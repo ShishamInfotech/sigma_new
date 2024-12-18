@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/ui_helper/constant_widgets.dart';
 
@@ -8,19 +9,29 @@ class UsageReportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final GlobalKey<ScaffoldState> _scaffoldKey =
+        GlobalKey<ScaffoldState>(); // Define a GlobalKey
+
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
     final isPortrait =
         MediaQuery.of(context).orientation == Orientation.portrait;
+
     return Scaffold(
+      key: _scaffoldKey,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(
           (isPortrait) ? height * 0.27 : height * 0.5,
-        ), // Adjust the height to include the Card
+        ),
         child: Stack(
           children: [
             AppBar(
-              leading: Icon(Icons.menu),
+              leading: InkWell(
+                onTap: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+                child: Icon(Icons.menu),
+              ),
               flexibleSpace: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -62,8 +73,7 @@ class UsageReportPage extends StatelessWidget {
               child: Card(
                 elevation: 6,
                 shadowColor: primaryColor,
-                margin: EdgeInsets.symmetric(
-                    horizontal: 16), // Add horizontal padding
+                margin: EdgeInsets.symmetric(horizontal: 16),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 15.0, bottom: 5),
                   child: Row(
@@ -229,13 +239,11 @@ class UsageReportPage extends StatelessWidget {
                   physics: NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
                   itemBuilder: (context, index) {
-                    // There will be a dynamic List here when we will get we will convert it
                     List colorList = [
                       Color(0xFFC9E4DF),
                       Color(0xFFC5DEF2),
                       Color(0xFFDBCDF0)
                     ];
-                    // API Value will be recieved here
                     return mockExamCard(
                         subjectName: "Chemistry",
                         level: "Easy",
@@ -245,20 +253,12 @@ class UsageReportPage extends StatelessWidget {
                   },
                   itemCount: 3,
                 ),
-                SizedBox(
-                  height: height * 0.01,
-                ),
-                SizedBox(
-                  height: height * 0.01,
-                ),
-                SizedBox(
-                  height: height * 0.01,
-                ),
               ],
             ),
           ),
         ),
       ),
+      drawer: DrawerWidget(context),
     );
   }
 }
