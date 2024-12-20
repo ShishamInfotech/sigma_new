@@ -4,11 +4,21 @@ import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/ui_helper/constant_widgets.dart';
 
+import '../../models/evaluation_models.dart';
+
 class UsageReportPage extends StatelessWidget {
   const UsageReportPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    List<EvaluationModels> evaluationmodel = [
+      EvaluationModels(
+          subject: 'Chemistry', level: 'Simple', score: 10, color: 0xFFC9E4DF),
+      EvaluationModels(
+          subject: 'Physics', level: 'Medium', score: 52, color: 0xFFC5DEF2),
+      EvaluationModels(
+          subject: 'Science', level: 'Hard', score: 43, color: 0xFFDBCDF0)
+    ];
     final GlobalKey<ScaffoldState> _scaffoldKey =
         GlobalKey<ScaffoldState>(); // Define a GlobalKey
 
@@ -235,21 +245,36 @@ class UsageReportPage extends StatelessWidget {
                   "Mock exam",
                   style: black12MediumTextStyle,
                 ),
+                // ListView.builder(
+                //   physics: NeverScrollableScrollPhysics(),
+                //   shrinkWrap: true,
+                //   itemBuilder: (context, index) {
+                //     List colorList = [
+                //       Color(0xFFC9E4DF),
+                //       Color(0xFFC5DEF2),
+                //       Color(0xFFDBCDF0)
+                //     ];
+                //     return mockExamCard(
+                //         subjectName: "Chemistry",
+                //         level: "Easy",
+                //         topScore: "43",
+                //         color: colorList[index % 3],
+                //         context: context);
+                //   },
+                //   itemCount: 3,
+                // ),
                 ListView.builder(
                   physics: NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
                   itemBuilder: (context, index) {
-                    List colorList = [
-                      Color(0xFFC9E4DF),
-                      Color(0xFFC5DEF2),
-                      Color(0xFFDBCDF0)
-                    ];
-                    return mockExamCard(
-                        subjectName: "Chemistry",
-                        level: "Easy",
-                        topScore: "43",
-                        color: colorList[index % 3],
-                        context: context);
+                    return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5.0),
+                        child: evaluationCard(
+                            subject: evaluationmodel[index].subject,
+                            level: evaluationmodel[index].level,
+                            score: evaluationmodel[index].score.toString(),
+                            color: evaluationmodel[index].color,
+                            context: context));
                   },
                   itemCount: 3,
                 ),

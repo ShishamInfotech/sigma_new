@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:sigma_new/models/menu_models.dart';
+import 'package:sigma_new/pages/exam_preparation/exam_preparation.dart';
+import 'package:sigma_new/pages/home/quick_guide/quick_guide.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
 class StudyPage extends StatefulWidget {
@@ -11,40 +13,50 @@ class StudyPage extends StatefulWidget {
 }
 
 class _Appbar2State extends State<StudyPage> {
-  List<Menu> studyMenu = [
-    Menu(
-        color: 0xFFF2C6DF, // Corrected color code
-        imagePath: 'assets/svg/calculator.svg',
-        navigation: '',
-        title: 'Calculator'),
-    Menu(
-        color: 0xFFC5DEF2,
-        imagePath: 'assets/svg/motivational_stories.svg',
-        navigation: '',
-        title: 'Motivation Stories'),
-    Menu(
-        color: 0xFFC9E4DF, // Corrected color code
-        imagePath: 'assets/svg/logbook.svg',
-        navigation: '',
-        title: 'Log Book'),
-    Menu(
-        color: 0xFFF8D9C4,
-        imagePath: 'assets/svg/quick_guide.svg',
-        navigation: '',
-        title: 'Quick Guide'),
-    Menu(
-        color: 0xFFDBCDF0,
-        imagePath: 'assets/svg/course_outline.svg',
-        navigation: '',
-        title: 'Course Outline'),
-    Menu(
-        color: 0xFFFAEDCB,
-        imagePath: 'assets/svg/exam_prep.svg',
-        navigation: '',
-        title: 'Exam Preparation'),
-  ];
   @override
   Widget build(BuildContext context) {
+    List<Menu> studyMenu = [
+      Menu(
+          color: 0xFFF2C6DF, // Corrected color code
+          imagePath: 'assets/svg/calculator.svg',
+          navigation: null,
+          // () {
+          //   Navigator.push(
+          //       context, MaterialPageRoute(builder: (context) => QuickGuide()));
+          // },
+          title: 'Calculator'),
+      Menu(
+          color: 0xFFC5DEF2,
+          imagePath: 'assets/svg/motivational_stories.svg',
+          navigation: null,
+          title: 'Motivation Stories'),
+      Menu(
+          color: 0xFFC9E4DF, // Corrected color code
+          imagePath: 'assets/svg/logbook.svg',
+          navigation: null,
+          title: 'Log Book'),
+      Menu(
+          color: 0xFFF8D9C4,
+          imagePath: 'assets/svg/quick_guide.svg',
+          navigation: () {
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => QuickGuide()));
+          },
+          title: 'Quick Guide'),
+      Menu(
+          color: 0xFFDBCDF0,
+          imagePath: 'assets/svg/course_outline.svg',
+          navigation: null,
+          title: 'Course Outline'),
+      Menu(
+          color: 0xFFFAEDCB,
+          imagePath: 'assets/svg/exam_prep.svg',
+          navigation: () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => ExamPreparation()));
+          },
+          title: 'Exam Preparation'),
+    ];
     return Scaffold(
       body: Center(
         child: Container(
@@ -65,11 +77,15 @@ class _Appbar2State extends State<StudyPage> {
                   InkWell(
                     splashColor: Colors.transparent,
                     onTap: () {
-                      // Navigation logic here
+                      if (studyMenu[index].navigation != null) {
+                        studyMenu[index].navigation!();
+                      } else {
+                        print('No navigation route defined for this menu item');
+                      }
                     },
                     child: Container(
-                      height: 100,
-                      width: 100,
+                      height: MediaQuery.of(context).size.height * 0.13,
+                      width: MediaQuery.of(context).size.width * 0.3,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: Color(studyMenu[index].color),

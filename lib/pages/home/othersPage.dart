@@ -15,22 +15,22 @@ class _OtherPageState extends State<OtherPage> {
     Menu(
         color: 0xFFFAEDCB, // Corrected color code
         imagePath: 'assets/svg/10_mh.svg',
-        navigation: '',
+        navigation: null,
         title: '10th MH'),
     Menu(
         color: 0xFFC9E4DF,
         imagePath: 'assets/svg/12_mh.svg',
-        navigation: '',
+        navigation: null,
         title: '12th MH PCMB'),
     Menu(
         color: 0xFFC5DEF2,
         imagePath: 'assets/svg/jee_cet_neet.svg',
-        navigation: '',
+        navigation: null,
         title: 'JEE CEE NEET'),
     Menu(
         color: 0xFFDBCDF0,
         imagePath: 'assets/svg/engg.svg',
-        navigation: '',
+        navigation: null,
         title: 'Engineer'),
   ];
   @override
@@ -59,8 +59,8 @@ class _OtherPageState extends State<OtherPage> {
                           // Navigation logic here
                         },
                         child: Container(
-                          height: 100,
-                          width: 100,
+                          height: MediaQuery.of(context).size.height * 0.13,
+                          width: MediaQuery.of(context).size.width * 0.3,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
                             color: Color(othersMenuList[index].color),

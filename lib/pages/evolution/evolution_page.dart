@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:sigma_new/models/evaluation_models.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
+
+import '../../ui_helper/constant_widgets.dart';
 
 class EvolutionPage extends StatefulWidget {
   const EvolutionPage({super.key});
@@ -11,6 +14,14 @@ class EvolutionPage extends StatefulWidget {
 }
 
 class _EvolutionPageState extends State<EvolutionPage> {
+  List<EvaluationModels> evaluationmodel = [
+    EvaluationModels(
+        subject: 'Chemistry', level: 'Simple', score: 10, color: 0xFFC9E4DF),
+    EvaluationModels(
+        subject: 'Physics', level: 'Medium', score: 52, color: 0xFFC5DEF2),
+    EvaluationModels(
+        subject: 'Science', level: 'Hard', score: 43, color: 0xFFDBCDF0)
+  ];
   final GlobalKey<ScaffoldState> _evolutionscaffoldKey =
       GlobalKey<ScaffoldState>();
 
@@ -21,6 +32,8 @@ class _EvolutionPageState extends State<EvolutionPage> {
     final isPortrait =
         MediaQuery.of(context).orientation == Orientation.portrait;
     return Scaffold(
+      backgroundColor: Colors.white,
+      // backgroundColor: backgroundColor,
       key: _evolutionscaffoldKey,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(
@@ -29,6 +42,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
         child: Stack(
           children: [
             AppBar(
+                // backgroundColor: backgroundColor,
                 leading: InkWell(
                   onTap: () {
                     _evolutionscaffoldKey.currentState?.openDrawer();
@@ -89,7 +103,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                         child: VerticalDivider(
                           color: primaryColor,
                           thickness: 1,
-                          width: 20,
+                          width: 15,
                         ),
                       ),
                       Padding(
@@ -115,7 +129,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                         child: VerticalDivider(
                           color: primaryColor,
                           thickness: 1,
-                          width: 20,
+                          width: 15,
                         ),
                       ),
                       Padding(
@@ -141,25 +155,27 @@ class _EvolutionPageState extends State<EvolutionPage> {
                         child: VerticalDivider(
                           color: primaryColor,
                           thickness: 1,
-                          width: 20,
+                          width: 15,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SvgPicture.asset(
-                                "assets/svg/subjectwisetext_evaluation_evaluation.svg"),
-                            Text(
-                              "Current Test Level",
-                              style: black10MediumTextStyle,
-                            ),
-                            Text(
-                              "10",
-                              style: primaryColor24w600TextStyle,
-                            ),
-                          ],
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SvgPicture.asset(
+                                  "assets/svg/subjectwisetest_evaluation.svg"),
+                              Text(
+                                "Current Test Level",
+                                style: black10MediumTextStyle,
+                              ),
+                              Text(
+                                "Simple",
+                                style: primaryColor24w600TextStyle,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -170,8 +186,32 @@ class _EvolutionPageState extends State<EvolutionPage> {
           ],
         ),
       ),
-      body: Column(
-        children: [],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Mock Exam",
+              style: black22w400RegularTextStyle,
+            ),
+            ListView.builder(
+              physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5.0),
+                    child: evaluationCard(
+                        subject: evaluationmodel[index].subject,
+                        level: evaluationmodel[index].level,
+                        score: evaluationmodel[index].score.toString(),
+                        color: evaluationmodel[index].color,
+                        context: context));
+              },
+              itemCount: 3,
+            ),
+          ],
+        ),
       ),
       drawer: DrawerWidget(context),
     );

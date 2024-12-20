@@ -113,3 +113,83 @@ Widget mockExamCard(
     ),
   );
 }
+
+Widget evaluationCard(
+    {required String subject,
+    required String level,
+    required String score,
+    required int color,
+    required BuildContext context}) {
+  double height = MediaQuery.of(context).size.height;
+  return Card(
+    elevation: 5,
+    color: Color(color),
+    shadowColor: Color(color),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  "Subject name",
+                  style: black12MediumTextStyle,
+                ),
+                Text(
+                  subject,
+                  style: primaryColor12MediumTextStyle,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: height * 0.05,
+            child: VerticalDivider(
+              color: primaryColor,
+              thickness: 1,
+              width: 20,
+            ),
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  "Level",
+                  style: black12MediumTextStyle,
+                ),
+                Text(
+                  level,
+                  style: primaryColor12MediumTextStyle,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: height * 0.05,
+            child: VerticalDivider(
+              color: primaryColor,
+              thickness: 1,
+              width: 20,
+            ),
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  "Top score",
+                  style: black12MediumTextStyle,
+                ),
+                Text(
+                  score,
+                  style: primaryColor12MediumTextStyle,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}

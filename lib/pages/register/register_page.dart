@@ -79,6 +79,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     horizontal: 10.0),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
+                                    autofocus: true,
                                     value: choosevalue,
                                     isExpanded: true,
                                     hint: Text(
@@ -179,6 +180,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     horizontal: 10.0),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
+                                    autofocus: true,
                                     value: choosestandard,
                                     isExpanded: true,
                                     hint: Text(
@@ -223,6 +225,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     horizontal: 10.0),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
+                                    autofocus: true,
                                     value: chooseboard,
                                     isExpanded: true,
                                     hint: Text(
@@ -270,6 +273,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       horizontal: 10.0),
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownButton<String>(
+                                      autofocus: true,
                                       value: choosesubject,
                                       isExpanded: true,
                                       hint: Text(

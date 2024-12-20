@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sigma_new/pages/evolution/evolution_page.dart';
+import 'package:sigma_new/pages/exam_preparation/exam_preparation.dart';
 import 'package:sigma_new/pages/home/home.dart';
 import 'package:sigma_new/pages/usage_report/usage_report_page.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
@@ -56,7 +57,15 @@ Widget DrawerWidget(BuildContext context) {
         ),
         ListTile(
           title: const Text('Exam Prep'),
-          onTap: () {},
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ExamPreparation(),
+              ),
+            );
+          },
         ),
         ListTile(
           title: const Text('Evaluation'),
