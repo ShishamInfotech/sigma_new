@@ -35,10 +35,10 @@ Widget DrawerWidget(BuildContext context) {
         ListTile(
           title: const Text('Books'),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HomePage(),
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("UI not defined in WireFrame"),
+                duration: Duration(seconds: 3),
               ),
             );
           },

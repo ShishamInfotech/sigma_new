@@ -93,7 +93,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                             ),
                             Text(
                               "10",
-                              style: primaryColor24w600TextStyle,
+                              style: primaryColor18BoldTextStyle,
                             )
                           ],
                         ),
@@ -119,7 +119,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                             ),
                             Text(
                               "10",
-                              style: primaryColor24w600TextStyle,
+                              style: primaryColor18BoldTextStyle,
                             )
                           ],
                         ),
@@ -145,7 +145,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                             ),
                             Text(
                               "10",
-                              style: primaryColor24w600TextStyle,
+                              style: primaryColor18BoldTextStyle,
                             ),
                           ],
                         ),
@@ -172,7 +172,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                               ),
                               Text(
                                 "Simple",
-                                style: primaryColor24w600TextStyle,
+                                style: primaryColor16MediumTextStyle,
                               ),
                             ],
                           ),
@@ -193,7 +193,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
           children: [
             Text(
               "Mock Exam",
-              style: black22w400RegularTextStyle,
+              style: black12MediumTextStyle,
             ),
             ListView.builder(
               physics: NeverScrollableScrollPhysics(),

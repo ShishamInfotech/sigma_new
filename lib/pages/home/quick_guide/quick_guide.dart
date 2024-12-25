@@ -15,7 +15,7 @@ class QuickGuide extends StatefulWidget {
 class _QuickGuideState extends State<QuickGuide> {
   List<Menu> examPreparationMenu = [
     Menu(
-        color: 0xFFF2C6DF, // Corrected color code
+        color: 0xFFF2C6DF,
         imagePath: 'assets/svg/quickguideimg.svg',
         navigation: null,
         title: 'Maths'),
