@@ -1,0 +1,24 @@
+<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.82581 1.94014L10.5435 6.49126C10.6122 6.92654 10.9873 7.24716 11.428 7.24716H18.1951C18.6358 7.24716 19.0109 6.92653 19.0796 6.49124L19.7972 1.94012C19.8829 1.39671 19.4629 0.905273 18.9128 0.905273H10.7103C10.1601 0.905273 9.74012 1.39673 9.82581 1.94014Z" fill="#BBA3A3"/>
+<path d="M19.4561 23.0299L20.1736 27.581C20.2593 28.1244 19.8393 28.6158 19.2891 28.6158H11.0868C10.5366 28.6158 10.1166 28.1244 10.2023 27.581L10.9199 23.0298C10.9886 22.5946 11.3637 22.2739 11.8044 22.2739H18.5716C19.0123 22.2739 19.3875 22.5946 19.4561 23.0299Z" fill="#BBA3A3"/>
+<circle cx="14.9996" cy="14.9274" r="10.3512" fill="url(#paint0_radial_224_260)" stroke="#CFCCCC"/>
+<path d="M14.9995 8.96191V14.9272H20.9648" stroke="#797979" stroke-width="1.0233" stroke-linecap="round"/>
+<path d="M15 6.01587V6.86466" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M6.08203 14.9343L6.93082 14.9343" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M10.5405 22.6577L10.9649 21.9226" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M7.27637 19.3936L8.01144 18.9692" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M7.27637 10.4753L8.01144 10.8997" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M10.5405 7.21094L10.9649 7.94601" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M15 23.0039V23.8527" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M23.0693 14.9343L23.9181 14.9343" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M19.0347 7.94604L19.4591 7.21097" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M21.9883 10.8997L22.7234 10.4753" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M21.9883 18.9692L22.7234 19.3936" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<path d="M19.0347 21.9229L19.4591 22.6579" stroke="#797979" stroke-width="0.63956" stroke-linecap="round"/>
+<defs>
+<radialGradient id="paint0_radial_224_260" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(14.9996 13.1348) rotate(90) scale(15.7935)">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="#E0DDDD"/>
+</radialGradient>
+</defs>
+</svg>
