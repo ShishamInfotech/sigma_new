@@ -1,3 +1,4 @@
+/*
 import 'package:flutter/material.dart';
 import 'package:sigma_new/pages/register/register_succes.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
@@ -344,6 +345,139 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+*/
+
+
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+
+class EnrolStudentScreen extends StatefulWidget {
+  @override
+  _EnrolStudentScreenState createState() => _EnrolStudentScreenState();
+}
+
+class _EnrolStudentScreenState extends State<EnrolStudentScreen> {
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+
+  List<Map<String, String>> boards = [
+    {'key': 'MH', 'name': 'Maharashtra'},
+    {'key': 'MP', 'name': 'Madhya Pradesh'},
+    {'key': 'KA', 'name': 'Karnataka'},
+    {'key': 'CBSE', 'name': 'CBSE'},
+  ];
+
+  List<Map<String, String>> standards = [
+    {'id': '10', 'name': '10th Std'},
+    {'id': '11', 'name': '11th Std'},
+    {'id': '12', 'name': '12th Std'},
+  ];
+
+  List<Map<String, String>> coursesMaster = [
+    {'key': '10_MH', 'id': '10_MH_PCMB', 'name': '10th Std MH PCMB'},
+    {'key': '11_MH', 'id': '11_MH_PCM', 'name': '11th Std MH PCM'},
+    {'key': '12_CBSE', 'id': '12_CBSE_IITJEE', 'name': 'IIT-JEE'},
+  ];
+
+  String? selectedBoard;
+  String? selectedStandard;
+  List<String> selectedCourses = [];
+  List<String> availableCourses = [];
+
+  void updateCourses() {
+    setState(() {
+      availableCourses = coursesMaster
+          .where((course) => course['key'] == "${selectedStandard}_$selectedBoard")
+          .map((course) => course['name']!)
+          .toList();
+      selectedCourses.clear();
+    });
+  }
+
+  Future<void> registerStudent() async {
+    if (titleController.text.isEmpty ||
+        firstNameController.text.isEmpty ||
+        lastNameController.text.isEmpty ||
+        selectedCourses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please fill all details and select courses")),
+      );
+      return;
+    }
+
+    Map<String, dynamic> student = {
+      'title': titleController.text,
+      'firstName': firstNameController.text,
+      'lastName': lastNameController.text,
+      'standard': selectedStandard,
+      'board': selectedBoard,
+      'courses': selectedCourses,
+    };
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('STUDENT_DATA', jsonEncode(student));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Congratulations! You are successfully enrolled!")),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Enroll Student")),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(controller: titleController, decoration: InputDecoration(labelText: "Title")),
+            TextField(controller: firstNameController, decoration: InputDecoration(labelText: "First Name")),
+            TextField(controller: lastNameController, decoration: InputDecoration(labelText: "Last Name")),
+            DropdownButtonFormField<String>(
+              value: selectedStandard,
+              items: standards.map((std) {
+                return DropdownMenuItem(value: std['id'], child: Text(std['name']!));
+              }).toList(),
+              onChanged: (value) {
+                setState(() { selectedStandard = value; });
+                updateCourses();
+              },
+              decoration: InputDecoration(labelText: "Select Standard"),
+            ),
+            DropdownButtonFormField<String>(
+              value: selectedBoard,
+              items: boards.map((brd) {
+                return DropdownMenuItem(value: brd['key'], child: Text(brd['name']!));
+              }).toList(),
+              onChanged: (value) {
+                setState(() { selectedBoard = value; });
+                updateCourses();
+              },
+              decoration: InputDecoration(labelText: "Select Board"),
+            ),
+            Wrap(
+              children: availableCourses.map((course) {
+                return FilterChip(
+                  label: Text(course),
+                  selected: selectedCourses.contains(course),
+                  onSelected: (isSelected) {
+                    setState(() {
+                      isSelected ? selectedCourses.add(course) : selectedCourses.remove(course);
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(onPressed: registerStudent, child: Text("Register")),
           ],
         ),
       ),

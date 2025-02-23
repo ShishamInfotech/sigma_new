@@ -1,4 +1,4 @@
-package com.ankit.sigma_new.sigma_new
+package com.example.sigma_new
 
 import io.flutter.embedding.android.FlutterActivity
 

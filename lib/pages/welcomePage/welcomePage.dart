@@ -28,7 +28,7 @@ class _WelcomePageState extends State<WelcomePage> {
       backgroundColor: backgroundColor,
       body: Column(
         children: [
-          SizedBox(
+          const SizedBox(
             height: 180,
           ),
           Center(
@@ -41,14 +41,14 @@ class _WelcomePageState extends State<WelcomePage> {
               ),
             ),
           ),
-          Text(
+          const Text(
             "Learn anytime anywhere",
             style: black22RegularTextStyle,
           ),
-          SizedBox(
+          const SizedBox(
             height: 2,
           ),
-          Text(
+          const Text(
             "Mini school in your pocket in the form of offline tablet",
             style: black12MediumTextStyle,
           ),
@@ -73,11 +73,11 @@ class _WelcomePageState extends State<WelcomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => RegisterPage(),
+                    builder: (context) => EnrolStudentScreen(),
                   ),
                 );
               },
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 // crossAxisAlignment: CrossAxisAlignment.,
                 children: const [
