@@ -10,7 +10,6 @@
 
     <application
         android:label="sigma_new"
-        android:requestLegacyExternalStorage="true"
         android:name="${applicationName}"
         android:supportsRtl="true"
         android:icon="@mipmap/ic_launcher">
