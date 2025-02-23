@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
-import 'package:sigma_new/pages/usage_report_page.dart';
+import 'package:get/get.dart';
+import 'package:sigma_new/pages/welcomePage/welcomePage.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -11,14 +11,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: UsageReportPage(),
+      home: WelcomePage(),
     );
   }
 }
+
+
+

@@ -1,0 +1,25 @@
+<svg width="93" height="67" viewBox="0 0 93 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="1.36386" y="1.16074" width="90.8136" height="55.033" rx="6.26301" fill="url(#paint0_linear_232_62)" stroke="#CCC9C9" stroke-width="0.894715"/>
+<rect x="43.8267" y="56.6411" width="5.28343" height="7.82876" fill="#F4EEEE"/>
+<path d="M26.7857 65.2504C26.4802 64.9764 26.674 64.47 27.0844 64.47H65.8519C66.2623 64.47 66.4561 64.9764 66.1506 65.2504L64.9114 66.3617C64.8293 66.4353 64.723 66.476 64.6127 66.476H28.3235C28.2133 66.476 28.1069 66.4353 28.0248 66.3617L26.7857 65.2504Z" fill="#E9E9E9"/>
+<rect x="8.20947" y="10.1667" width="31.4548" height="20.9699" fill="#9B9797"/>
+<rect x="8.20947" y="34.8691" width="26.8608" height="2.25326" rx="1.12663" fill="#C6C6C6"/>
+<rect x="8.20947" y="38.5735" width="11.9099" height="2.25326" rx="1.12663" fill="#C6C6C6"/>
+<rect x="48.8931" y="10.1667" width="15.5158" height="10.3439" fill="#D0D0D0"/>
+<rect x="65.6123" y="10.1667" width="19.719" height="2.25326" rx="1.12663" fill="#C6C6C6"/>
+<rect x="65.6123" y="13.8708" width="11.9099" height="2.25326" rx="1.12663" fill="#C6C6C6"/>
+<rect x="48.8931" y="22.9797" width="15.5158" height="10.3439" fill="#D0D0D0"/>
+<rect x="65.6123" y="22.9797" width="19.719" height="2.25326" rx="1.12663" fill="#C6C6C6"/>
+<rect x="65.6123" y="26.6838" width="11.9099" height="2.25326" rx="1.12663" fill="#C6C6C6"/>
+<rect x="48.8931" y="35.6548" width="15.5158" height="10.3439" fill="#D0D0D0"/>
+<rect x="65.6123" y="35.6548" width="19.719" height="2.25326" rx="1.12663" fill="#C6C6C6"/>
+<rect x="65.6123" y="39.3589" width="11.9099" height="2.25326" rx="1.12663" fill="#C6C6C6"/>
+<circle cx="23.9311" cy="21.187" r="3.82515" fill="#D9D9D9"/>
+<path d="M25.5957 21.1872L23.0986 22.6289L23.0986 19.7455L25.5957 21.1872Z" fill="white"/>
+<defs>
+<linearGradient id="paint0_linear_232_62" x1="46.7707" y1="0.713379" x2="46.7707" y2="56.6411" gradientUnits="userSpaceOnUse">
+<stop stop-color="#D9D9D9"/>
+<stop offset="1" stop-color="#F7F7F7"/>
+</linearGradient>
+</defs>
+</svg>
