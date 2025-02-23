@@ -56,7 +56,7 @@ Widget mockExamCard(
           Expanded(
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Subject name",
                   style: black12MediumTextStyle,
                 ),
@@ -67,9 +67,9 @@ Widget mockExamCard(
               ],
             ),
           ),
-          Container(
+          SizedBox(
             height: height * 0.05,
-            child: VerticalDivider(
+            child: const VerticalDivider(
               color: primaryColor,
               thickness: 1,
               width: 20,
@@ -78,7 +78,7 @@ Widget mockExamCard(
           Expanded(
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Level",
                   style: black12MediumTextStyle,
                 ),
@@ -89,9 +89,9 @@ Widget mockExamCard(
               ],
             ),
           ),
-          Container(
+          SizedBox(
             height: height * 0.05,
-            child: VerticalDivider(
+            child: const VerticalDivider(
               color: primaryColor,
               thickness: 1,
               width: 20,
@@ -100,7 +100,7 @@ Widget mockExamCard(
           Expanded(
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Top score",
                   style: black12MediumTextStyle,
                 ),
@@ -136,7 +136,7 @@ Widget evaluationCard(
           Expanded(
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Subject name",
                   style: black12MediumTextStyle,
                 ),
@@ -147,9 +147,9 @@ Widget evaluationCard(
               ],
             ),
           ),
-          Container(
+          SizedBox(
             height: height * 0.05,
-            child: VerticalDivider(
+            child: const VerticalDivider(
               color: primaryColor,
               thickness: 1,
               width: 20,
@@ -158,7 +158,7 @@ Widget evaluationCard(
           Expanded(
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Level",
                   style: black12MediumTextStyle,
                 ),
@@ -169,9 +169,9 @@ Widget evaluationCard(
               ],
             ),
           ),
-          Container(
+          SizedBox(
             height: height * 0.05,
-            child: VerticalDivider(
+            child: const VerticalDivider(
               color: primaryColor,
               thickness: 1,
               width: 20,
@@ -180,7 +180,7 @@ Widget evaluationCard(
           Expanded(
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Top score",
                   style: black12MediumTextStyle,
                 ),
@@ -204,14 +204,14 @@ Widget mockExamTable({
   return Center(
     child: Card(
       elevation: 4,
-      color: Color(0xFFC5DEF2),
+      color: const Color(0xFFC5DEF2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Table(
-          border: TableBorder(
+          border: const TableBorder(
             verticalInside: BorderSide(
               color: primaryColor,
               width: 1,
@@ -285,14 +285,14 @@ Widget targetDatesTable({
   return Center(
     child: Card(
       elevation: 4,
-      color: Color(0xFFD9F3EB),
+      color: const Color(0xFFD9F3EB),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Table(
-          border: TableBorder(
+          border: const TableBorder(
             verticalInside: BorderSide(
               color: primaryColor,
               width: 1,
@@ -348,7 +348,7 @@ Widget targetDatesTable({
                         style: primaryColor12MediumTextStyle,
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             vertical: 4.0, horizontal: 8.0),

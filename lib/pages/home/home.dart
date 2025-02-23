@@ -27,7 +27,7 @@ class _HomePageState extends State<HomePage> {
                     onTap: () {
                       _homeScaffoldKey.currentState?.openDrawer();
                     },
-                    child: Icon(Icons.view_headline_outlined)),
+                    child: const Icon(Icons.view_headline_outlined)),
                 title: Row(
                   children: [
                     Image.asset(
@@ -41,7 +41,7 @@ class _HomePageState extends State<HomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             "Welcome back👋",
                             style: black16w400MediumTextStyle,
                           ),
@@ -72,15 +72,15 @@ class _HomePageState extends State<HomePage> {
                         color: primaryColor.withOpacity(0.1),
                         shape: BoxShape.rectangle,
                       ),
-                      padding: EdgeInsets.all(5),
-                      labelPadding: EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(5),
+                      labelPadding: const EdgeInsets.all(5),
                       indicatorSize: TabBarIndicatorSize.tab,
                       dividerColor: Colors.transparent,
                       labelColor: primaryColor,
                       unselectedLabelColor: blackColor,
                       splashBorderRadius: BorderRadius.circular(5),
                       indicatorColor: backgroundColor,
-                      tabs: [
+                      tabs: const [
                         Tab(
                           child: Text(
                             "Study",
@@ -93,17 +93,17 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 15,
                 ),
                 SizedBox(
                   height: MediaQuery.of(context).size.height,
-                  child: TabBarView(children: [
+                  child: const TabBarView(children: [
                     StudyPage(),
                     OtherPage(),
                   ]),
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
               ],
             ),
           ),

@@ -42,7 +42,7 @@ class _StudyPageState extends State<StudyPage> {
           imagePath: 'assets/svg/engg.svg',
           navigation: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text("UI not defined in WireFrame"),
                 duration: Duration(seconds: 2),
               ),
@@ -55,11 +55,11 @@ class _StudyPageState extends State<StudyPage> {
         children: [
           Center(
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width * 0.9,
               child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: 20,
                   mainAxisSpacing: 6,
@@ -113,7 +113,7 @@ class _StudyPageState extends State<StudyPage> {
                           ),
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 5,
                       ),
                       Text(

@@ -17,7 +17,7 @@ const Color redColor = Colors.red;
 const Color blackColor = Color(0xFF000000);
 const Color textblackColor = Color(0xFF172B4D);
 const Color whiteColor = Color(0xFFFFFFFF);
-const Color whiteColortt = Color(0xFFFFFF);
+const Color whiteColortt = Color(0x00ffffff);
 const Color upiReceiptColor = Color(0xFF44546F);
 
 const EdgeInsetsGeometry h10 = EdgeInsets.symmetric(horizontal: 10);
@@ -35,28 +35,28 @@ const EdgeInsetsGeometry v205 = EdgeInsets.symmetric(vertical: 2.5);
 const EdgeInsetsGeometry v15 = EdgeInsets.symmetric(vertical: 15);
 const EdgeInsetsGeometry v20 = EdgeInsets.symmetric(vertical: 20);
 
-SizedBox height20Space = SizedBox(
+SizedBox height20Space = const SizedBox(
   height: 20,
 );
-SizedBox height10Space = SizedBox(
+SizedBox height10Space = const SizedBox(
   height: 10,
 );
-SizedBox height5Space = SizedBox(
+SizedBox height5Space = const SizedBox(
   height: 5,
 );
-SizedBox height15Space = SizedBox(
+SizedBox height15Space = const SizedBox(
   height: 15,
 );
-SizedBox width15Space = SizedBox(
+SizedBox width15Space = const SizedBox(
   width: 15,
 );
-SizedBox width20Space = SizedBox(
+SizedBox width20Space = const SizedBox(
   width: 20,
 );
-SizedBox width5Space = SizedBox(
+SizedBox width5Space = const SizedBox(
   width: 5,
 );
-SizedBox width10Space = SizedBox(
+SizedBox width10Space = const SizedBox(
   width: 10,
 );
 
@@ -107,7 +107,7 @@ const TextStyle grey12RegularTextStyle = TextStyle(
   color: greyColor,
 );
 
-TextStyle grey14RegularTextStyle = TextStyle(fontSize: 14.0, color: greyColor);
+TextStyle grey14RegularTextStyle = const TextStyle(fontSize: 14.0, color: greyColor);
 
 const TextStyle grey12MediumTextStyle = TextStyle(
   fontSize: 12.0,
@@ -552,113 +552,113 @@ const TextStyle white36BoldTextStyle = TextStyle(
   fontWeight: FontWeight.bold,
 );
 
-TextStyle primaryColor10RegularTextStyle = TextStyle(
+TextStyle primaryColor10RegularTextStyle = const TextStyle(
   fontSize: 10.0,
   color: primaryColor,
 );
 
-TextStyle primaryColor12RegularTextStyle = TextStyle(
+TextStyle primaryColor12RegularTextStyle = const TextStyle(
   fontSize: 12.0,
   color: primaryColor,
 );
 
-TextStyle primaryColor14RegularTextStyle = TextStyle(
+TextStyle primaryColor14RegularTextStyle = const TextStyle(
   fontSize: 14.0,
   color: primaryColor,
 );
 TextStyle primaryColor14RegularTextStyleInter =
-    TextStyle(fontSize: 14.0, color: primaryColor, fontFamily: "Inter");
+    const TextStyle(fontSize: 14.0, color: primaryColor, fontFamily: "Inter");
 
-TextStyle primaryColor12MediumTextStyle = TextStyle(
+TextStyle primaryColor12MediumTextStyle = const TextStyle(
   fontSize: 12.0,
   color: primaryColor,
   fontWeight: FontWeight.w500,
 );
-TextStyle primaryColor14MediumTextStyle = TextStyle(
+TextStyle primaryColor14MediumTextStyle = const TextStyle(
   fontSize: 14.0,
   color: primaryColor,
   fontWeight: FontWeight.w500,
 );
-TextStyle primaryColor14ULMediumTextStyle = TextStyle(
+TextStyle primaryColor14ULMediumTextStyle = const TextStyle(
     fontSize: 14.0,
     color: primaryColor,
     fontWeight: FontWeight.w500,
     decoration: TextDecoration.underline);
-TextStyle primaryColor14w400MediumTextStyle = TextStyle(
+TextStyle primaryColor14w400MediumTextStyle = const TextStyle(
   fontSize: 14.0,
   color: primaryColor,
   fontWeight: FontWeight.w400,
 );
-TextStyle primaryColor32NormalLS064TextStyle = TextStyle(
+TextStyle primaryColor32NormalLS064TextStyle = const TextStyle(
     fontSize: 32.0,
     color: primaryColor,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.64);
 
-TextStyle primaryColor14w300MediumTextStyle = TextStyle(
+TextStyle primaryColor14w300MediumTextStyle = const TextStyle(
   fontSize: 14.0,
   color: primaryColor,
   fontWeight: FontWeight.w700,
 );
 
-TextStyle primaryColor16MediumTextStyle = TextStyle(
+TextStyle primaryColor16MediumTextStyle = const TextStyle(
   fontSize: 16.0,
   color: primaryColor,
   fontWeight: FontWeight.w500,
 );
 
-TextStyle primaryColor16w700MediumTextStyle = TextStyle(
+TextStyle primaryColor16w700MediumTextStyle = const TextStyle(
   fontSize: 16.0,
   color: primaryColor,
   fontWeight: FontWeight.w700,
 );
 
-TextStyle primaryColor16w400MediumTextStyle = TextStyle(
+TextStyle primaryColor16w400MediumTextStyle = const TextStyle(
   fontSize: 16.0,
   color: primaryColor,
   fontWeight: FontWeight.w400,
 );
 
-TextStyle primaryColor16BoldTextStyle = TextStyle(
+TextStyle primaryColor16BoldTextStyle = const TextStyle(
   fontSize: 16.0,
   color: primaryColor,
   fontWeight: FontWeight.bold,
 );
-TextStyle primaryColor16w500TextStyleInter = TextStyle(
+TextStyle primaryColor16w500TextStyleInter = const TextStyle(
     fontSize: 16.0,
     color: primaryColor,
     fontWeight: FontWeight.w500,
     fontFamily: "Inter");
 
-TextStyle primaryColor18BoldTextStyle = TextStyle(
+TextStyle primaryColor18BoldTextStyle = const TextStyle(
   fontSize: 18.0,
   color: primaryColor,
   fontWeight: FontWeight.bold,
 );
 
-TextStyle primaryColor22BoldTextStyle = TextStyle(
+TextStyle primaryColor22BoldTextStyle = const TextStyle(
   fontSize: 22.0,
   color: primaryColor,
   fontWeight: FontWeight.bold,
 );
 
-TextStyle primaryColor20BoldTextStyle = TextStyle(
+TextStyle primaryColor20BoldTextStyle = const TextStyle(
   fontSize: 20.0,
   color: primaryColor,
   fontWeight: FontWeight.bold,
 );
 
-TextStyle primaryColor22w300TextStyle = TextStyle(
+TextStyle primaryColor22w300TextStyle = const TextStyle(
   fontSize: 22.0,
   color: primaryColor,
   fontWeight: FontWeight.w300,
 );
-TextStyle primaryColor24w600TextStyle = TextStyle(
+TextStyle primaryColor24w600TextStyle = const TextStyle(
   fontSize: 24.0,
   color: primaryColor,
   fontWeight: FontWeight.w600,
 );
-TextStyle primaryColor32w300TextStyle = TextStyle(
+TextStyle primaryColor32w300TextStyle = const TextStyle(
   fontSize: 32.0,
   color: primaryColor,
   fontWeight: FontWeight.w300,
@@ -700,8 +700,9 @@ class DrawDottedHorizontalLine extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (double i = -285; i < 285; i = i + 15) {
-      if (i % 3 == 0)
+      if (i % 3 == 0) {
         canvas.drawLine(Offset(i, 0.0), Offset(i + 10, 0.0), _paint);
+      }
     }
   }
 
@@ -715,7 +716,7 @@ String maskNumber(String number) {
   if (number.length != 10 || int.tryParse(number) == null) {
     throw ArgumentError('Input must be a 10-digit number.');
   }
-  return number.substring(0, 2) + 'XXXXX' + number.substring(7);
+  return '${number.substring(0, 2)}XXXXX${number.substring(7)}';
 }
 
 // For amount formatting

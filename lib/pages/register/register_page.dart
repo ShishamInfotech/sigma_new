@@ -45,14 +45,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10.0),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 10.0),
                         child: Text(
                           "Registeration",
                           style: black20w400MediumTextStyle,
                         ),
                       ),
-                      Text(
+                      const Text(
                         "Register to your account",
                         style: grey14MediumTextStyle,
                       ),
@@ -62,7 +62,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Title',
                               style: black16MediumTextStyle,
                             ),
@@ -71,7 +71,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   border:
                                       Border.all(color: Colors.grey, width: 1),
                                   borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0))),
+                                      const BorderRadius.all(Radius.circular(15.0))),
                               height: MediaQuery.of(context).size.height * 0.05,
                               width: MediaQuery.of(context).size.width * 0.9,
                               child: Padding(
@@ -82,7 +82,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     autofocus: true,
                                     value: choosevalue,
                                     isExpanded: true,
-                                    hint: Text(
+                                    hint: const Text(
                                       "Select",
                                       style: grey16MediumTextStyle,
                                     ),
@@ -104,15 +104,15 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
+                            const Padding(
+                              padding: EdgeInsets.only(top: 5.0),
                               child: Text(
                                 'First Name',
                                 style: black16MediumTextStyle,
                               ),
                             ),
                             Container(
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(15.0))),
                               height: MediaQuery.of(context).size.height * 0.05,
@@ -120,10 +120,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               child: TextFormField(
                                 autofocus: true,
                                 decoration: InputDecoration(
-                                    contentPadding: EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                         vertical: 4, horizontal: 10),
                                     hintText: "First Name",
-                                    hintStyle: TextStyle(
+                                    hintStyle: const TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.w400),
                                     border: OutlineInputBorder(
@@ -132,15 +132,15 @@ class _RegisterPageState extends State<RegisterPage> {
                                         gapPadding: 20)),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
+                            const Padding(
+                              padding: EdgeInsets.only(top: 5.0),
                               child: Text(
                                 'Last Name',
                                 style: black16MediumTextStyle,
                               ),
                             ),
                             Container(
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(15.0))),
                               height: MediaQuery.of(context).size.height * 0.05,
@@ -148,10 +148,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               child: TextFormField(
                                 autofocus: true,
                                 decoration: InputDecoration(
-                                    contentPadding: EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                         vertical: 4, horizontal: 10),
                                     hintText: "Last Name",
-                                    hintStyle: TextStyle(
+                                    hintStyle: const TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.w400),
                                     border: OutlineInputBorder(
@@ -160,8 +160,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                         gapPadding: 20)),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
+                            const Padding(
+                              padding: EdgeInsets.only(top: 5.0),
                               child: Text(
                                 'Standard',
                                 style: black16MediumTextStyle,
@@ -172,7 +172,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   border:
                                       Border.all(color: Colors.grey, width: 1),
                                   borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0))),
+                                      const BorderRadius.all(Radius.circular(15.0))),
                               height: MediaQuery.of(context).size.height * 0.05,
                               width: MediaQuery.of(context).size.width * 0.9,
                               child: Padding(
@@ -183,7 +183,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     autofocus: true,
                                     value: choosestandard,
                                     isExpanded: true,
-                                    hint: Text(
+                                    hint: const Text(
                                       "Standard",
                                       style: grey16MediumTextStyle,
                                     ),
@@ -205,8 +205,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
+                            const Padding(
+                              padding: EdgeInsets.only(top: 5.0),
                               child: Text(
                                 'Board',
                                 style: black16MediumTextStyle,
@@ -217,7 +217,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   border:
                                       Border.all(color: Colors.grey, width: 1),
                                   borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0))),
+                                      const BorderRadius.all(Radius.circular(15.0))),
                               height: MediaQuery.of(context).size.height * 0.05,
                               width: MediaQuery.of(context).size.width * 0.9,
                               child: Padding(
@@ -228,7 +228,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     autofocus: true,
                                     value: chooseboard,
                                     isExpanded: true,
-                                    hint: Text(
+                                    hint: const Text(
                                       "Select",
                                       style: grey16MediumTextStyle,
                                     ),
@@ -250,8 +250,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
+                            const Padding(
+                              padding: EdgeInsets.only(top: 5.0),
                               child: Text(
                                 'Subjects',
                                 style: black16MediumTextStyle,
@@ -263,7 +263,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 decoration: BoxDecoration(
                                     border: Border.all(
                                         color: Colors.grey, width: 1),
-                                    borderRadius: BorderRadius.all(
+                                    borderRadius: const BorderRadius.all(
                                         Radius.circular(15.0))),
                                 height:
                                     MediaQuery.of(context).size.height * 0.05,
@@ -276,7 +276,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       autofocus: true,
                                       value: choosesubject,
                                       isExpanded: true,
-                                      hint: Text(
+                                      hint: const Text(
                                         "Select",
                                         style: grey16MediumTextStyle,
                                       ),
@@ -307,7 +307,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
             SizedBox(
@@ -315,7 +315,7 @@ class _RegisterPageState extends State<RegisterPage> {
               height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xff7F0081), // Purple color
+                  backgroundColor: const Color(0xff7F0081), // Purple color
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
@@ -325,12 +325,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => RegisterSuccessPage(),
+                        builder: (context) => const RegisterSuccessPage(),
                       ));
                 },
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     SizedBox(
                       width: 10,
                     ),

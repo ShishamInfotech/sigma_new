@@ -68,10 +68,10 @@ class _ExamPreparationState extends State<ExamPreparation> {
               print("Opening Drawer");
               _examscaffoldKey.currentState?.openDrawer();
             },
-            child: Icon(Icons.menu),
+            child: const Icon(Icons.menu),
           ),
           flexibleSpace: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   backgroundColor,
@@ -84,7 +84,7 @@ class _ExamPreparationState extends State<ExamPreparation> {
               ),
             ),
           ),
-          title: Text(
+          title: const Text(
             "Exam Preparation",
             style: black20w400MediumTextStyle,
           )),
@@ -94,11 +94,11 @@ class _ExamPreparationState extends State<ExamPreparation> {
             padding: const EdgeInsets.only(top: 30.0),
             child: Center(
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 height: MediaQuery.of(context).size.height * 0.8,
                 width: MediaQuery.of(context).size.width * 0.85,
                 child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
@@ -132,7 +132,7 @@ class _ExamPreparationState extends State<ExamPreparation> {
                             ),
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 5,
                         ),
                         Text(

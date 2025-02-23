@@ -21,9 +21,9 @@ class UsageReportPage extends StatelessWidget {
         child: Stack(
           children: [
             AppBar(
-              leading: Icon(Icons.menu),
+              leading: const Icon(Icons.menu),
               flexibleSpace: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
                       backgroundColor,
@@ -43,7 +43,7 @@ class UsageReportPage extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "Welcome back 👋",
                         style: black12MediumTextStyle,
                       ),
@@ -63,7 +63,7 @@ class UsageReportPage extends StatelessWidget {
               child: Card(
                 elevation: 6,
                 shadowColor: primaryColor,
-                margin: EdgeInsets.symmetric(
+                margin: const EdgeInsets.symmetric(
                     horizontal: 16), // Add horizontal padding
                 child: Padding(
                   padding: const EdgeInsets.only(top: 15.0, bottom: 5),
@@ -76,7 +76,7 @@ class UsageReportPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SvgPicture.asset("assets/svg/watch.svg"),
-                            Text(
+                            const Text(
                               "Total Time spent",
                               style: black10MediumTextStyle,
                             ),
@@ -87,21 +87,21 @@ class UsageReportPage extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Container(
+                      SizedBox(
                         height: height * 0.08,
-                        child: VerticalDivider(
+                        child: const VerticalDivider(
                           color: primaryColor,
                           thickness: 1,
                           width: 20,
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SvgPicture.asset("assets/svg/clock.svg"),
-                            Text(
+                            const Text(
                               "Total time daily",
                               style: black10MediumTextStyle,
                             ),
@@ -112,9 +112,9 @@ class UsageReportPage extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Container(
+                      SizedBox(
                         height: height * 0.08,
-                        child: VerticalDivider(
+                        child: const VerticalDivider(
                           color: primaryColor,
                           thickness: 1,
                           width: 20,
@@ -126,7 +126,7 @@ class UsageReportPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SvgPicture.asset("assets/svg/app_visits.svg"),
-                            Text(
+                            const Text(
                               "App visit",
                               style: black10MediumTextStyle,
                             ),
@@ -153,7 +153,7 @@ class UsageReportPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   "Study Details",
                   style: black12MediumTextStyle,
                 ),
@@ -164,7 +164,7 @@ class UsageReportPage extends StatelessWidget {
                       child: infoCard(
                         title: "Videos",
                         number: "0",
-                        color: Color(0xFFFAEDCB),
+                        color: const Color(0xFFFAEDCB),
                         context: context,
                       ),
                     ),
@@ -172,14 +172,14 @@ class UsageReportPage extends StatelessWidget {
                       child: infoCard(
                           title: "Answers visited",
                           number: "0",
-                          color: Color(0xFFC9E4DF),
+                          color: const Color(0xFFC9E4DF),
                           context: context),
                     ),
                     Expanded(
                       child: infoCard(
                         title: "MCQs practiced",
                         number: "0",
-                        color: Color(0xFFC5DEF2),
+                        color: const Color(0xFFC5DEF2),
                         context: context,
                       ),
                     ),
@@ -188,7 +188,7 @@ class UsageReportPage extends StatelessWidget {
                 SizedBox(
                   height: height * 0.02,
                 ),
-                Text(
+                const Text(
                   "Test Performance",
                   style: black12MediumTextStyle,
                 ),
@@ -199,7 +199,7 @@ class UsageReportPage extends StatelessWidget {
                       child: infoCard(
                         title: "Test given",
                         number: "0",
-                        color: Color(0xFFDBCDF0),
+                        color: const Color(0xFFDBCDF0),
                         context: context,
                       ),
                     ),
@@ -207,13 +207,13 @@ class UsageReportPage extends StatelessWidget {
                         child: infoCard(
                             title: "Average score",
                             number: "0",
-                            color: Color(0xFFF8D9C4),
+                            color: const Color(0xFFF8D9C4),
                             context: context)),
                     Expanded(
                       child: infoCard(
                         title: "Top score",
                         number: "0",
-                        color: Color(0xFFF2C6DF),
+                        color: const Color(0xFFF2C6DF),
                         context: context,
                       ),
                     ),
@@ -222,19 +222,19 @@ class UsageReportPage extends StatelessWidget {
                 SizedBox(
                   height: height * 0.02,
                 ),
-                Text(
+                const Text(
                   "Mock exam",
                   style: black12MediumTextStyle,
                 ),
                 ListView.builder(
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
                   itemBuilder: (context, index) {
                     // There will be a dynamic List here when we will get we will convert it
                     List colorList = [
-                      Color(0xFFC9E4DF),
-                      Color(0xFFC5DEF2),
-                      Color(0xFFDBCDF0)
+                      const Color(0xFFC9E4DF),
+                      const Color(0xFFC5DEF2),
+                      const Color(0xFFDBCDF0)
                     ];
                     // API Value will be recieved here
                     return mockExamCard(

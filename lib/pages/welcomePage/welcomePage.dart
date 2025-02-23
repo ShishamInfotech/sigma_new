@@ -18,7 +18,7 @@ class _WelcomePageState extends State<WelcomePage> {
   Widget build(BuildContext context){
 
  //   print("Path of2 ${SdCardUtility.listFilesOnSDCard()}");
-    print("Path of1 ${SdCardUtility.getSdcardName()}");
+    print("Path of1 ${SdCardUtility.getBasePath()}");
     print("Path ofImae ${SdCardUtility.getIntroImages()}");
   //  print("Path of Sigma ${SdCardUtility.isSigmaDirAvl()}");
  //   print("Path of 12 ${SdCardUtility.getSubjectEncJsonData("12/MH/testseries/sigma_data.json")}");
@@ -28,7 +28,7 @@ class _WelcomePageState extends State<WelcomePage> {
       backgroundColor: backgroundColor,
       body: Column(
         children: [
-          SizedBox(
+          const SizedBox(
             height: 180,
           ),
           Center(
@@ -41,14 +41,14 @@ class _WelcomePageState extends State<WelcomePage> {
               ),
             ),
           ),
-          Text(
+          const Text(
             "Learn anytime anywhere",
             style: black22RegularTextStyle,
           ),
-          SizedBox(
+          const SizedBox(
             height: 2,
           ),
-          Text(
+          const Text(
             "Mini school in your pocket in the form of offline tablet",
             style: black12MediumTextStyle,
           ),
@@ -63,7 +63,7 @@ class _WelcomePageState extends State<WelcomePage> {
             height: 50,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xff7F0081), // Purple color
+                backgroundColor: const Color(0xff7F0081), // Purple color
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -73,14 +73,14 @@ class _WelcomePageState extends State<WelcomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => RegisterPage(),
+                    builder: (context) => const RegisterPage(),
                   ),
                 );
               },
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 // crossAxisAlignment: CrossAxisAlignment.,
-                children: const [
+                children: [
                   SizedBox(
                     width: 10,
                   ),

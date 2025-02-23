@@ -18,11 +18,11 @@ class TargetDatesModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['subject_name'] = this.subjectName;
-    data['target_dates'] = this.targetDates;
-    data['present_status'] = this.presentStatus;
-    data['days_remaining'] = this.daysRemaining;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['subject_name'] = subjectName;
+    data['target_dates'] = targetDates;
+    data['present_status'] = presentStatus;
+    data['days_remaining'] = daysRemaining;
     return data;
   }
 }

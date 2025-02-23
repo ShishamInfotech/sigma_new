@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:sigma_new/pages/welcomePage/welcomePage.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: WelcomePage(),
+      home: const WelcomePage(),
     );
   }
 }

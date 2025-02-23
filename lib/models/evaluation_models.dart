@@ -19,11 +19,11 @@ class EvaluationModels {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['color'] = this.color;
-    data['subject'] = this.subject;
-    data['level'] = this.level;
-    data['score'] = this.score;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['color'] = color;
+    data['subject'] = subject;
+    data['level'] = level;
+    data['score'] = score;
 
     return data;
   }

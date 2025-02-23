@@ -1,11 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:crypto/crypto.dart';
 
 import 'package:encrypt/encrypt.dart';
-import 'package:pointycastle/export.dart';
-import 'package:pointycastle/pointycastle.dart';
 
 class CryptoUtils {
   static const String algorithm = "AES";

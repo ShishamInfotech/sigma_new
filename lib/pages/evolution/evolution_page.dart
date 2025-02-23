@@ -47,10 +47,10 @@ class _EvolutionPageState extends State<EvolutionPage> {
                   onTap: () {
                     _evolutionscaffoldKey.currentState?.openDrawer();
                   },
-                  child: Icon(Icons.menu),
+                  child: const Icon(Icons.menu),
                 ),
                 flexibleSpace: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
                         backgroundColor,
@@ -63,7 +63,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                     ),
                   ),
                 ),
-                title: Text(
+                title: const Text(
                   "Evaluation",
                   style: black20w400MediumTextStyle,
                 )),
@@ -74,7 +74,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
               child: Card(
                 elevation: 6,
                 shadowColor: primaryColor,
-                margin: EdgeInsets.symmetric(horizontal: 16),
+                margin: const EdgeInsets.symmetric(horizontal: 16),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 15.0, bottom: 5),
                   child: Row(
@@ -87,7 +87,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                           children: [
                             SvgPicture.asset(
                                 "assets/svg/completed_evaluation.svg"),
-                            Text(
+                            const Text(
                               "Completed",
                               style: black10MediumTextStyle,
                             ),
@@ -98,22 +98,22 @@ class _EvolutionPageState extends State<EvolutionPage> {
                           ],
                         ),
                       ),
-                      Container(
+                      SizedBox(
                         height: height * 0.08,
-                        child: VerticalDivider(
+                        child: const VerticalDivider(
                           color: primaryColor,
                           thickness: 1,
                           width: 15,
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SvgPicture.asset(
                                 "assets/svg/totalscore_evaluation.svg"),
-                            Text(
+                            const Text(
                               "Total Score",
                               style: black10MediumTextStyle,
                             ),
@@ -124,9 +124,9 @@ class _EvolutionPageState extends State<EvolutionPage> {
                           ],
                         ),
                       ),
-                      Container(
+                      SizedBox(
                         height: height * 0.08,
-                        child: VerticalDivider(
+                        child: const VerticalDivider(
                           color: primaryColor,
                           thickness: 1,
                           width: 15,
@@ -139,7 +139,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                           children: [
                             SvgPicture.asset(
                                 "assets/svg/averge_evaluation.svg"),
-                            Text(
+                            const Text(
                               "Average",
                               style: black10MediumTextStyle,
                             ),
@@ -150,9 +150,9 @@ class _EvolutionPageState extends State<EvolutionPage> {
                           ],
                         ),
                       ),
-                      Container(
+                      SizedBox(
                         height: height * 0.08,
-                        child: VerticalDivider(
+                        child: const VerticalDivider(
                           color: primaryColor,
                           thickness: 1,
                           width: 15,
@@ -166,7 +166,7 @@ class _EvolutionPageState extends State<EvolutionPage> {
                             children: [
                               SvgPicture.asset(
                                   "assets/svg/subjectwisetest_evaluation.svg"),
-                              Text(
+                              const Text(
                                 "Current Test Level",
                                 style: black10MediumTextStyle,
                               ),
@@ -191,12 +191,12 @@ class _EvolutionPageState extends State<EvolutionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               "Mock Exam",
               style: black12MediumTextStyle,
             ),
             ListView.builder(
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemBuilder: (context, index) {
                 return Padding(

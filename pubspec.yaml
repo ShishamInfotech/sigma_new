@@ -45,6 +45,7 @@ dependencies:
   encrypt: ^5.0.0
   pointycastle: ^3.9.1
   crypto: ^3.0.6
+  external_path: ^2.0.1
 
 
 
