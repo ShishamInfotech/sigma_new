@@ -27,7 +27,7 @@ Widget DrawerWidget(BuildContext context) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => HomePage(),
+                builder: (context) => const HomePage(),
               ),
             );
           },
@@ -36,7 +36,7 @@ Widget DrawerWidget(BuildContext context) {
           title: const Text('Books'),
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text("UI not defined in WireFrame"),
                 duration: Duration(seconds: 3),
               ),
@@ -50,7 +50,7 @@ Widget DrawerWidget(BuildContext context) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => UsageReportPage(),
+                builder: (context) => const UsageReportPage(),
               ),
             );
           },
@@ -62,7 +62,7 @@ Widget DrawerWidget(BuildContext context) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ExamPreparation(),
+                builder: (context) => const ExamPreparation(),
               ),
             );
           },
@@ -74,7 +74,7 @@ Widget DrawerWidget(BuildContext context) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => EvolutionPage(),
+                builder: (context) => const EvolutionPage(),
               ),
             );
           },

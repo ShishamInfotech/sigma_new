@@ -29,7 +29,7 @@ class UsageReportPage extends StatelessWidget {
           targetDates: "21/12/2024"),
     ];
 
-    final GlobalKey<ScaffoldState> _scaffoldKey =
+    final GlobalKey<ScaffoldState> scaffoldKey =
         GlobalKey<ScaffoldState>(); // Define a GlobalKey
 
     double height = MediaQuery.of(context).size.height;
@@ -38,7 +38,7 @@ class UsageReportPage extends StatelessWidget {
         MediaQuery.of(context).orientation == Orientation.portrait;
 
     return Scaffold(
-      key: _scaffoldKey,
+      key: scaffoldKey,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(
           (isPortrait) ? height * 0.08 : height * 0.5,
@@ -48,12 +48,12 @@ class UsageReportPage extends StatelessWidget {
             AppBar(
               leading: InkWell(
                 onTap: () {
-                  _scaffoldKey.currentState?.openDrawer();
+                  scaffoldKey.currentState?.openDrawer();
                 },
-                child: Icon(Icons.menu),
+                child: const Icon(Icons.menu),
               ),
               flexibleSpace: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
                       backgroundColor,
@@ -73,7 +73,7 @@ class UsageReportPage extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "Welcome back 👋",
                         style: black12MediumTextStyle,
                       ),
@@ -183,7 +183,7 @@ class UsageReportPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     "Real time study time (In hours)",
                     style: black12MediumTextStyle,
                   ),
@@ -194,7 +194,7 @@ class UsageReportPage extends StatelessWidget {
                         child: infoCard(
                           title: "Yesterday",
                           number: "1",
-                          color: Color(0xFFFAEDCB),
+                          color: const Color(0xFFFAEDCB),
                           context: context,
                         ),
                       ),
@@ -202,14 +202,14 @@ class UsageReportPage extends StatelessWidget {
                         child: infoCard(
                             title: "Today",
                             number: "3",
-                            color: Color(0xFFC9E4DF),
+                            color: const Color(0xFFC9E4DF),
                             context: context),
                       ),
                       Expanded(
                         child: infoCard(
                           title: "To Date",
                           number: "1",
-                          color: Color(0xFFC5DEF2),
+                          color: const Color(0xFFC5DEF2),
                           context: context,
                         ),
                       ),
@@ -218,7 +218,7 @@ class UsageReportPage extends StatelessWidget {
                   SizedBox(
                     height: height * 0.02,
                   ),
-                  Text(
+                  const Text(
                     "Real time analytical data of study (In hours)",
                     style: black12MediumTextStyle,
                   ),
@@ -229,7 +229,7 @@ class UsageReportPage extends StatelessWidget {
                         child: infoCard(
                           title: "Average study \ntime per day",
                           number: "0",
-                          color: Color(0xFFDBCDF0),
+                          color: const Color(0xFFDBCDF0),
                           context: context,
                         ),
                       ),
@@ -237,13 +237,13 @@ class UsageReportPage extends StatelessWidget {
                           child: infoCard(
                               title: "Lowest study time",
                               number: "0",
-                              color: Color(0xFFF8D9C4),
+                              color: const Color(0xFFF8D9C4),
                               context: context)),
                       Expanded(
                         child: infoCard(
                           title: "Highest study time",
                           number: "0",
-                          color: Color(0xFFF2C6DF),
+                          color: const Color(0xFFF2C6DF),
                           context: context,
                         ),
                       ),
@@ -257,7 +257,7 @@ class UsageReportPage extends StatelessWidget {
                     style: black12MediumTextStyle,
                   ),
                   targetDatesTable(context: context, data: targetDatesList),
-                  Text(
+                  const Text(
                     "To date Level wise performance in Mock Examinations",
                     style: black12MediumTextStyle,
                   ),

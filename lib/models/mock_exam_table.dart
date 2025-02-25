@@ -12,10 +12,10 @@ class MockExamTable {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['board_exam'] = this.boardExam;
-    data['exams_attempted'] = this.examsAttempted;
-    data['level'] = this.level;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['board_exam'] = boardExam;
+    data['exams_attempted'] = examsAttempted;
+    data['level'] = level;
     return data;
   }
 }

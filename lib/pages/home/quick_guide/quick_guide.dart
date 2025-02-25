@@ -51,10 +51,10 @@ class _QuickGuideState extends State<QuickGuide> {
               print("Opening Drawer");
               // _quickquidescaffoldKey.currentState?.openDrawer();
             },
-            child: Icon(Icons.menu),
+            child: const Icon(Icons.menu),
           ),
           flexibleSpace: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   backgroundColor,
@@ -67,7 +67,7 @@ class _QuickGuideState extends State<QuickGuide> {
               ),
             ),
           ),
-          title: Text(
+          title: const Text(
             "Quick Guide",
             style: black20w400MediumTextStyle,
           )),
@@ -77,11 +77,11 @@ class _QuickGuideState extends State<QuickGuide> {
             padding: const EdgeInsets.only(top: 30.0),
             child: Center(
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 height: MediaQuery.of(context).size.height * 0.8,
                 width: MediaQuery.of(context).size.width * 0.85,
                 child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 0,
@@ -115,7 +115,7 @@ class _QuickGuideState extends State<QuickGuide> {
                             ),
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 5,
                         ),
                         Text(

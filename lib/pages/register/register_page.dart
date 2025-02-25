@@ -1,486 +1,329 @@
-/*
+// lib/pages/register/register_page.dart
 import 'package:flutter/material.dart';
+import 'package:sigma_new/config/config_loader.dart';
 import 'package:sigma_new/pages/register/register_succes.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
-
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  List titlelist = ['Mr', 'Ms'];
-  List standardlist = ['10th', '11th', '12th'];
-  List boardlist = ['10th Std MH', '12th Std MH PCMB', 'JEE-CET-NEET'];
-  List subjectlist = ['CS', 'IT'];
-  var choosevalue;
-  var choosestandard;
-  var chooseboard;
-  var choosesubject;
+  String? selectedTitle;
+  EnrolConfigStandard? selectedStandard;
+  EnrolConfigBoard? selectedBoard;
+  EnrolConfigCourses? selectedCourse;
+
+  late Future<Map<String, dynamic>> enrolDataFuture;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.15,
-            ),
-            Center(
-              child: Card(
-                elevation: 6,
-                shadowColor: blackColor,
-                borderOnForeground: false,
-                child: Container(
-                  // height: MediaQuery.of(context).size.height * 0.61,
-                  width: MediaQuery.of(context).size.width * 0.7,
-                  decoration: BoxDecoration(
-                      color: backgroundColor,
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10.0),
-                        child: Text(
-                          "Registeration",
-                          style: black20w400MediumTextStyle,
-                        ),
-                      ),
-                      Text(
-                        "Register to your account",
-                        style: grey14MediumTextStyle,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15.0, vertical: 5),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Title',
-                              style: black16MediumTextStyle,
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.grey, width: 1),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0))),
-                              height: MediaQuery.of(context).size.height * 0.05,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10.0),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    autofocus: true,
-                                    value: choosevalue,
-                                    isExpanded: true,
-                                    hint: Text(
-                                      "Select",
-                                      style: grey16MediumTextStyle,
-                                    ),
-                                    onChanged: (String? newValue) {
-                                      setState(() {
-                                        choosevalue =
-                                            newValue; // Update selected value
-                                      });
-                                    },
-                                    items: titlelist
-                                        .map<DropdownMenuItem<String>>(
-                                            (valueItem) {
-                                      return DropdownMenuItem<String>(
-                                        value: valueItem,
-                                        child: Text(valueItem),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
-                              child: Text(
-                                'First Name',
-                                style: black16MediumTextStyle,
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0))),
-                              height: MediaQuery.of(context).size.height * 0.05,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: TextFormField(
-                                autofocus: true,
-                                decoration: InputDecoration(
-                                    contentPadding: EdgeInsets.symmetric(
-                                        vertical: 4, horizontal: 10),
-                                    hintText: "First Name",
-                                    hintStyle: TextStyle(
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.w400),
-                                    border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(15.0),
-                                        gapPadding: 20)),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
-                              child: Text(
-                                'Last Name',
-                                style: black16MediumTextStyle,
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0))),
-                              height: MediaQuery.of(context).size.height * 0.05,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: TextFormField(
-                                autofocus: true,
-                                decoration: InputDecoration(
-                                    contentPadding: EdgeInsets.symmetric(
-                                        vertical: 4, horizontal: 10),
-                                    hintText: "Last Name",
-                                    hintStyle: TextStyle(
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.w400),
-                                    border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(15.0),
-                                        gapPadding: 20)),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
-                              child: Text(
-                                'Standard',
-                                style: black16MediumTextStyle,
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.grey, width: 1),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0))),
-                              height: MediaQuery.of(context).size.height * 0.05,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10.0),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    autofocus: true,
-                                    value: choosestandard,
-                                    isExpanded: true,
-                                    hint: Text(
-                                      "Standard",
-                                      style: grey16MediumTextStyle,
-                                    ),
-                                    onChanged: (String? newValue) {
-                                      setState(() {
-                                        choosestandard =
-                                            newValue; // Update selected value
-                                      });
-                                    },
-                                    items: standardlist
-                                        .map<DropdownMenuItem<String>>(
-                                            (valueItem) {
-                                      return DropdownMenuItem<String>(
-                                        value: valueItem,
-                                        child: Text(valueItem),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
-                              child: Text(
-                                'Board',
-                                style: black16MediumTextStyle,
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.grey, width: 1),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15.0))),
-                              height: MediaQuery.of(context).size.height * 0.05,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10.0),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    autofocus: true,
-                                    value: chooseboard,
-                                    isExpanded: true,
-                                    hint: Text(
-                                      "Select",
-                                      style: grey16MediumTextStyle,
-                                    ),
-                                    onChanged: (String? newValue) {
-                                      setState(() {
-                                        chooseboard =
-                                            newValue; // Update selected value
-                                      });
-                                    },
-                                    items: boardlist
-                                        .map<DropdownMenuItem<String>>(
-                                            (valueItem) {
-                                      return DropdownMenuItem<String>(
-                                        value: valueItem,
-                                        child: Text(valueItem),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
-                              child: Text(
-                                'Subjects',
-                                style: black16MediumTextStyle,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 6.0),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: Colors.grey, width: 1),
-                                    borderRadius: BorderRadius.all(
-                                        Radius.circular(15.0))),
-                                height:
-                                    MediaQuery.of(context).size.height * 0.05,
-                                width: MediaQuery.of(context).size.width * 0.9,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10.0),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      autofocus: true,
-                                      value: choosesubject,
-                                      isExpanded: true,
-                                      hint: Text(
-                                        "Select",
-                                        style: grey16MediumTextStyle,
-                                      ),
-                                      onChanged: (String? newValue) {
-                                        setState(() {
-                                          choosesubject =
-                                              newValue; // Update selected value
-                                        });
-                                      },
-                                      items: subjectlist
-                                          .map<DropdownMenuItem<String>>(
-                                              (valueItem) {
-                                        return DropdownMenuItem<String>(
-                                          value: valueItem,
-                                          child: Text(valueItem),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.5,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xff7F0081), // Purple color
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                onPressed: () {
-                  // Add navigation or functionality here
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RegisterSuccessPage(),
-                      ));
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text("Continue", style: white18MediumTextStyle),
-                    Icon(
-                      Icons.arrow_forward_ios_outlined,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-*/
-
-
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-
-class EnrolStudentScreen extends StatefulWidget {
-  @override
-  _EnrolStudentScreenState createState() => _EnrolStudentScreenState();
-}
-
-class _EnrolStudentScreenState extends State<EnrolStudentScreen> {
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController lastNameController = TextEditingController();
-
-  List<Map<String, String>> boards = [
-    {'key': 'MH', 'name': 'Maharashtra'},
-    {'key': 'MP', 'name': 'Madhya Pradesh'},
-    {'key': 'KA', 'name': 'Karnataka'},
-    {'key': 'CBSE', 'name': 'CBSE'},
-  ];
-
-  List<Map<String, String>> standards = [
-    {'id': '10', 'name': '10th Std'},
-    {'id': '11', 'name': '11th Std'},
-    {'id': '12', 'name': '12th Std'},
-  ];
-
-  List<Map<String, String>> coursesMaster = [
-    {'key': '10_MH', 'id': '10_MH_PCMB', 'name': '10th Std MH PCMB'},
-    {'key': '11_MH', 'id': '11_MH_PCM', 'name': '11th Std MH PCM'},
-    {'key': '12_CBSE', 'id': '12_CBSE_IITJEE', 'name': 'IIT-JEE'},
-  ];
-
-  String? selectedBoard;
-  String? selectedStandard;
-  List<String> selectedCourses = [];
-  List<String> availableCourses = [];
-
-  void updateCourses() {
-    setState(() {
-      availableCourses = coursesMaster
-          .where((course) => course['key'] == "${selectedStandard}_$selectedBoard")
-          .map((course) => course['name']!)
-          .toList();
-      selectedCourses.clear();
+  void initState() {
+    super.initState();
+    enrolDataFuture = Future.wait([
+      ConfigLoader.getEnrolConfigStandard(),
+      ConfigLoader.getEnrolConfigBoard(),
+      ConfigLoader.getEnrolConfigCourses(),
+    ]).then((results) {
+      return {
+        'standard': results[0] ?? [],
+        'board': results[1] ?? [],
+        'courses': results[2] ?? [],
+      };
     });
   }
 
-  Future<void> registerStudent() async {
-    if (titleController.text.isEmpty ||
-        firstNameController.text.isEmpty ||
-        lastNameController.text.isEmpty ||
-        selectedCourses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please fill all details and select courses")),
-      );
-      return;
+  /// Filters courses based on selected Standard and Board.
+  List<EnrolConfigCourses> getFilteredCourses(List<EnrolConfigCourses> courses) {
+    if (selectedStandard != null && selectedBoard != null) {
+      final filterKey = "${selectedStandard!.stdID}_${selectedBoard!.boardKey}";
+      return courses.where((course) => course.stdBoardKey == filterKey).toList();
     }
-
-    Map<String, dynamic> student = {
-      'title': titleController.text,
-      'firstName': firstNameController.text,
-      'lastName': lastNameController.text,
-      'standard': selectedStandard,
-      'board': selectedBoard,
-      'courses': selectedCourses,
-    };
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('STUDENT_DATA', jsonEncode(student));
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Congratulations! You are successfully enrolled!")),
-    );
+    return [];
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Enroll Student")),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(controller: titleController, decoration: InputDecoration(labelText: "Title")),
-            TextField(controller: firstNameController, decoration: InputDecoration(labelText: "First Name")),
-            TextField(controller: lastNameController, decoration: InputDecoration(labelText: "Last Name")),
-            DropdownButtonFormField<String>(
-              value: selectedStandard,
-              items: standards.map((std) {
-                return DropdownMenuItem(value: std['id'], child: Text(std['name']!));
-              }).toList(),
-              onChanged: (value) {
-                setState(() { selectedStandard = value; });
-                updateCourses();
-              },
-              decoration: InputDecoration(labelText: "Select Standard"),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: enrolDataFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          return const Scaffold(
+            body: Center(child: Text("Error loading enrollment configurations")),
+          );
+        }
+        final standardList = snapshot.data!['standard'] as List<EnrolConfigStandard>;
+        final boardList = snapshot.data!['board'] as List<EnrolConfigBoard>;
+        final coursesList = snapshot.data!['courses'] as List<EnrolConfigCourses>;
+
+        // Hardcoded title dropdown values.
+        final titleList = ["Mr", "Ms"];
+        // Filter courses based on selected standard and board.
+        final filteredCourses = getFilteredCourses(coursesList);
+
+        return Scaffold(
+          backgroundColor: backgroundColor,
+          body: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+                Center(
+                  child: Card(
+                    elevation: 6,
+                    shadowColor: blackColor,
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.7,
+                      decoration: BoxDecoration(
+                        color: backgroundColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(top: 10.0),
+                            child: Text("Registration", style: black20w400MediumTextStyle),
+                          ),
+                          const Text("Register to your account", style: grey14MediumTextStyle),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Title Dropdown
+                                const Text("Title", style: black16MediumTextStyle),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey, width: 1),
+                                    borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                                  ),
+                                  height: MediaQuery.of(context).size.height * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.9,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: selectedTitle,
+                                        isExpanded: true,
+                                        hint: const Text("Select", style: grey16MediumTextStyle),
+                                        onChanged: (newValue) {
+                                          setState(() {
+                                            selectedTitle = newValue;
+                                          });
+                                        },
+                                        items: titleList.map((valueItem) {
+                                          return DropdownMenuItem<String>(
+                                            value: valueItem,
+                                            child: Text(valueItem),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // First Name Field
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 5.0),
+                                  child: Text("First Name", style: black16MediumTextStyle),
+                                ),
+                                Container(
+                                  decoration: const BoxDecoration(
+                                    borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                                  ),
+                                  height: MediaQuery.of(context).size.height * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.9,
+                                  child: TextFormField(
+                                    decoration: InputDecoration(
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                                      hintText: "First Name",
+                                      hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w400),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(15.0),
+                                        gapPadding: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Last Name Field
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 5.0),
+                                  child: Text("Last Name", style: black16MediumTextStyle),
+                                ),
+                                Container(
+                                  decoration: const BoxDecoration(
+                                    borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                                  ),
+                                  height: MediaQuery.of(context).size.height * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.9,
+                                  child: TextFormField(
+                                    decoration: InputDecoration(
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                                      hintText: "Last Name",
+                                      hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w400),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(15.0),
+                                        gapPadding: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Standard Dropdown
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 5.0),
+                                  child: Text("Standard", style: black16MediumTextStyle),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey, width: 1),
+                                    borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                                  ),
+                                  height: MediaQuery.of(context).size.height * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.9,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<EnrolConfigStandard>(
+                                        value: selectedStandard,
+                                        isExpanded: true,
+                                        hint: const Text("Select", style: grey16MediumTextStyle),
+                                        onChanged: (newValue) {
+                                          setState(() {
+                                            selectedStandard = newValue;
+                                            // When standard changes, reset the course selection.
+                                            selectedCourse = null;
+                                          });
+                                        },
+                                        items: standardList.map((valueItem) {
+                                          return DropdownMenuItem<EnrolConfigStandard>(
+                                            value: valueItem,
+                                            child: Text(valueItem.name),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Board Dropdown
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 5.0),
+                                  child: Text("Board", style: black16MediumTextStyle),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey, width: 1),
+                                    borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                                  ),
+                                  height: MediaQuery.of(context).size.height * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.9,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<EnrolConfigBoard>(
+                                        value: selectedBoard,
+                                        isExpanded: true,
+                                        hint: const Text("Select", style: grey16MediumTextStyle),
+                                        onChanged: (newValue) {
+                                          setState(() {
+                                            selectedBoard = newValue;
+                                            // When board changes, reset course selection.
+                                            selectedCourse = null;
+                                          });
+                                        },
+                                        items: boardList.map((valueItem) {
+                                          return DropdownMenuItem<EnrolConfigBoard>(
+                                            value: valueItem,
+                                            child: Text(valueItem.board),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Courses Dropdown (dependent on Standard & Board)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 5.0),
+                                  child: Text("Courses", style: black16MediumTextStyle),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey, width: 1),
+                                    borderRadius: const BorderRadius.all(Radius.circular(15.0)),
+                                  ),
+                                  height: MediaQuery.of(context).size.height * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.9,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<EnrolConfigCourses>(
+                                        value: selectedCourse,
+                                        isExpanded: true,
+                                        hint: const Text("Select", style: grey16MediumTextStyle),
+                                        onChanged: (newValue) {
+                                          setState(() {
+                                            print("Selected Course $selectedCourse");
+                                            selectedCourse = newValue;
+                                          });
+                                        },
+                                        items: getFilteredCourses(coursesList).map((valueItem) {
+                                          return DropdownMenuItem<EnrolConfigCourses>(
+                                            value: valueItem,
+                                            child: Text(valueItem.course),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xff7F0081),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    onPressed: () {
+                      // TODO: Save registration data and update global config accordingly.
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterSuccessPage(),
+                        ),
+                      );
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SizedBox(width: 10),
+                        Text("Continue", style: white18MediumTextStyle),
+                        Icon(Icons.arrow_forward_ios_outlined, color: Colors.white, size: 24),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            DropdownButtonFormField<String>(
-              value: selectedBoard,
-              items: boards.map((brd) {
-                return DropdownMenuItem(value: brd['key'], child: Text(brd['name']!));
-              }).toList(),
-              onChanged: (value) {
-                setState(() { selectedBoard = value; });
-                updateCourses();
-              },
-              decoration: InputDecoration(labelText: "Select Board"),
-            ),
-            Wrap(
-              children: availableCourses.map((course) {
-                return FilterChip(
-                  label: Text(course),
-                  selected: selectedCourses.contains(course),
-                  onSelected: (isSelected) {
-                    setState(() {
-                      isSelected ? selectedCourses.add(course) : selectedCourses.remove(course);
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(onPressed: registerStudent, child: Text("Register")),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

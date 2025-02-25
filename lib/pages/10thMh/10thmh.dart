@@ -46,10 +46,10 @@ class _StandardMenuState extends State<StandardMenu> {
               print("Opening Drawer");
               _examscaffoldKey.currentState?.openDrawer();
             },
-            child: Icon(Icons.menu),
+            child: const Icon(Icons.menu),
           ),
           flexibleSpace: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   backgroundColor,
@@ -62,7 +62,7 @@ class _StandardMenuState extends State<StandardMenu> {
               ),
             ),
           ),
-          title: Text(
+          title: const Text(
             "Syallabus",
             style: black20w400MediumTextStyle,
           )),
@@ -72,11 +72,11 @@ class _StandardMenuState extends State<StandardMenu> {
             padding: const EdgeInsets.only(top: 30.0),
             child: Center(
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 height: MediaQuery.of(context).size.height * 0.8,
                 width: MediaQuery.of(context).size.width * 0.85,
                 child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
@@ -110,7 +110,7 @@ class _StandardMenuState extends State<StandardMenu> {
                             ),
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 5,
                         ),
                         Text(

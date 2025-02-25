@@ -21,7 +21,7 @@ class _Appbar2State extends State<OtherPage> {
           imagePath: 'assets/svg/calculator.svg',
           navigation: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text("UI not defined in WireFrame"),
                 duration: Duration(seconds: 2),
               ),
@@ -33,7 +33,7 @@ class _Appbar2State extends State<OtherPage> {
           imagePath: 'assets/svg/motivational_stories.svg',
           navigation: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text("UI not defined in WireFrame"),
                 duration: Duration(seconds: 2),
               ),
@@ -45,7 +45,7 @@ class _Appbar2State extends State<OtherPage> {
           imagePath: 'assets/svg/logbook.svg',
           navigation: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text("UI not defined in WireFrame"),
                 duration: Duration(seconds: 2),
               ),
@@ -57,7 +57,7 @@ class _Appbar2State extends State<OtherPage> {
           imagePath: 'assets/svg/quick_guide.svg',
           navigation: () {
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => QuickGuide()));
+                context, MaterialPageRoute(builder: (context) => const QuickGuide()));
           },
           title: 'Quick Guide'),
       Menu(
@@ -65,7 +65,7 @@ class _Appbar2State extends State<OtherPage> {
           imagePath: 'assets/svg/course_outline.svg',
           navigation: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text("UI not defined in WireFrame"),
                 duration: Duration(seconds: 2),
               ),
@@ -77,7 +77,7 @@ class _Appbar2State extends State<OtherPage> {
           imagePath: 'assets/svg/exam_prep.svg',
           navigation: () {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => ExamPreparation()));
+                MaterialPageRoute(builder: (context) => const ExamPreparation()));
           },
           title: 'Exam Preparation'),
     ];

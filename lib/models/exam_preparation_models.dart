@@ -18,11 +18,11 @@ class ExamPreparationModels {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['color'] = this.color;
-    data['title'] = this.title;
-    data['image_path'] = this.imagePath;
-    data['navigation'] = this.navigation;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['color'] = color;
+    data['title'] = title;
+    data['image_path'] = imagePath;
+    data['navigation'] = navigation;
     return data;
   }
 }
