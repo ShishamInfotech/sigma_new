@@ -1,5 +1,8 @@
 // lib/pages/register/register_page.dart
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/config/config_loader.dart';
 import 'package:sigma_new/pages/register/register_succes.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
@@ -12,6 +15,13 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   String? selectedTitle;
+  String? selectedStandardString;
+  String? selectedBoardString;
+  String? selectedCourseString;
+
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+
   EnrolConfigStandard? selectedStandard;
   EnrolConfigBoard? selectedBoard;
   EnrolConfigCourses? selectedCourse;
@@ -36,8 +46,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
   /// Filters courses based on selected Standard and Board.
   List<EnrolConfigCourses> getFilteredCourses(List<EnrolConfigCourses> courses) {
+    print("SelectedCon ${selectedStandard != null && selectedBoard != null}");
     if (selectedStandard != null && selectedBoard != null) {
       final filterKey = "${selectedStandard!.stdID}_${selectedBoard!.boardKey}";
+     // print("List ${courses.where((course) => course.stdBoardKey == filterKey).toList()} CC ${}");
       return courses.where((course) => course.stdBoardKey == filterKey).toList();
     }
     return [];
@@ -140,6 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   height: MediaQuery.of(context).size.height * 0.05,
                                   width: MediaQuery.of(context).size.width * 0.9,
                                   child: TextFormField(
+                                    controller: firstNameController,
                                     decoration: InputDecoration(
                                       contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
                                       hintText: "First Name",
@@ -163,6 +176,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   height: MediaQuery.of(context).size.height * 0.05,
                                   width: MediaQuery.of(context).size.width * 0.9,
                                   child: TextFormField(
+                                    controller: lastNameController,
                                     decoration: InputDecoration(
                                       contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
                                       hintText: "Last Name",
@@ -197,7 +211,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                           setState(() {
                                             selectedStandard = newValue;
                                             // When standard changes, reset the course selection.
-                                            selectedCourse = null;
+                                            //selectedCourse = null;
                                           });
                                         },
                                         items: standardList.map((valueItem) {
@@ -233,7 +247,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                           setState(() {
                                             selectedBoard = newValue;
                                             // When board changes, reset course selection.
-                                            selectedCourse = null;
+                                            print("Selected $selectedBoard");
+                                            //selectedCourse = null;
                                           });
                                         },
                                         items: boardList.map((valueItem) {
@@ -271,7 +286,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                             selectedCourse = newValue;
                                           });
                                         },
-                                        items: getFilteredCourses(coursesList).map((valueItem) {
+                                        items:coursesList.map((valueItem) {
                                           return DropdownMenuItem<EnrolConfigCourses>(
                                             value: valueItem,
                                             child: Text(valueItem.course),
@@ -302,12 +317,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     onPressed: () {
                       // TODO: Save registration data and update global config accordingly.
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterSuccessPage(),
-                        ),
-                      );
+                      _saveData();
                     },
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -326,4 +336,35 @@ class _RegisterPageState extends State<RegisterPage> {
       },
     );
   }
+
+
+  void _saveData() {
+    if (selectedTitle == null ||
+        firstNameController.text.isEmpty ||
+        lastNameController.text.isEmpty ||
+        selectedStandard == null ||
+        selectedBoard == null ||
+        selectedCourse == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields before continuing")),
+      );
+      return;
+    }
+
+    print('String Value ${selectedStandard!.toString()+selectedBoard!.toString()+selectedCourse!.toString()}');
+
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString('title', selectedTitle!);
+      prefs.setString('firstName', firstNameController.text);
+      prefs.setString('lastName', lastNameController.text);
+      prefs.setString('standard', selectedStandard!.toString());
+      prefs.setString('board', selectedBoard!.toString());
+      prefs.setString('course', selectedCourse!.toString());
+
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterSuccessPage()));
+    });
+  }
+
+
+
 }

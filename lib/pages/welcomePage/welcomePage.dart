@@ -6,8 +6,11 @@ import 'package:sigma_new/pages/home/home.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:sigma_new/config/config_loader.dart';
+import 'package:chewie/chewie.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../config/config.dart';
+
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -18,6 +21,7 @@ class WelcomePage extends StatefulWidget {
 
 class _WelcomePageState extends State<WelcomePage> {
   List<String>? introImages;
+
 
   @override
   void initState() {
@@ -72,6 +76,28 @@ class _WelcomePageState extends State<WelcomePage> {
               scrollDirection: Axis.horizontal,
               itemCount: introImages!.length,
               itemBuilder: (context, index) {
+
+                /*String filePath = introImages![index];
+                if (_isVideo(filePath)) {
+                  return Container(
+                    margin: const EdgeInsets.all(8),
+                    width: 200,
+                    height: 300,
+                    child: Chewie(
+                      controller: ChewieController(
+                        videoPlayerController: VideoPlayerController.file(File(filePath)),
+                        autoPlay: true,
+                        looping: true,
+                        showControls: true,
+                      ),
+                    )
+                  );
+                } else {*/
+                  return Container(
+                    margin: const EdgeInsets.all(8),
+                    child: Image.file(File(introImages![index])),
+                  );
+              //  }
                 return Container(
                   margin: const EdgeInsets.all(8),
                   child: Image.file(File(introImages![index])),
@@ -127,5 +153,11 @@ class _WelcomePageState extends State<WelcomePage> {
         ],
       ),
     );
+  }
+
+  bool _isVideo(String path) {
+    return path.toLowerCase().endsWith('.mp4') ||
+        path.toLowerCase().endsWith('.mov') ||
+        path.toLowerCase().endsWith('.avi');
   }
 }

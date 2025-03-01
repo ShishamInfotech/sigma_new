@@ -46,6 +46,9 @@ dependencies:
   pointycastle: ^3.9.1
   crypto: ^3.0.6
   external_path: ^2.0.1
+  chewie: ^1.10.0
+  video_player: ^2.9.3
+  shared_preferences: ^2.5.2
 
 
 
