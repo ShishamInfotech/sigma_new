@@ -28,6 +28,52 @@ class _RegisterPageState extends State<RegisterPage> {
 
   late Future<Map<String, dynamic>> enrolDataFuture;
 
+  List<EnrolConfigCourses> selectedCourses = [];
+
+
+  void _showMultiSelectDialog(List coursesList) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text("Select Courses"),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: coursesList.map((course) {
+                    return CheckboxListTile(
+                      title: Text(course.course),
+                      value: selectedCourses.contains(course),
+                      onChanged: (bool? selected) {
+                        setDialogState(() {
+                          if (selected!) {
+                            selectedCourses.add(course);
+                          } else {
+                            selectedCourses.remove(course);
+                          }
+                        });
+
+                        // Update the main UI in real-time
+                        setState(() {});
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("CLOSE"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -273,28 +319,39 @@ class _RegisterPageState extends State<RegisterPage> {
                                   ),
                                   height: MediaQuery.of(context).size.height * 0.05,
                                   width: MediaQuery.of(context).size.width * 0.9,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<EnrolConfigCourses>(
-                                        value: selectedCourse,
-                                        isExpanded: true,
-                                        hint: const Text("Select", style: grey16MediumTextStyle),
-                                        onChanged: (newValue) {
-                                          setState(() {
-                                            print("Selected Course $selectedCourse");
-                                            selectedCourse = newValue;
-                                          });
-                                        },
-                                        items:coursesList.map((valueItem) {
-                                          return DropdownMenuItem<EnrolConfigCourses>(
-                                            value: valueItem,
-                                            child: Text(valueItem.course),
-                                          );
-                                        }).toList(),
+                                  child: GestureDetector(
+                                    onTap: (){
+                                      _showMultiSelectDialog(coursesList);
+
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.blue, width: 1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              selectedCourses.isEmpty
+                                                  ? "Select Courses"
+                                                  : selectedCourses.map((e) => e.course).join(", "),
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                          Icon(Icons.arrow_drop_down, color: Colors.blue),
+                                        ],
                                       ),
                                     ),
                                   ),
+
+                                ),
+                                SizedBox(height: 20),
+                                Text(
+                                  "Selected: ${selectedCourses.isEmpty ? "None" : selectedCourses.map((e) => e.course).join(", ")}",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
@@ -339,32 +396,31 @@ class _RegisterPageState extends State<RegisterPage> {
 
 
   void _saveData() {
+    print('String Value ${selectedStandard!.name+selectedBoard!.board+selectedCourses.map((e) => e.course).join(", ")} ');
     if (selectedTitle == null ||
         firstNameController.text.isEmpty ||
         lastNameController.text.isEmpty ||
         selectedStandard == null ||
         selectedBoard == null ||
-        selectedCourse == null) {
+        selectedCourses.length==0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill all fields before continuing")),
       );
       return;
     }
 
-    print('String Value ${selectedStandard!.toString()+selectedBoard!.toString()+selectedCourse!.toString()}');
+
 
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('title', selectedTitle!);
       prefs.setString('firstName', firstNameController.text);
       prefs.setString('lastName', lastNameController.text);
-      prefs.setString('standard', selectedStandard!.toString());
-      prefs.setString('board', selectedBoard!.toString());
-      prefs.setString('course', selectedCourse!.toString());
+      prefs.setString('standard', selectedStandard!.name);
+      prefs.setString('board', selectedBoard!.board);
+      prefs.setString('course', selectedCourses.map((e) => e.course).join(", "));
 
       Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterSuccessPage()));
     });
   }
-
-
 
 }

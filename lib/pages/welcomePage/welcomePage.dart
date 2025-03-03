@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/register/register_page.dart';
 import 'package:sigma_new/pages/home/home.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
@@ -23,11 +24,15 @@ class _WelcomePageState extends State<WelcomePage> {
   List<String>? introImages;
 
 
+
+
+
   @override
-  void initState() {
+  void initState()  {
     super.initState();
     _initPermissions();
     loadIntroImages();
+
   }
 
   void _initPermissions() async {
@@ -36,6 +41,8 @@ class _WelcomePageState extends State<WelcomePage> {
       print("MANAGE_EXTERNAL_STORAGE permission not granted!");
       // Handle permission denial, e.g. show a dialog.
     }
+
+
   }
   void loadIntroImages() async {
     introImages = await SdCardUtility.getIntroImages();
@@ -122,10 +129,10 @@ class _WelcomePageState extends State<WelcomePage> {
               onPressed: () async {
                 // Load global config to check registration status.
                 Config? config = await ConfigLoader.getGlobalConfig();
+                final prefs = await SharedPreferences.getInstance();
+                print(prefs.containsKey('firstName'));
                 // For this example, we assume the device is registered if deviceID is non-empty.
-                if (config == null ||
-                    config.deviceID == null ||
-                    config.deviceID!.isEmpty) {
+                if(!prefs.containsKey('firstName')) {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
