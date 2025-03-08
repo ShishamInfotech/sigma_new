@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/home/othersPage.dart';
 import 'package:sigma_new/pages/home/studyPage.dart';
@@ -13,7 +14,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _homeScaffoldKey =
-      GlobalKey<ScaffoldState>(); // Define a GlobalKey
+      GlobalKey<ScaffoldState>();
+
+
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(

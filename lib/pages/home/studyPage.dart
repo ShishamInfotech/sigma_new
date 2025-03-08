@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/models/menu_models.dart';
 import 'package:sigma_new/pages/10thMh/10thmh.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
@@ -13,28 +14,58 @@ class StudyPage extends StatefulWidget {
 }
 
 class _StudyPageState extends State<StudyPage> {
+
+
+  List<String> courseList=[];
+
+
+  @override
+  void initState()  {
+    super.initState();
+    sharedPrefrenceData();
+
+  }
+  sharedPrefrenceData() async{
+    final prefs = await SharedPreferences.getInstance();
+
+    String? course = prefs.getString('course');
+    print("Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
+    if (course != null && course.isNotEmpty) {
+      courseList = course.split(","); // Convert String to List
+    }
+    print(courseList.length);
+    print(courseList);
+
+    setState(() {
+
+    });
+
+
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Menu> othersMenuList = [
-      Menu(
+      if(courseList.contains("10th Std MH "))Menu(
           color: 0xFFFAEDCB, // Corrected color code
           imagePath: 'assets/svg/10_mh.svg',
           navigation: () {
-            Get.to(StandardMenu());
+
+            Get.to(StandardMenu(standard: "10th MH",));
           },
           title: '10th MH'),
-      Menu(
+      if(courseList.contains(" 12th Std MH PCMB"))Menu(
           color: 0xFFC9E4DF,
           imagePath: 'assets/svg/12_mh.svg',
           navigation: () {
-            Get.to(StandardMenu());
+            Get.to(StandardMenu(standard: "12th MH",));
           },
-          title: '12th MH PCMB'),
-      Menu(
+          title: '12th MH PCM'),
+      if(courseList.contains(" IIT-JEE"))Menu(
           color: 0xFFC5DEF2,
           imagePath: 'assets/svg/jee_cet_neet.svg',
           navigation: () {
-            Get.to(StandardMenu(standard: "jee",));
+            Get.to(StandardMenu(standard: "JEE",));
           },
           title: 'JEE CEE NEET'),
       Menu(
@@ -65,7 +96,7 @@ class _StudyPageState extends State<StudyPage> {
                   mainAxisSpacing: 6,
                   childAspectRatio: 0.6,
                 ),
-                itemCount: othersMenuList.length,
+                itemCount: courseList.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Column(
                     children: [
@@ -118,7 +149,7 @@ class _StudyPageState extends State<StudyPage> {
                       ),
                       Text(
                         textAlign: TextAlign.center,
-                        othersMenuList[index].title,
+                        courseList[index],
                         style: black14w400MediumTextStyle,
                       )
                     ],

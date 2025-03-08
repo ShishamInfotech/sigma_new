@@ -30,6 +30,11 @@ android {
         versionName = flutter.versionName
     }
 
+    dependencies {
+        // Other dependencies
+        implementation "androidx.work:work-runtime-ktx:2.7.1" // Use the latest version available
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

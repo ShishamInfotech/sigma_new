@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/models/menu_models.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
+import 'package:sigma_new/questions/table_quiz.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
 class StandardMenu extends StatefulWidget {
@@ -15,6 +18,34 @@ class StandardMenu extends StatefulWidget {
 class _StandardMenuState extends State<StandardMenu> {
 
 
+  @override
+  void initState()  {
+    super.initState();
+    sharedPrefrenceData();
+
+  }
+  sharedPrefrenceData() async{
+    final prefs = await SharedPreferences.getInstance();
+
+    String? standard = prefs.getString('standard');
+    String? board = prefs.getString('board');
+
+
+    print("Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
+
+    if (standard != null && standard.isNotEmpty) {
+
+
+      // courseList = course.split(","); // Convert String to List
+    }
+
+    setState(() {
+
+    });
+
+
+  }
+
   final GlobalKey<ScaffoldState> _examscaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -23,7 +54,7 @@ class _StandardMenuState extends State<StandardMenu> {
     double width = MediaQuery.of(context).size.width;
 
     List<Menu> examPreparationMenu = [
-      if(widget.standard!="jee")Menu(
+      if(widget.standard!="JEE")Menu(
           color: 0xFFFAEDCB, // Corrected color code
           imagePath: 'assets/svg/board_syllabus.svg',
           navigation: null,
@@ -31,7 +62,9 @@ class _StandardMenuState extends State<StandardMenu> {
       Menu(
           color: 0xFFC9E4DF,
           imagePath: 'assets/svg/exam_preparation_logo.svg',
-          navigation: null,
+          navigation: (){
+            Get.to(TableQuiz());
+          },
           title: 'Board Mock Exam'),
     ];
     final isPortrait =
@@ -62,8 +95,8 @@ class _StandardMenuState extends State<StandardMenu> {
               ),
             ),
           ),
-          title: const Text(
-            "Syallabus",
+          title: Text(
+            widget.standard,
             style: black20w400MediumTextStyle,
           )),
       body: Column(
@@ -89,6 +122,12 @@ class _StandardMenuState extends State<StandardMenu> {
                         InkWell(
                           splashColor: Colors.transparent,
                           onTap: () {
+                            if (examPreparationMenu[index].navigation != null) {
+                              examPreparationMenu[index].navigation!();
+                            } else {
+                              print(
+                                  'No navigation route defined for this menu item');
+                            }
                             // Navigation logic here
                           },
                           child: Container(

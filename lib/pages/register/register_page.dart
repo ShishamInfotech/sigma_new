@@ -28,7 +28,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   late Future<Map<String, dynamic>> enrolDataFuture;
 
-  List<EnrolConfigCourses> selectedCourses = [];
+  List<EnrolConfigCourses> selectedCourses = [] ;
 
 
   void _showMultiSelectDialog(List coursesList) async {

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:external_path/external_path.dart';
+import 'package:sigma_new/utility/crypto_utils.dart';
 import 'constants.dart';
 
 class SdCardUtility {
@@ -170,5 +171,41 @@ class SdCardUtility {
       throw Exception('Unable to load file: $relativePath, error: $e');
     }
   }
+
+
+  static const String sigmaDir = "testseries";
+  static const String encryptionKey = "1234567890123456"; // 16-byte key
+
+  static Future<String?> getSubjectEncJsonData(String path) async {
+    try {
+      // Get base path (like getSdcardName in Java)
+      String basePath = await getBasePath();
+      if (basePath == null) {
+        print("Storage not available.");
+        return null;
+      }
+
+      print('basePath ${basePath}');
+
+      // Construct full file path
+      String fullFilePath = "${basePath}/12/MH/$sigmaDir/$path";
+      print("Full File Path: $fullFilePath");
+
+      File encryptedFile = File(fullFilePath);
+      if (await encryptedFile.exists()) {
+        // Read and decrypt file
+        String decryptedData = await CryptoUtils.decryptStream(encryptionKey,encryptedFile);
+        print("Decrypted Data: $decryptedData");
+        return decryptedData;
+      } else {
+        print("File does not exist.");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+    return null;
+  }
+
+
 }
 

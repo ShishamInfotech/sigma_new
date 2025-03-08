@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sigma_new/pages/welcomePage/welcomePage.dart';
+import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,6 +12,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    FatchDeviceDetails().init();
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',

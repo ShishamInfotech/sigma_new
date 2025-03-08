@@ -129,6 +129,7 @@ class _WelcomePageState extends State<WelcomePage> {
               onPressed: () async {
                 // Load global config to check registration status.
                 Config? config = await ConfigLoader.getGlobalConfig();
+                print('Config $config');
                 final prefs = await SharedPreferences.getInstance();
                 print(prefs.containsKey('firstName'));
                 // For this example, we assume the device is registered if deviceID is non-empty.
@@ -139,6 +140,7 @@ class _WelcomePageState extends State<WelcomePage> {
                         builder: (context) => const RegisterPage(),
                       ));
                 } else {
+                 // print("Data ${await SdCardUtility.getSubjectEncJsonData("sigma_data.json")}");
                   Navigator.push(
                       context,
                       MaterialPageRoute(

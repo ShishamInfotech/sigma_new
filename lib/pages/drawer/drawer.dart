@@ -3,6 +3,7 @@ import 'package:sigma_new/pages/evolution/evolution_page.dart';
 import 'package:sigma_new/pages/exam_preparation/exam_preparation.dart';
 import 'package:sigma_new/pages/home/home.dart';
 import 'package:sigma_new/pages/usage_report/usage_report_page.dart';
+import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
 @override
@@ -69,6 +70,18 @@ Widget DrawerWidget(BuildContext context) {
         ),
         ListTile(
           title: const Text('Evaluation'),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const EvolutionPage(),
+              ),
+            );
+          },
+        ),
+        ListTile(
+          title: Text("Device Id: ${deviceId()}"),
           onTap: () {
             Navigator.pop(context);
             Navigator.push(
