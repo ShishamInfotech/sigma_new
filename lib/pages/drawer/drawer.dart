@@ -18,7 +18,7 @@ Widget DrawerWidget(BuildContext context) {
             color: primaryColor,
           ),
           child: Text(
-            'Drawer Header',
+            'Device Details\n',
             style: white18MediumTextStyle,
           ),
         ),

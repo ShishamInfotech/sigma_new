@@ -1,56 +1,102 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/models/menu_models.dart';
-import 'package:sigma_new/pages/board_mock_exam/subject_wise.dart';
-import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/questions/table_quiz.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
+import 'package:sigma_new/utility/sd_card_utility.dart';
 
-class StandardMenu extends StatefulWidget {
-  var standard;
-  StandardMenu({this.standard, super.key});
+class SubjectWise extends StatefulWidget {
+  String? path;
+  SubjectWise({this.path, super.key});
 
   @override
-  State<StandardMenu> createState() => _StandardMenuState();
+  State<SubjectWise> createState() => _SubjectWiseState();
 }
 
-class _StandardMenuState extends State<StandardMenu> {
+class _SubjectWiseState extends State<SubjectWise> {
+  List<Menu> examPreparationMenu = [
+    Menu(
+        color: 0xFFF2C6DF,
+        imagePath: 'assets/svg/quickguideimg.svg',
+        navigation: () {},
+        title: 'Maths'),
+    Menu(
+        color: 0xFFC5DEF2,
+        imagePath: 'assets/svg/quickguideimg.svg',
+        navigation: () {},
+        title: 'Physics'),
+    Menu(
+        color: 0xFFC9E4DF, // Corrected color code
+        imagePath: 'assets/svg/quickguideimg.svg',
+        navigation: (){},
+        title: 'Chemistry'),
+    Menu(
+        color: 0xFFF8D9C4,
+        imagePath: 'assets/svg/quickguideimg.svg',
+        navigation: (){},
+        title: 'Biology'),
+  ];
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
 
-  final GlobalKey<ScaffoldState> _examscaffoldKey = GlobalKey<ScaffoldState>();
+    subjectWiseTest();
+  }
+
+  List<String> subjects = [];
+  List<String> subjectsId = [];
+
+  String removeTestSeriesFromSubjectTitle(String title) {
+    if (title.toLowerCase().contains("test series")) {
+      List<String> parts = title.split("-");
+      if (parts.length > 1) {
+        return "Board Mock Exam - ${parts[1].trim()}";
+      }
+    }
+    return title;
+  }
+
+  subjectWiseTest() async {
+    var inputFile =
+        await SdCardUtility.getSubjectEncJsonData('/sigma_data.json');
+
+    print("INput File  $inputFile");
+    Map<String, dynamic> parsedJson = jsonDecode(inputFile!);
+    // Extracting subject values
+    List<dynamic> sigmaData = parsedJson["sigma_data"];
+
+    // Get all subjects
+    subjects = sigmaData.map((data) => data["subject"].toString()).toList();
+    subjectsId = sigmaData.map((data) => data["subjectid"].toString()).toList();
+
+    //removeTestSeriesFromSubjectTitle(subjects);
+
+    // Print subjects
+    print(subjects);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
+
+    print(widget.path);
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
-
-    List<Menu> examPreparationMenu = [
-      if(widget.standard!="JEE")Menu(
-          color: 0xFFFAEDCB, // Corrected color code
-          imagePath: 'assets/svg/board_syllabus.svg',
-          navigation: null,
-          title: 'Board Syllabus'),
-      Menu(
-          color: 0xFFC9E4DF,
-          imagePath: 'assets/svg/exam_preparation_logo.svg',
-          navigation: (){
-
-          },
-          title: 'Board Mock Exam'),
-    ];
     final isPortrait =
         MediaQuery.of(context).orientation == Orientation.portrait;
     return Scaffold(
-      key: _examscaffoldKey,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // backgroundColor: backgroundColor,
+          // backgroundColor: backgroundColor,
           leading: InkWell(
             onTap: () {
               print("Opening Drawer");
-              _examscaffoldKey.currentState?.openDrawer();
+              // _quickquidescaffoldKey.currentState?.openDrawer();
             },
             child: const Icon(Icons.menu),
           ),
@@ -68,8 +114,8 @@ class _StandardMenuState extends State<StandardMenu> {
               ),
             ),
           ),
-          title: Text(
-            widget.standard,
+          title: const Text(
+            "Board Mock",
             style: black20w400MediumTextStyle,
           )),
       body: Column(
@@ -85,10 +131,10 @@ class _StandardMenuState extends State<StandardMenu> {
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.6,
+                    mainAxisSpacing: 0,
+                    childAspectRatio: 0.5,
                   ),
-                  itemCount: examPreparationMenu.length,
+                  itemCount: subjects.length,
                   itemBuilder: (BuildContext context, int index) {
                     return Column(
                       children: [
@@ -97,16 +143,20 @@ class _StandardMenuState extends State<StandardMenu> {
                           onTap: () {
                             if (examPreparationMenu[index].navigation != null) {
                               examPreparationMenu[index].navigation!();
-                                  Get.to(SubjectWise(path: widget.standard,));
+
+                              Get.to(TableQuiz(
+                                pathQuestion: subjectsId[index],
+                                title: removeTestSeriesFromSubjectTitle(
+                                    subjects[index]),
+                              ));
                             } else {
                               print(
                                   'No navigation route defined for this menu item');
                             }
-                            // Navigation logic here
                           },
                           child: Container(
-                            height: MediaQuery.of(context).size.height * 0.13,
-                            width: MediaQuery.of(context).size.width * 0.3,
+                            height: height * 0.13,
+                            width: width * 0.3,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
                               color: Color(examPreparationMenu[index].color),
@@ -116,8 +166,8 @@ class _StandardMenuState extends State<StandardMenu> {
                               child: SvgPicture.asset(
                                 examPreparationMenu[index]
                                     .imagePath, // Correct interpolation
-                                height: height * 0.07,
-                                width: width * 0.07,
+                                height: height * 0.08,
+                                width: width * 0.08,
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -128,7 +178,7 @@ class _StandardMenuState extends State<StandardMenu> {
                         ),
                         Text(
                           textAlign: TextAlign.center,
-                          examPreparationMenu[index].title,
+                          removeTestSeriesFromSubjectTitle(subjects[index]),
                           style: black14RegularTextStyle,
                         )
                       ],
@@ -140,7 +190,6 @@ class _StandardMenuState extends State<StandardMenu> {
           ),
         ],
       ),
-      drawer: DrawerWidget(context),
     );
   }
 }

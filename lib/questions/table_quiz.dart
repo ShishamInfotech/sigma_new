@@ -1,10 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/questions/easy_questions.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
+import 'package:sigma_new/utility/sd_card_utility.dart';
 
 class TableQuiz extends StatefulWidget {
-  const TableQuiz({super.key});
+  String pathQuestion;
+  String title;
+  TableQuiz({required this.pathQuestion,required this.title,super.key  });
 
   @override
   State<TableQuiz> createState() => _TableQuizState();
@@ -14,8 +20,102 @@ class _TableQuizState extends State<TableQuiz> {
   final GlobalKey<ScaffoldState> _tablequizscaffoldKey =
       GlobalKey<ScaffoldState>();
 
+  Map<String, dynamic> parsedJson={};
+  List<dynamic> sigmaData =[];
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    getQuestionList();
+
+  }
+
+
+  getQuestionList() async{
+    var inputFile = await SdCardUtility.getSubjectEncJsonData('/${widget.pathQuestion}.json');
+
+
+     parsedJson = jsonDecode(inputFile!);
+
+    sigmaData = parsedJson["sigma_data"];
+    print("Sig ${parsedJson["sigma_data"][0]["complexity"]}");
+
+    createFinalList();
+  }
+
+  Future<void> createFinalList() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (true) {
+      // Get the stored test level based on subject
+      // currentTestLevel = prefs.getString("${widget.jeeData.first.question.trim().toUpperCase()}_LEVEL") ?? "s";
+
+      List<dynamic> simple = [];
+      List<dynamic> medium = [];
+      List<dynamic> complex = [];
+      List<dynamic> difficult = [];
+      List<dynamic> advanced = [];
+
+      // Categorize questions by complexity
+      for (var data in parsedJson["sigma_data"]) {
+        switch (data["complexity"]) {
+          case "s":
+            simple.add(data);
+            print("Simplesss $data");
+            break;
+          case "m":
+            medium.add(data);
+            print("Simplessm $data");
+            break;
+          case "c":
+            complex.add(data);
+            print("Simplessc $data");
+            break;
+          case "d":
+            difficult.add(data);
+            print("Simplessd $data");
+            break;
+          case "a":
+            advanced.add(data);
+            print("Simplessa $data");
+            break;
+        }
+      }
+
+      for (int j = 0; j < medium.length; j++) {
+        //JeeDatum data = simpleque.get(arraySimple[j]);
+      //  data.setArrange(allquestions.size() + 1);
+       // allquestions.add(data.getQuestion());
+       // finalArr.put(data.getJson());
+       // randomList.add(data);
+
+        print(medium.length);
+        print("Simple ${medium}  Complexity ${sigmaData[j]["complexity"]}");
+      }
+      // Select random questions
+      List<int> getRandomIndices(int size, int count) {
+        if (size == 0) return [];
+        List<int> indices = List.generate(size, (i) => i);
+        indices.shuffle();
+        return indices.take(count.clamp(0, size)).toList();
+      }
+
+      // Select based on test level
+
+
+      // Prepare final JSON structure
+
+
+     // print("SimpleData ${simple.first}");
+      setState(() {});
+    }// Refresh UI
+  }
+
   @override
   Widget build(BuildContext context) {
+    print("Path Q ${widget.pathQuestion}");
     double height = MediaQuery.of(context).size.height;
 
     final isPortrait =
@@ -53,8 +153,8 @@ class _TableQuizState extends State<TableQuiz> {
                       ),
                     ),
                   ),
-                  title: const Text(
-                    "Mathematical Logic",
+                  title: Text(
+                    widget.title,
                     style: black20w400MediumTextStyle,
                   )),
             ],
@@ -104,9 +204,9 @@ class _TableQuizState extends State<TableQuiz> {
             const SizedBox(
               height: 15,
             ),
-            const Expanded(
+             Expanded(
               child: TabBarView(children: [
-                EasyQuestions(),
+                EasyQuestions(easyQuestion: sigmaData),
               //  MediumQuestions(),
               //  ComplexQuestions()
               ]),

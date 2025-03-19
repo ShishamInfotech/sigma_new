@@ -38,7 +38,7 @@ class _RegisterPageState extends State<RegisterPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text("Select Courses"),
+              title: const Text("Select Courses"),
               content: SingleChildScrollView(
                 child: Column(
                   children: coursesList.map((course) {
@@ -64,7 +64,7 @@ class _RegisterPageState extends State<RegisterPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("CLOSE"),
+                  child: const Text("CLOSE"),
                 ),
               ],
             );
@@ -325,7 +325,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                                     },
                                     child: Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                       decoration: BoxDecoration(
                                         border: Border.all(color: Colors.blue, width: 1),
                                         borderRadius: BorderRadius.circular(8),
@@ -338,20 +338,20 @@ class _RegisterPageState extends State<RegisterPage> {
                                               selectedCourses.isEmpty
                                                   ? "Select Courses"
                                                   : selectedCourses.map((e) => e.course).join(", "),
-                                              style: TextStyle(fontSize: 16),
+                                              style: const TextStyle(fontSize: 16),
                                             ),
                                           ),
-                                          Icon(Icons.arrow_drop_down, color: Colors.blue),
+                                          const Icon(Icons.arrow_drop_down, color: Colors.blue),
                                         ],
                                       ),
                                     ),
                                   ),
 
                                 ),
-                                SizedBox(height: 20),
+                                const SizedBox(height: 20),
                                 Text(
                                   "Selected: ${selectedCourses.isEmpty ? "None" : selectedCourses.map((e) => e.course).join(", ")}",
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),

@@ -46,26 +46,26 @@ class _StudyPageState extends State<StudyPage> {
   @override
   Widget build(BuildContext context) {
     List<Menu> othersMenuList = [
-      if(courseList.contains("10th Std MH "))Menu(
+      Menu(
           color: 0xFFFAEDCB, // Corrected color code
           imagePath: 'assets/svg/10_mh.svg',
           navigation: () {
 
-            Get.to(StandardMenu(standard: "10th MH",));
+          //  Get.to(StandardMenu(standard: "10th MH",));
           },
           title: '10th MH'),
-      if(courseList.contains(" 12th Std MH PCMB"))Menu(
+      Menu(
           color: 0xFFC9E4DF,
           imagePath: 'assets/svg/12_mh.svg',
           navigation: () {
-            Get.to(StandardMenu(standard: "12th MH",));
+          //  Get.to(StandardMenu(standard: "12th MH",));
           },
           title: '12th MH PCM'),
-      if(courseList.contains(" IIT-JEE"))Menu(
+      Menu(
           color: 0xFFC5DEF2,
           imagePath: 'assets/svg/jee_cet_neet.svg',
           navigation: () {
-            Get.to(StandardMenu(standard: "JEE",));
+           // Get.to(StandardMenu(standard: "JEE",));
           },
           title: 'JEE CEE NEET'),
       Menu(
@@ -105,6 +105,9 @@ class _StudyPageState extends State<StudyPage> {
                           // Navigation logic here
                           if (othersMenuList[index].navigation != null) {
                             othersMenuList[index].navigation!();
+
+                            Get.to(StandardMenu(standard: courseList[index],));
+
                           } else {
                             print(
                                 'No navigation route defined for this menu item');

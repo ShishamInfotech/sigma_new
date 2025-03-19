@@ -1,6 +1,7 @@
 // lib/utils/sd_card_utility.dart
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
@@ -188,7 +189,7 @@ class SdCardUtility {
       print('basePath ${basePath}');
 
       // Construct full file path
-      String fullFilePath = "${basePath}/12/MH/$sigmaDir/$path";
+      String fullFilePath = "${basePath}/10/MH/$sigmaDir$path";
       print("Full File Path: $fullFilePath");
 
       File encryptedFile = File(fullFilePath);
@@ -206,6 +207,7 @@ class SdCardUtility {
     return null;
   }
 
-
 }
+
+
 

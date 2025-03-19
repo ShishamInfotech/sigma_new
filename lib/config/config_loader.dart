@@ -166,7 +166,7 @@ class ConfigLoader {
 static Future<Config?> getGlobalConfig() async {
     //String content = await SdCardUtility.loadFile('config.json');
     final inputFile = await SdCardUtility.loadFileAsFile('config.json');
-    if (inputFile!= null) {
+    if (inputFile== null) {
       print("Global config not found");
       return null;
     }
