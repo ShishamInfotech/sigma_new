@@ -189,7 +189,7 @@ class SdCardUtility {
       print('basePath ${basePath}');
 
       // Construct full file path
-      String fullFilePath = "${basePath}/10/MH/$sigmaDir$path";
+      String fullFilePath = "${basePath}/10/$sigmaDir$path";
       print("Full File Path: $fullFilePath");
 
       File encryptedFile = File(fullFilePath);
