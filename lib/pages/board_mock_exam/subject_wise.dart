@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/models/menu_models.dart';
 import 'package:sigma_new/questions/table_quiz.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
@@ -31,12 +32,33 @@ class _SubjectWiseState extends State<SubjectWise> {
     Menu(
         color: 0xFFC9E4DF, // Corrected color code
         imagePath: 'assets/svg/quickguideimg.svg',
-        navigation: (){},
+        navigation: () {},
         title: 'Chemistry'),
     Menu(
         color: 0xFFF8D9C4,
         imagePath: 'assets/svg/quickguideimg.svg',
-        navigation: (){},
+        navigation: () {},
+        title: 'Biology'),
+
+    Menu(
+        color: 0xFFF2C6DF,
+        imagePath: 'assets/svg/quickguideimg.svg',
+        navigation: () {},
+        title: 'Maths'),
+    Menu(
+        color: 0xFFC5DEF2,
+        imagePath: 'assets/svg/quickguideimg.svg',
+        navigation: () {},
+        title: 'Physics'),
+    Menu(
+        color: 0xFFC9E4DF, // Corrected color code
+        imagePath: 'assets/svg/quickguideimg.svg',
+        navigation: () {},
+        title: 'Chemistry'),
+    Menu(
+        color: 0xFFF8D9C4,
+        imagePath: 'assets/svg/quickguideimg.svg',
+        navigation: () {},
         title: 'Biology'),
   ];
 
@@ -62,8 +84,27 @@ class _SubjectWiseState extends State<SubjectWise> {
   }
 
   subjectWiseTest() async {
-    var inputFile =
-        await SdCardUtility.getSubjectEncJsonData('/sigma_data.json');
+    var newPath;
+    var board;
+    final prefs = await SharedPreferences.getInstance();
+    String? course = prefs.getString('course');
+    print(
+        "Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
+
+    if (prefs.getString('board') == "Maharashtra") {
+      board = "MH/";
+    } else {
+      board = prefs.getString('board');
+    }
+
+    if (widget.path!.contains("10")) {
+      newPath = "10/";
+    } else if (widget.path!.contains("12")) {
+      newPath = "12/";
+    }
+
+    var inputFile = await SdCardUtility.getSubjectEncJsonData(
+        '${newPath}${board}testseries/sigma_data.json');
 
     print("INput File  $inputFile");
     Map<String, dynamic> parsedJson = jsonDecode(inputFile!);
@@ -83,8 +124,6 @@ class _SubjectWiseState extends State<SubjectWise> {
 
   @override
   Widget build(BuildContext context) {
-
-    print(widget.path);
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
     final isPortrait =
@@ -144,11 +183,13 @@ class _SubjectWiseState extends State<SubjectWise> {
                             if (examPreparationMenu[index].navigation != null) {
                               examPreparationMenu[index].navigation!();
 
-                              Get.to(TableQuiz(
-                                pathQuestion: subjectsId[index],
-                                title: removeTestSeriesFromSubjectTitle(
-                                    subjects[index]),
-                              ));
+                              Get.to(
+                                TableQuiz(
+                                  pathQuestion: subjectsId[index],
+                                  title: removeTestSeriesFromSubjectTitle(
+                                      subjects[index]),
+                                ),
+                              );
                             } else {
                               print(
                                   'No navigation route defined for this menu item');

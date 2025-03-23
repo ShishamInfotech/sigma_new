@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/models/menu_models.dart';
 import 'package:sigma_new/pages/board_mock_exam/subject_wise.dart';
+import 'package:sigma_new/pages/board_syallabus/subject_wise_syllabus.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/questions/table_quiz.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
@@ -30,7 +31,9 @@ class _StandardMenuState extends State<StandardMenu> {
       if(widget.standard!="JEE")Menu(
           color: 0xFFFAEDCB, // Corrected color code
           imagePath: 'assets/svg/board_syllabus.svg',
-          navigation: null,
+          navigation:() {
+
+          },
           title: 'Board Syllabus'),
       Menu(
           color: 0xFFC9E4DF,
@@ -95,10 +98,14 @@ class _StandardMenuState extends State<StandardMenu> {
                         InkWell(
                           splashColor: Colors.transparent,
                           onTap: () {
-                            if (examPreparationMenu[index].navigation != null) {
+                            if (examPreparationMenu[index].navigation != null && index==1) {
                               examPreparationMenu[index].navigation!();
                                   Get.to(SubjectWise(path: widget.standard,));
-                            } else {
+                            } else if(index==0) {
+                              examPreparationMenu[index].navigation!();
+                              Get.to(BoardWiseSyllabus(path: widget.standard,));
+
+                            }else{
                               print(
                                   'No navigation route defined for this menu item');
                             }

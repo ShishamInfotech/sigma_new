@@ -155,6 +155,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     },
                   );
                 } else {*/
+
                 final prefs = await SharedPreferences.getInstance();
                 Get.snackbar("Error", " ${prefs.containsKey('firstName')}");
                 print(prefs.containsKey('firstName'));

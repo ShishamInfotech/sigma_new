@@ -189,7 +189,7 @@ class SdCardUtility {
       print('basePath ${basePath}');
 
       // Construct full file path
-      String fullFilePath = "${basePath}/10/$sigmaDir$path";
+      String fullFilePath = "${basePath}/$path";
       print("Full File Path: $fullFilePath");
 
       File encryptedFile = File(fullFilePath);
@@ -197,7 +197,16 @@ class SdCardUtility {
         // Read and decrypt file
         String decryptedData = await CryptoUtils.decryptStream(encryptionKey,encryptedFile);
         print("Decrypted Data: $decryptedData");
-        return decryptedData;
+        if(decryptedData.contains("{")){
+          return decryptedData;
+        }else {
+          String fixedData = _fixBase64(decryptedData);
+          // Decode Base64 to bytes, then decode bytes to a UTF-8 string.
+          final decodedBytes = base64Decode(fixedData);
+          final jsonString = utf8.decode(decodedBytes);
+          print("Decoded JSON: $jsonString");
+          return jsonString;
+        }
       } else {
         print("File does not exist.");
       }
@@ -205,6 +214,15 @@ class SdCardUtility {
       print("Error: $e");
     }
     return null;
+  }
+
+
+  static String _fixBase64(String input) {
+    input = input.trim().replaceAll("\n", "").replaceAll("\r", "");
+    while (input.length % 4 != 0) {
+      input += '=';
+    }
+    return input;
   }
 
 }
