@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/home/othersPage.dart';
 import 'package:sigma_new/pages/home/studyPage.dart';
@@ -58,58 +57,56 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ))),
-        body: Container(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 160.0),
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.5,
-                    height: MediaQuery.of(context).size.height * 0.06,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: Colors.white),
-                    child: TabBar(
-                      indicator: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: primaryColor.withOpacity(0.1),
-                        shape: BoxShape.rectangle,
-                      ),
-                      padding: const EdgeInsets.all(5),
-                      labelPadding: const EdgeInsets.all(5),
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      dividerColor: Colors.transparent,
-                      labelColor: primaryColor,
-                      unselectedLabelColor: blackColor,
-                      splashBorderRadius: BorderRadius.circular(5),
-                      indicatorColor: backgroundColor,
-                      tabs: const [
-                        Tab(
-                          child: Text(
-                            "Study",
-                          ),
-                        ),
-                        Tab(
-                          child: Text("Other"),
-                        ),
-                      ],
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 160.0),
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  height: MediaQuery.of(context).size.height * 0.06,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.white),
+                  child: TabBar(
+                    indicator: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: primaryColor.withOpacity(0.1),
+                      shape: BoxShape.rectangle,
                     ),
+                    padding: const EdgeInsets.all(5),
+                    labelPadding: const EdgeInsets.all(5),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerColor: Colors.transparent,
+                    labelColor: primaryColor,
+                    unselectedLabelColor: blackColor,
+                    splashBorderRadius: BorderRadius.circular(5),
+                    indicatorColor: backgroundColor,
+                    tabs: const [
+                      Tab(
+                        child: Text(
+                          "Study",
+                        ),
+                      ),
+                      Tab(
+                        child: Text("Other"),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(
-                  height: 15,
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height,
-                  child: const TabBarView(children: [
-                    StudyPage(),
-                    OtherPage(),
-                  ]),
-                ),
-                const SizedBox(height: 15),
-              ],
-            ),
+              ),
+              const SizedBox(
+                height: 15,
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: const TabBarView(children: [
+                  StudyPage(),
+                  OtherPage(),
+                ]),
+              ),
+              const SizedBox(height: 15),
+            ],
           ),
         ),
         drawer: DrawerWidget(context),

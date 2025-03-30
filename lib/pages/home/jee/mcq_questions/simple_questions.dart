@@ -1,19 +1,17 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-
 import 'package:sigma_new/ui_helper/constant.dart';
 
-class EasyQuestions extends StatefulWidget {
-  List<dynamic> easyQuestion;
-  EasyQuestions({required this.easyQuestion, super.key});
+class SimpleQuestions extends StatefulWidget {
+  dynamic easyQuestion;
+  SimpleQuestions({this.easyQuestion, super.key});
 
   @override
-  State<EasyQuestions> createState() => _EasyQuestionsState();
+  State<SimpleQuestions> createState() => _SimpleQuestionsState();
 }
 
-class _EasyQuestionsState extends State<EasyQuestions> {
-
+class _SimpleQuestionsState extends State<SimpleQuestions> {
 
   List<dynamic> selectedQuestions = [];
   bool isLoading = false;
@@ -24,7 +22,7 @@ class _EasyQuestionsState extends State<EasyQuestions> {
     selectRandomQuestions();
   }*/
 
-  void selectRandomQuestions() {
+  /*void selectRandomQuestions() {
     isLoading=true;
     if (widget.easyQuestion.isNotEmpty) {
 
@@ -40,13 +38,13 @@ class _EasyQuestionsState extends State<EasyQuestions> {
 
     }
 
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
-    selectRandomQuestions();
+    //selectRandomQuestions();
     return  isLoading ? const SizedBox(
-      height: 10,
+        height: 10,
         child: LinearProgressIndicator()):ListView.builder(
       physics: const ScrollPhysics(),
       itemCount: selectedQuestions.length,

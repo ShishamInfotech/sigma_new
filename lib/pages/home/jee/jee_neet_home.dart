@@ -1,26 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/models/menu_models.dart';
-import 'package:sigma_new/pages/board_mock_exam/subject_wise.dart';
-import 'package:sigma_new/pages/board_syallabus/subject_wise_syllabus.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
-import 'package:sigma_new/pages/home/jee/jee_neet_home.dart';
-import 'package:sigma_new/questions/table_quiz.dart';
+import 'package:sigma_new/pages/home/jee/jee_subjectwise.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
-class StandardMenu extends StatefulWidget {
-  var standard;
-  StandardMenu({this.standard, super.key});
+  class JeeNeetHome extends StatefulWidget {
+  const JeeNeetHome({super.key});
 
   @override
-  State<StandardMenu> createState() => _StandardMenuState();
+  State<JeeNeetHome> createState() => _JeeNeetHomeState();
 }
 
-class _StandardMenuState extends State<StandardMenu> {
-
-
+class _JeeNeetHomeState extends State<JeeNeetHome> {
   final GlobalKey<ScaffoldState> _examscaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -30,27 +23,32 @@ class _StandardMenuState extends State<StandardMenu> {
 
     List<Menu> examPreparationMenu = [
       Menu(
-          color: 0xFFFAEDCB, // Corrected color code
-          imagePath: 'assets/svg/board_syllabus.svg',
-          navigation:() {
-
-          },
-          title: 'Study/Revise'),
-      if(!widget.standard.toString().contains("IIT"))Menu(
+          color: 0xFFC5DEF2, // Corrected color code
+          imagePath: 'assets/svg/mcq_questions.svg',
+          navigation: () {},
+          title: 'Multiple Choice Question'),
+      Menu(
           color: 0xFFC9E4DF,
-          imagePath: 'assets/svg/exam_preparation_logo.svg',
-          navigation: (){
-
-          },
-          title: 'Board Mock Exam'),
+          imagePath: 'assets/svg/subject_wise_test.svg',
+          navigation: () {},
+          title: 'Subject Wise Test'),
+      Menu(
+          color: 0xFFDBCDF0,
+          imagePath: 'assets/svg/mock_test.svg',
+          navigation: () {},
+          title: 'Mock Test'),
+      Menu(
+          color: 0xFFF2C6DF,
+          imagePath: 'assets/svg/concept.svg',
+          navigation: () {},
+          title: 'Concept'),
     ];
-    final isPortrait =
-        MediaQuery.of(context).orientation == Orientation.portrait;
+
     return Scaffold(
       key: _examscaffoldKey,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // backgroundColor: backgroundColor,
+          // backgroundColor: backgroundColor,
           leading: InkWell(
             onTap: () {
               print("Opening Drawer");
@@ -72,8 +70,8 @@ class _StandardMenuState extends State<StandardMenu> {
               ),
             ),
           ),
-          title: Text(
-            widget.standard,
+          title:const Text(
+            "JEE-CET-NEET",
             style: black20w400MediumTextStyle,
           )),
       body: Column(
@@ -88,9 +86,9 @@ class _StandardMenuState extends State<StandardMenu> {
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.6,
+                    crossAxisSpacing: 9,
+                    mainAxisSpacing: 9,
+                    childAspectRatio: 0.55,
                   ),
                   itemCount: examPreparationMenu.length,
                   itemBuilder: (BuildContext context, int index) {
@@ -99,19 +97,11 @@ class _StandardMenuState extends State<StandardMenu> {
                         InkWell(
                           splashColor: Colors.transparent,
                           onTap: () {
-                            if (examPreparationMenu[index].navigation != null && index==1) {
+
+
+                            if (examPreparationMenu[index].navigation != null) {
                               examPreparationMenu[index].navigation!();
-                                  Get.to(SubjectWise(path: widget.standard,));
-                            } else if(index==0) {
-
-                              if(widget.standard.toString().contains("IIT")){
-                                Get.to(JeeNeetHome());
-                              }else {
-                                examPreparationMenu[index].navigation!();
-                                Get.to(
-                                    BoardWiseSyllabus(path: widget.standard,));
-                              }
-
+                              Get.to(JeeSubjectwise(path: examPreparationMenu[index].title,));
                             }else{
                               print(
                                   'No navigation route defined for this menu item');
