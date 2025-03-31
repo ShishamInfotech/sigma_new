@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:sigma_new/models/menu_models.dart';
 import 'package:sigma_new/pages/home/jee/jee_neet_concept.dart';
 import 'package:sigma_new/pages/home/jee/jee_neet_mcq.dart';
+import 'package:sigma_new/pages/home/jee/mock_exam/jeemockexam.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
@@ -40,7 +41,6 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
         imagePath: 'assets/svg/quickguideimg.svg',
         navigation: () {},
         title: 'Biology'),
-
     Menu(
         color: 0xFFF2C6DF,
         imagePath: 'assets/svg/quickguideimg.svg',
@@ -88,17 +88,14 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
   subjectWiseTest() async {
     var newPath;
     var board;
-   // final prefs = await SharedPreferences.getInstance();
-   // String? course = prefs.getString('course');
+    // final prefs = await SharedPreferences.getInstance();
+    // String? course = prefs.getString('course');
 
-
-    if(widget.path.contains("Concept")){
+    if (widget.path.contains("Concept")) {
       newPath = "/THEORY";
-    }else{
-      newPath="/MCQ";
+    } else {
+      newPath = "/MCQ";
     }
-
-
 
     var inputFile = await SdCardUtility.getSubjectEncJsonData(
         'JEE$newPath/sigma_data.json');
@@ -108,35 +105,37 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
     // Extracting subject values
     List<dynamic> sigmaData = parsedJson["sigma_data"];
 
-
     subjects = sigmaData.map((data) => data["subject"].toString()).toList();
     subjectsId = sigmaData.map((data) => data["subjectid"].toString()).toList();
     // Get all subjects
 
-    if(!widget.path.contains("Concept")) {
+    if (!widget.path.contains("Concept")) {
       for (int i = 0; i < subjects.length; i++) {
-        if (widget.path.removeAllWhitespace.toLowerCase().contains(
-            "multiplechoicequestion") && !subjects[i].contains("Offline") &&
+        if (widget.path.removeAllWhitespace
+                .toLowerCase()
+                .contains("multiplechoicequestion") &&
+            !subjects[i].contains("Offline") &&
             !subjects[i].contains("Mock")) {
           subjectsTopic.add(subjects[i]);
         }
 
-        if (widget.path.removeAllWhitespace.toLowerCase().contains(
-            "subjectwisetest") && subjects[i].contains("Offline")) {
+        if (widget.path.removeAllWhitespace
+                .toLowerCase()
+                .contains("subjectwisetest") &&
+            subjects[i].contains("Offline")) {
           subjectsTopic.add(subjects[i]);
         }
 
-        if (widget.path.removeAllWhitespace.toLowerCase().contains(
-            "mocktest") && subjects[i].contains("Mock")) {
+        if (widget.path.removeAllWhitespace
+                .toLowerCase()
+                .contains("mockexam") &&
+            subjects[i].contains("Mock")) {
           subjectsTopic.add(subjects[i]);
         }
       }
-    }else{
-
+    } else {
       subjectsTopic = subjects;
-
     }
-
 
     //removeTestSeriesFromSubjectTitle(subjects);
 
@@ -155,7 +154,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // backgroundColor: backgroundColor,
+          // backgroundColor: backgroundColor,
           leading: InkWell(
             onTap: () {
               print("Opening Drawer");
@@ -177,7 +176,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
               ),
             ),
           ),
-          title:  Text(
+          title: Text(
             widget.path,
             style: black20w400MediumTextStyle,
           )),
@@ -207,15 +206,86 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                             if (examPreparationMenu[index].navigation != null) {
                               examPreparationMenu[index].navigation!();
 
-                              if(widget.path.removeAllWhitespace.toLowerCase().contains(
-                                  "multiplechoicequestion")||widget.path.removeAllWhitespace.toLowerCase().contains(
-                                  "subjectwisetest")){
-                                Get.to(JeeNeetMcq(title:subjectsTopic[index], subjectId: subjectsId[index],));
-                              }else if(widget.path.removeAllWhitespace.toLowerCase().contains(
-                                  "concept")){
-                                Get.to(JeeNeetConcept(subjectId: subjectsId[index],));
+                              if (widget.path.removeAllWhitespace
+                                      .toLowerCase()
+                                      .contains("multiplechoicequestion") ||
+                                  widget.path.removeAllWhitespace
+                                      .toLowerCase()
+                                      .contains("subjectwisetest")) {
+                                Get.to(JeeNeetMcq(
+                                  title: subjectsTopic[index],
+                                  subjectId: subjectsId[index],
+                                ));
+                              } else if (widget.path.removeAllWhitespace
+                                  .toLowerCase()
+                                  .contains("concept")) {
+                                showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text('Concept'),
+                                        content: const Text(
+                                          'Select any one category given below',
+                                        ),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            style: TextButton.styleFrom(
+                                                textStyle: Theme.of(context)
+                                                    .textTheme
+                                                    .labelLarge),
+                                            child: const Text(
+                                                'Elementary Concept'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                              Get.to(JeeNeetConcept(
+                                                subjectId: subjectsId[index],
+                                                complexity: "e",
+                                              ));
+                                              //
+                                            },
+                                          ),
+                                          TextButton(
+                                            style: TextButton.styleFrom(
+                                                textStyle: Theme.of(context)
+                                                    .textTheme
+                                                    .labelLarge),
+                                            child:
+                                                const Text('Advanced Concept'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                              Get.to(JeeNeetConcept(
+                                                subjectId: subjectsId[index],
+                                                complexity: "a",
+                                              ));
+                                              // Navigator.of(context).pop();
+                                            },
+                                          ),
+                                          TextButton(
+                                            style: TextButton.styleFrom(
+                                                textStyle: Theme.of(context)
+                                                    .textTheme
+                                                    .labelLarge),
+                                            child: const Text('Cancel'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    });
+                                // Get.to(JeeNeetConcept(subjectId: subjectsId[index],));
                               }
-                            } else {
+                              else if (widget.path.removeAllWhitespace
+                                  .toLowerCase()
+                                  .contains("mockexam")) {
+                                Get.to(JeeNeetMcq(
+                                  title: subjectsTopic[index],
+                                  subjectId: subjectsId[index],
+                                ));
+                              }
+
+
+                            }  else {
                               print(
                                   'No navigation route defined for this menu item');
                             }
@@ -244,7 +314,8 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                         ),
                         Text(
                           textAlign: TextAlign.center,
-                          removeTestSeriesFromSubjectTitle(subjectsTopic[index]),
+                          removeTestSeriesFromSubjectTitle(
+                              subjectsTopic[index]),
                           style: black14RegularTextStyle,
                         )
                       ],

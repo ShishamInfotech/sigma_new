@@ -9,7 +9,8 @@ import 'package:sigma_new/utility/sd_card_utility.dart';
 
 class JeeNeetConcept extends StatefulWidget {
   String subjectId;
-  JeeNeetConcept({required this.subjectId, super.key});
+  String? complexity;
+  JeeNeetConcept({required this.subjectId,this.complexity, super.key});
 
   @override
   State<JeeNeetConcept> createState() => _JeeNeetConceptState();
@@ -18,6 +19,7 @@ class JeeNeetConcept extends StatefulWidget {
 class _JeeNeetConceptState extends State<JeeNeetConcept> {
 
   List<String> subjects = [];
+  List<String> complexitySubject = [];
   bool _showSideNav = true;
   Map<String, List<Map<String, dynamic>>> groupedData = {};
 
@@ -29,7 +31,7 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
     subjectWiseTest();
   }
 
-  subjectWiseTest() async {
+  /*subjectWiseTest() async {
     var newPath;
     var board;
 
@@ -38,6 +40,7 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
         'JEE/THEORY/${widget.subjectId}.json');
 
     print("INput File  $inputFile");
+
     Map<String, dynamic> parsedJson = jsonDecode(inputFile!);
     print("parsedJson $parsedJson");
     // Extracting subject values
@@ -46,9 +49,12 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
 
     // Get all subjects
     subjects = sigmaData.map((data) => data["chapter"].toString()).toList();
+    complexitySubject = sigmaData.map((data) => data["complexity"].toString()).toList();
     //subjectsId = sigmaData.map((data) => data["subjectid"].toString()).toList();
 
     //removeTestSeriesFromSubjectTitle(subjects);
+
+    print("Complexity $complexitySubject");
 
     if (sigmaData.isNotEmpty) {
       for (var item in sigmaData) {
@@ -63,6 +69,49 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
     }
     // Print subjects
     print(subjects);
+    setState(() {});
+  }*/
+
+  subjectWiseTest() async {
+    var inputFile = await SdCardUtility.getSubjectEncJsonData(
+        'JEE/THEORY/${widget.subjectId}.json');
+
+    if (inputFile == null) {
+      print("Error: No data found!");
+      return;
+    }
+
+    print("Input File: $inputFile");
+
+    Map<String, dynamic> parsedJson = jsonDecode(inputFile);
+    print("Parsed JSON: $parsedJson");
+
+    // Extract sigma data
+    List<Map<String, dynamic>> sigmaData =
+    List<Map<String, dynamic>>.from(parsedJson["sigma_data"]);
+
+    // Filtering only records where complexity is "a" or "e"
+    sigmaData = sigmaData.where((data) {
+      String complexity = data["complexity"].toString().toLowerCase();
+      return complexity == widget.complexity;
+    }).toList();
+
+    // Group data by chapter
+    groupedData.clear();
+    for (var item in sigmaData) {
+      String chapterName = item["chapter"].toString(); // Use chapter name for grouping
+
+      if (!groupedData.containsKey(chapterName)) {
+        groupedData[chapterName] = [];
+      }
+      groupedData[chapterName]!.add(item);
+    }
+
+    // Update subjects list based on grouped data
+    subjects = groupedData.keys.toList();
+
+    print("Grouped Chapters (Complexity: A or E): $groupedData");
+
     setState(() {});
   }
 
@@ -141,19 +190,22 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
               bottom: screenHeight * 0.03,
               child: ListView(
                 children: groupedData.entries.map((entry) {
+                  int chapterIndex = groupedData.keys.toList().indexOf(entry.key) + 1;
                   return ExpansionTile(
                     title: Text(
-                      "${entry.key}: ${entry.value[0]["chapter"]}",
+                      "${chapterIndex}: ${entry.value[0]["chapter"]}",
                       style:
                       TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    children: entry.value.map((item) {
+                    children: entry.value.asMap().entries.map((subEntry)  {
+                      int subIndex = subEntry.key + 1;
+                      var item = subEntry.value;
                       return ListTile(
                         title: Container(
                           margin: EdgeInsets.symmetric(horizontal: 10),
                           padding: EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
-                            "${item["subchapter_number"]}: ${item["subchapter"]}" ??
+                            "$chapterIndex.$subIndex: ${item["subchapter"]}" ??
                                 "No Subchapter",
                             style: TextStyle(fontSize: 16),
 
@@ -178,7 +230,7 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
 
   void onSublistItemClick(Map<String, dynamic> item) {
     // Handle item click
-    print("Clicked on: ${item["subchapter"]}");
+    print("Clicked on: ${item["description_image_id"]}");
 
     Get.to(TopicWiseSyllabus(pathQuestion: item, subjectId: widget.subjectId,));
 

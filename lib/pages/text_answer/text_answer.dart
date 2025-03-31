@@ -1,16 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
-import 'dart:io';
-import 'package:flutter/material.dart';
 
 class TextAnswer extends StatefulWidget {
   dynamic imagePath; // Can be String or List
-  String basePath;
+  String? basePath;
 
-  TextAnswer({required this.imagePath, required this.basePath, super.key});
+  TextAnswer({required this.imagePath, this.basePath, super.key});
 
   @override
   State<TextAnswer> createState() => _TextAnswerState();
@@ -31,8 +30,12 @@ class _TextAnswerState extends State<TextAnswer> {
 
     // Ensure imagePath is a List
     List<dynamic> imagePaths = widget.imagePath is String
-        ? widget.imagePath.split(",").map((e) => e.trim()).toList() // Trim spaces
-        : List<String>.from(widget.imagePath.map((e) => e.trim())); // Convert List<dynamic> to List<String>
+        ? widget.imagePath
+            .split(",")
+            .map((e) => e.trim())
+            .toList() // Trim spaces
+        : List<String>.from(widget.imagePath
+            .map((e) => e.trim())); // Convert List<dynamic> to List<String>
 
     List<File> loadedFiles = [];
 
@@ -55,19 +58,34 @@ class _TextAnswerState extends State<TextAnswer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Images from Memory Card")),
-      body: imageFiles.isEmpty
-          ? Center(child: Text("No images found"))
-          : ListView.builder(
-        itemCount: imageFiles.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.file(imageFiles[index],
-                 width: double.infinity, fit: BoxFit.cover),
-          );
-        },
-      ),
+      appBar: AppBar(title: const Text("Images from Memory Card")),
+      body: widget.basePath == "nr"
+          ? SingleChildScrollView(
+            child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 15),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  
+                    color: blackColor.withOpacity(0.1),
+                    borderRadius: const BorderRadius.all(Radius.circular(10))),
+                child: Text(
+                  widget.imagePath,
+                  style: black16MediumTextStyle,
+                ),
+              ),
+          )
+          : imageFiles.isEmpty
+              ? const Center(child: Text("No images found"))
+              : ListView.builder(
+                  itemCount: imageFiles.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.file(imageFiles[index],
+                          width: double.infinity, fit: BoxFit.cover),
+                    );
+                  },
+                ),
     );
   }
 }

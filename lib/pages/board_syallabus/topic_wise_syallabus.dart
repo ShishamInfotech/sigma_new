@@ -147,7 +147,13 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
         Row(
           children: [
             TextButton(onPressed: () {
+              if(widget.pathQuestion["description_image_id"].toString().toLowerCase()=="nr"){
+
+                Get.to(TextAnswer(imagePath: widget.pathQuestion["test_answer_string"], basePath: "nr",));
+
+              }else{
               Get.to(TextAnswer(imagePath: widget.pathQuestion["description_image_id"],basePath: "/jee/theory/${widget.pathQuestion["subjectid"]}/images/",));
+              }
             }, child: Text('Text Answer')),
             if ((widget.pathQuestion["explaination_video_id"]
                         .toString()

@@ -36,7 +36,7 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
           color: 0xFFDBCDF0,
           imagePath: 'assets/svg/mock_test.svg',
           navigation: () {},
-          title: 'Mock Test'),
+          title: 'Mock Exam'),
       Menu(
           color: 0xFFF2C6DF,
           imagePath: 'assets/svg/concept.svg',

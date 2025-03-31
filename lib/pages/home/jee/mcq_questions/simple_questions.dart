@@ -1,9 +1,15 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+
+
 import 'package:sigma_new/ui_helper/constant.dart';
 
+
 class SimpleQuestions extends StatefulWidget {
+
+
   dynamic easyQuestion;
   SimpleQuestions({this.easyQuestion, super.key});
 
@@ -16,13 +22,14 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
   List<dynamic> selectedQuestions = [];
   bool isLoading = false;
 
-  /*@override
+
+  @override
   void initState() {
     super.initState();
     selectRandomQuestions();
-  }*/
+  }
 
-  /*void selectRandomQuestions() {
+  void selectRandomQuestions() {
     isLoading=true;
     if (widget.easyQuestion.isNotEmpty) {
 
@@ -38,11 +45,12 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
 
     }
 
-  }*/
+  }
 
   @override
   Widget build(BuildContext context) {
-    //selectRandomQuestions();
+    selectRandomQuestions();
+    String? selectedAnswer;
     return  isLoading ? const SizedBox(
         height: 10,
         child: LinearProgressIndicator()):ListView.builder(
@@ -51,6 +59,16 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
       itemBuilder: (context, index) {
 
         var question = selectedQuestions[index]["question"];
+
+        List<String> options = [];
+        for (int i = 1; i <= 5; i++) {
+          String key = "option_$i";
+          if (selectedQuestions[index][key] != null &&
+              selectedQuestions[index][key] != "NA") {
+            options.add(selectedQuestions[index][key]);
+          }
+        }
+        print("LaTeX Question: $question");
         return Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
@@ -66,9 +84,9 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                   ),
                 ),
                 Expanded(
-                  child: Text(
-                    question,
-                    style: const TextStyle(
+                  child: Math.tex(
+                    preprocessLaTeX(question),
+                    textStyle: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w300,
                         color: primaryColor),
@@ -78,35 +96,20 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
             ),
 
             height5Space,
-            /*...List.generate(question[].length, (i) {
-              // "${String.fromCharCode(65 + i)}. ${question['options'][i]}"
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 15.0),
-                child: Center(
-                  child: Container(
-                    height: MediaQuery.of(context).size.height * 0.045,
-                    width: MediaQuery.of(context).size.width * 0.8,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          alignment: Alignment.centerLeft,
-                          side: const BorderSide(
-                              color: greyColor, width: 1.0), // Purple border
-                          backgroundColor: whiteColor // Black text color
-                          ),
-                      onPressed: () {},
-                      child: Text(
-                        "${String.fromCharCode(65 + i)}. ${question['options'][i]}",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w400,
-                          color: blackColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),*/
+            Column(
+              children: options.map((option) {
+                return RadioListTile<String>(
+                  title: Text(option),
+                  value: option,
+                  groupValue: selectedAnswer,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedAnswer = value;
+                    });
+                  },
+                );
+              }).toList(),
+            ),
             /*Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -172,4 +175,23 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
       },
     );
   }
+
+
+  String preprocessLaTeX(String question) {
+    return question
+        .replaceAll(r"\(", " ")  // Remove \(
+        .replaceAll(r"\)", " ")  // Remove \)
+        .replaceAll(r"\[", " ")  // Remove \[
+        .replaceAll(r"\]", " ")
+        .replaceAll(r"$", " ")
+        .replaceAll(r"\right", " ")
+        .replaceAll(r"\leqb", " "); // Remove \]
+  }
+
 }
+
+
+
+
+
+

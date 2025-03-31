@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/questions/easy_questions.dart';
@@ -39,9 +40,6 @@ class _TableQuizState extends State<TableQuiz> {
     var newPath;
     var board;
     final prefs = await SharedPreferences.getInstance();
-    String? course = prefs.getString('course');
-    print(
-        "Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
 
     if (prefs.getString('board') == "Maharashtra") {
       board = "MH/";
@@ -49,9 +47,9 @@ class _TableQuizState extends State<TableQuiz> {
       board = prefs.getString('board');
     }
 
-    if (widget.pathQuestion!.contains("10")) {
+    if (widget.pathQuestion.contains("10")) {
       newPath = "10/";
-    } else if (widget.pathQuestion!.contains("12")) {
+    } else if (widget.pathQuestion.contains("12")) {
       newPath = "12/";
     }
 
@@ -67,7 +65,6 @@ class _TableQuizState extends State<TableQuiz> {
   }
 
   Future<void> createFinalList() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     if (true) {
       // Get the stored test level based on subject
       // currentTestLevel = prefs.getString("${widget.jeeData.first.question.trim().toUpperCase()}_LEVEL") ?? "s";
@@ -141,7 +138,7 @@ class _TableQuizState extends State<TableQuiz> {
     final isPortrait =
         MediaQuery.of(context).orientation == Orientation.portrait;
     return DefaultTabController(
-      length: 3,
+      length: 5,
       child: Scaffold(
         drawer: DrawerWidget(context),
         key: _tablequizscaffoldKey,
@@ -184,10 +181,10 @@ class _TableQuizState extends State<TableQuiz> {
           children: [
             height10Space,
             Padding(
-              padding: const EdgeInsets.only(right: 65.0),
+              padding: const EdgeInsets.only(right: 10.0,left: 10),
               child: Container(
-                width: MediaQuery.of(context).size.width * 0.7,
-                height: MediaQuery.of(context).size.height * 0.06,
+                width: Get.width * 0.95,
+                height: Get.height * 0.06,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                     color: Colors.white),
@@ -216,6 +213,14 @@ class _TableQuizState extends State<TableQuiz> {
                     ),
                     Tab(
                       child: Text("Complex"),
+                    ),
+
+                    Tab(
+                      child: Text("Advance"),
+                    ),
+
+                    Tab(
+                      child: Text("Difficult"),
                     ),
                   ],
                 ),

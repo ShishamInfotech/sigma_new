@@ -8,8 +8,10 @@ import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
 
+
 class ViewQuestions extends StatefulWidget {
-  const ViewQuestions({super.key});
+  String chapterId;
+  ViewQuestions({required this.chapterId, super.key});
 
   @override
   State<ViewQuestions> createState() => _ViewQuestionsState();
@@ -21,6 +23,7 @@ class _ViewQuestionsState extends State<ViewQuestions> {
 
   Map<String, dynamic> parsedJson={};
   List<dynamic> sigmaData =[];
+
 
 
   @override
@@ -54,13 +57,13 @@ class _ViewQuestionsState extends State<ViewQuestions> {
       newPath = "12/";
     }*/
 
-    var inputFile = await SdCardUtility.getSubjectEncJsonData('${newPath}${board}testseries/.json');
+    var inputFile = await SdCardUtility.getSubjectEncJsonData('jee/mcq/${widget.chapterId}.json');
 
 
     parsedJson = jsonDecode(inputFile!);
 
     sigmaData = parsedJson["sigma_data"];
-    print("Sig ${parsedJson["sigma_data"][0]["complexity"]}");
+
 
     createFinalList();
   }
@@ -121,13 +124,7 @@ class _ViewQuestionsState extends State<ViewQuestions> {
         return indices.take(count.clamp(0, size)).toList();
       }
 
-      // Select based on test level
 
-
-      // Prepare final JSON structure
-
-
-      // print("SimpleData ${simple.first}");
       setState(() {});
     }// Refresh UI
   }
@@ -140,7 +137,7 @@ class _ViewQuestionsState extends State<ViewQuestions> {
     final isPortrait =
         MediaQuery.of(context).orientation == Orientation.portrait;
     return DefaultTabController(
-      length: 3,
+      length: 5,
       child: Scaffold(
         drawer: DrawerWidget(context),
         key: _tablequizscaffoldKey,
@@ -183,9 +180,9 @@ class _ViewQuestionsState extends State<ViewQuestions> {
           children: [
             height10Space,
             Padding(
-              padding: const EdgeInsets.only(right: 65.0),
+              padding: const EdgeInsets.only(right: 10.0),
               child: Container(
-                width: MediaQuery.of(context).size.width * 0.7,
+                width: MediaQuery.of(context).size.width * 0.9,
                 height: MediaQuery.of(context).size.height * 0.06,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
@@ -215,6 +212,14 @@ class _ViewQuestionsState extends State<ViewQuestions> {
                     ),
                     Tab(
                       child: Text("Complex"),
+                    ),
+
+                    Tab(
+                      child: Text("Difficult"),
+                    ),
+
+                    Tab(
+                      child: Text("Advance"),
                     ),
                   ],
                 ),

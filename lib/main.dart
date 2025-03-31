@@ -4,6 +4,7 @@ import 'package:sigma_new/pages/welcomePage/welcomePage.dart';
 import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 

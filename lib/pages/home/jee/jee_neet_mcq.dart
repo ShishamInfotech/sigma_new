@@ -17,6 +17,7 @@ class JeeNeetMcq extends StatefulWidget {
 
 class _JeeNeetMcqState extends State<JeeNeetMcq> {
   List<String> subjects = [];
+  List<String> subjectsId = [];
   bool _showSideNav = true;
 
   @override
@@ -43,7 +44,7 @@ class _JeeNeetMcqState extends State<JeeNeetMcq> {
 
     // Get all subjects
     subjects = sigmaData.map((data) => data["chapter"].toString()).toList();
-    //subjectsId = sigmaData.map((data) => data["subjectid"].toString()).toList();
+    subjectsId = sigmaData.map((data) => data["chapterid"].toString()).toList();
 
     //removeTestSeriesFromSubjectTitle(subjects);
 
@@ -146,7 +147,7 @@ class _JeeNeetMcqState extends State<JeeNeetMcq> {
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios),
                       onTap: (){
-                        Get.to(ViewQuestions());
+                        Get.to(ViewQuestions(chapterId: subjectsId[index],));
                       },
                     );
                   }),
