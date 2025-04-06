@@ -47,9 +47,9 @@ class _TableQuizState extends State<TableQuiz> {
       board = prefs.getString('board');
     }
 
-    if (widget.pathQuestion.contains("10")) {
+    if (widget.pathQuestion!.contains("10")) {
       newPath = "10/";
-    } else if (widget.pathQuestion.contains("12")) {
+    } else if (widget.pathQuestion!.contains("12")) {
       newPath = "12/";
     }
 

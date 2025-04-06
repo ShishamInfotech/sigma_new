@@ -205,7 +205,6 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                           onTap: () {
                             if (examPreparationMenu[index].navigation != null) {
                               examPreparationMenu[index].navigation!();
-
                               if (widget.path.removeAllWhitespace
                                       .toLowerCase()
                                       .contains("multiplechoicequestion") ||
@@ -274,18 +273,44 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                                       );
                                     });
                                 // Get.to(JeeNeetConcept(subjectId: subjectsId[index],));
-                              }
-                              else if (widget.path.removeAllWhitespace
+                              } else if (widget.path.removeAllWhitespace
                                   .toLowerCase()
                                   .contains("mockexam")) {
-                                Get.to(JeeNeetMcq(
-                                  title: subjectsTopic[index],
-                                  subjectId: subjectsId[index],
-                                ));
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: const Text('Exam information'),
+                                      content: const Text(
+                                          'Your Current Test Average: 0.00 \n\nCurrent Test Level Qualified for: SIMPLE \n\nBegin Test?', style: black14BoldTextStyleInter,),
+                                      actions: [
+                                        TextButton(
+                                          style: TextButton.styleFrom(
+                                              textStyle: Theme.of(context)
+                                                  .textTheme
+                                                  .labelLarge),
+                                          child: const Text('Yes'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            Get.to(const JeeMockExam());
+                                          },
+                                        ),
+                                        TextButton(
+                                          style: TextButton.styleFrom(
+                                              textStyle: Theme.of(context)
+                                                  .textTheme
+                                                  .labelLarge),
+                                          child: const Text('No'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
                               }
-
-
-                            }  else {
+                            } else {
                               print(
                                   'No navigation route defined for this menu item');
                             }

@@ -1,77 +1,68 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
-
-
 import 'package:sigma_new/ui_helper/constant.dart';
 
-
 class SimpleQuestions extends StatefulWidget {
+  final List<dynamic> easyQuestion;
 
-
-  dynamic easyQuestion;
-  SimpleQuestions({this.easyQuestion, super.key});
+  SimpleQuestions({required this.easyQuestion, super.key});
 
   @override
   State<SimpleQuestions> createState() => _SimpleQuestionsState();
 }
 
 class _SimpleQuestionsState extends State<SimpleQuestions> {
-
   List<dynamic> selectedQuestions = [];
   bool isLoading = false;
+  bool isInitialized = false;
+  Map<int, String?> selectedAnswers = {}; // Store selected answers per question
+  Map<int, bool?> answerResults = {};
+  // Store correct/wrong status per question
 
 
   @override
-  void initState() {
-    super.initState();
-    selectRandomQuestions();
-  }
-
-  void selectRandomQuestions() {
-    isLoading=true;
-    if (widget.easyQuestion.isNotEmpty) {
-
-      List<dynamic> tempList = List.from(widget.easyQuestion); // Copy list
-      tempList.shuffle(Random()); // Shuffle the list randomly
-      setState(() {
-
-
-        selectedQuestions = tempList.take(30).toList();
-        // Take 30 random questions
-      });
-      isLoading =false;
-
-    }
-
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print("SimpleQuestions: didChangeDependencies called");
+    // You can reinitialize your question list here
   }
 
   @override
   Widget build(BuildContext context) {
-    selectRandomQuestions();
-    String? selectedAnswer;
-    return  isLoading ? const SizedBox(
-        height: 10,
-        child: LinearProgressIndicator()):ListView.builder(
+
+
+    /*if (!isInitialized) {
+      selectRandomQuestions();
+      isInitialized = true;
+    }*/
+
+   // selectRandomQuestions();
+
+
+
+
+    return ListView.builder(
       physics: const ScrollPhysics(),
-      itemCount: selectedQuestions.length,
+      itemCount: widget.easyQuestion.length,
       itemBuilder: (context, index) {
+        var questionData = widget.easyQuestion[index];
+        var question = questionData["question"];
+        String correctAnswer = questionData["answer"];
 
-        var question = selectedQuestions[index]["question"];
-
+        // Extract options dynamically
         List<String> options = [];
         for (int i = 1; i <= 5; i++) {
           String key = "option_$i";
-          if (selectedQuestions[index][key] != null &&
-              selectedQuestions[index][key] != "NA") {
-            options.add(selectedQuestions[index][key]);
+          if (questionData[key] != null && questionData[key] != "NA") {
+            options.add(questionData[key]);
           }
         }
-        print("LaTeX Question: $question");
+
         return Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            // Display Question
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,7 +70,7 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
-                    "${index+1}",
+                    "${index + 1}.",
                     style: primaryColor16w500TextStyleInter,
                   ),
                 ),
@@ -94,81 +85,96 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                 ),
               ],
             ),
-
             height5Space,
+
+            // Show options with radio buttons and color feedback
             Column(
               children: options.map((option) {
-                return RadioListTile<String>(
-                  title: Text(option),
-                  value: option,
-                  groupValue: selectedAnswer,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedAnswer = value;
-                    });
-                  },
+                bool isCorrect = option == correctAnswer;
+                bool isSubmitted = answerResults.containsKey(index);
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: isSubmitted
+                        ? (isCorrect
+                        ? Colors.green.withOpacity(0.2) // Green for correct
+                        : (selectedAnswers[index] == option
+                        ? Colors.red.withOpacity(0.2) // Red for wrong
+                        : Colors.transparent))
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: RadioListTile<String>(
+                    title: Text(
+                      option,
+                      style: TextStyle(
+                        color: isSubmitted
+                            ? (isCorrect
+                            ? Colors.green // Green text for correct
+                            : (selectedAnswers[index] == option
+                            ? Colors.red // Red text for wrong
+                            : Colors.black))
+                            : Colors.black,
+                      ),
+                    ),
+                    value: option,
+                    groupValue: selectedAnswers[index],
+                    onChanged: isSubmitted
+                        ? null // Disable selection after submission
+                        : (value) {
+                      setState(() {
+                        selectedAnswers[index] = value;
+                      });
+                    },
+                  ),
                 );
               }).toList(),
             ),
-            /*Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0),
-                  child: Center(
-                    child: Container(
-                      height: MediaQuery.of(context).size.height * 0.045,
-                      width: MediaQuery.of(context).size.width * 0.4,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          side: const BorderSide(
-                              color: primaryColor, width: 1.0), // Purple border
-                          // Black text color
-                        ),
-                        onPressed: () {},
-                        child: const Text(
-                          "Notes",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w300,
-                            color: primaryColor, // Black text color
+
+            // Show submit button only when an option is selected
+            if (selectedAnswers[index] != null && !answerResults.containsKey(index))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: whiteColor,
+                      backgroundColor: primaryColor,
+                    ),
+                    onPressed: () {
+                      bool isCorrect = selectedAnswers[index] == correctAnswer;
+
+                      setState(() {
+                        answerResults[index] = isCorrect;
+                      });
+
+                      // Show feedback
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            isCorrect ? "✅ Correct!" : "❌ Wrong! Correct Answer: $correctAnswer",
                           ),
+                          backgroundColor: isCorrect ? Colors.green : Colors.red,
                         ),
+                      );
+                    },
+                    child: const Text(
+                      "Submit",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0),
-                  child: Center(
-                    child: Container(
-                      height: MediaQuery.of(context).size.height * 0.045,
-                      width: MediaQuery.of(context).size.width * 0.4,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: whiteColor,
-                          backgroundColor: primaryColor,
-                        ),
-                        onPressed: () {},
-                        child: const Text(
-                          "Submit",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),*/
+              ),
+
             const Divider(
-              color: primaryColor, // Color of the divider
-              thickness: 1.5, // Thickness of the divider
-              indent: 5.0, // Start offset of the divider from the left
-              endIndent: 5.0, // End offset of the divider from the right
+              color: primaryColor,
+              thickness: 1.5,
+              indent: 5.0,
+              endIndent: 5.0,
             ),
           ],
         );
@@ -176,22 +182,14 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
     );
   }
 
-
   String preprocessLaTeX(String question) {
     return question
-        .replaceAll(r"\(", " ")  // Remove \(
-        .replaceAll(r"\)", " ")  // Remove \)
-        .replaceAll(r"\[", " ")  // Remove \[
+        .replaceAll(r"\(", " ")
+        .replaceAll(r"\)", " ")
+        .replaceAll(r"\[", " ")
         .replaceAll(r"\]", " ")
         .replaceAll(r"$", " ")
         .replaceAll(r"\right", " ")
-        .replaceAll(r"\leqb", " "); // Remove \]
+        .replaceAll(r"\leqb", " ");
   }
-
 }
-
-
-
-
-
-

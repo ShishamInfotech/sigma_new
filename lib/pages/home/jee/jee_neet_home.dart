@@ -23,6 +23,11 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
 
     List<Menu> examPreparationMenu = [
       Menu(
+          color: 0xFFF2C6DF,
+          imagePath: 'assets/svg/concept.svg',
+          navigation: () {},
+          title: 'Concept'),
+      Menu(
           color: 0xFFC5DEF2, // Corrected color code
           imagePath: 'assets/svg/mcq_questions.svg',
           navigation: () {},
@@ -37,11 +42,7 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
           imagePath: 'assets/svg/mock_test.svg',
           navigation: () {},
           title: 'Mock Exam'),
-      Menu(
-          color: 0xFFF2C6DF,
-          imagePath: 'assets/svg/concept.svg',
-          navigation: () {},
-          title: 'Concept'),
+
     ];
 
     return Scaffold(

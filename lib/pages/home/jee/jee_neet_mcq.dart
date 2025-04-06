@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sigma_new/pages/home/jee/mcq_questions/view_questions.dart';
+import 'package:sigma_new/pages/home/jee/offline/offline_questions.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
@@ -147,7 +148,41 @@ class _JeeNeetMcqState extends State<JeeNeetMcq> {
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios),
                       onTap: (){
-                        Get.to(ViewQuestions(chapterId: subjectsId[index],));
+                        if(widget.title.toLowerCase().contains("offline")){
+                          showDialog(context: context, builder: (BuildContext context){
+                            return AlertDialog(
+                              title: Text('Begin Test ?'),
+                              actions: [
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                      textStyle: Theme.of(context)
+                                          .textTheme
+                                          .labelLarge),
+                                  child: const Text(
+                                      'Yes'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    Get.to(OfflineQuestions(chapterId: subjectsId[index],));
+                                    //
+                                  },
+                                ),
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                      textStyle: Theme.of(context)
+                                          .textTheme
+                                          .labelLarge),
+                                  child: const Text('No'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          });
+
+                        }else {
+                          Get.to(ViewQuestions(chapterId: subjectsId[index],));
+                        }
                       },
                     );
                   }),

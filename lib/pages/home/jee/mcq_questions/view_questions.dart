@@ -1,13 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/home/jee/mcq_questions/simple_questions.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
-
-
 
 class ViewQuestions extends StatefulWidget {
   String chapterId;
@@ -17,27 +16,30 @@ class ViewQuestions extends StatefulWidget {
   State<ViewQuestions> createState() => _ViewQuestionsState();
 }
 
-class _ViewQuestionsState extends State<ViewQuestions> {
+class _ViewQuestionsState extends State<ViewQuestions>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _tablequizscaffoldKey =
-  GlobalKey<ScaffoldState>();
+      GlobalKey<ScaffoldState>();
 
-  Map<String, dynamic> parsedJson={};
-  List<dynamic> sigmaData =[];
-
-
+  Map<String, dynamic> parsedJson = {};
+  List<dynamic> sigmaData = [];
+  late TabController _tabController;
+  int _selectedTabIndex = 0;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        _selectedTabIndex = _tabController.index; // Update tab index on change
+      });
+    });
     getQuestionList();
-
   }
 
-
-  getQuestionList() async{
-
+  getQuestionList() async {
     var newPath;
     var board;
     final prefs = await SharedPreferences.getInstance();
@@ -57,13 +59,12 @@ class _ViewQuestionsState extends State<ViewQuestions> {
       newPath = "12/";
     }*/
 
-    var inputFile = await SdCardUtility.getSubjectEncJsonData('jee/mcq/${widget.chapterId}.json');
-
+    var inputFile = await SdCardUtility.getSubjectEncJsonData(
+        'jee/mcq/${widget.chapterId}.json');
 
     parsedJson = jsonDecode(inputFile!);
 
     sigmaData = parsedJson["sigma_data"];
-
 
     createFinalList();
   }
@@ -124,14 +125,12 @@ class _ViewQuestionsState extends State<ViewQuestions> {
         return indices.take(count.clamp(0, size)).toList();
       }
 
-
       setState(() {});
-    }// Refresh UI
+    } // Refresh UI
   }
 
   @override
   Widget build(BuildContext context) {
-
     double height = MediaQuery.of(context).size.height;
 
     final isPortrait =
@@ -148,7 +147,7 @@ class _ViewQuestionsState extends State<ViewQuestions> {
           child: Stack(
             children: [
               AppBar(
-                // backgroundColor: backgroundColor,
+                  // backgroundColor: backgroundColor,
                   leading: InkWell(
                     onTap: () {
                       _tablequizscaffoldKey.currentState?.openDrawer();
@@ -188,6 +187,7 @@ class _ViewQuestionsState extends State<ViewQuestions> {
                     borderRadius: BorderRadius.circular(15),
                     color: Colors.white),
                 child: TabBar(
+                  controller: _tabController,
                   indicator: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     color: primaryColor.withOpacity(0.1),
@@ -213,11 +213,9 @@ class _ViewQuestionsState extends State<ViewQuestions> {
                     Tab(
                       child: Text("Complex"),
                     ),
-
                     Tab(
                       child: Text("Difficult"),
                     ),
-
                     Tab(
                       child: Text("Advance"),
                     ),
@@ -229,8 +227,13 @@ class _ViewQuestionsState extends State<ViewQuestions> {
               height: 15,
             ),
             Expanded(
-              child: TabBarView(children: [
-                SimpleQuestions(easyQuestion: sigmaData),
+              child: TabBarView(controller: _tabController, children: [
+                if (sigmaData.isEmpty) Center(child: CircularProgressIndicator(),) else SimpleQuestions(
+                  easyQuestion: sigmaData,
+                  key: ValueKey(_selectedTabIndex),
+                ),
+                Container(), // Placeholder for Medium Questions
+                Container(),
                 //  MediumQuestions(),
                 //  ComplexQuestions()
               ]),

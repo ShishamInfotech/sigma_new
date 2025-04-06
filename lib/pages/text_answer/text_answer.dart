@@ -27,6 +27,25 @@ class _TextAnswerState extends State<TextAnswer> {
   loadImage() async {
     String basePath = await SdCardUtility.getBasePath();
     print("Basepath $basePath --- ${widget.basePath},, ${widget.imagePath}");
+    var classes;
+    var state;
+    var subject;
+
+    if(widget.basePath!.contains("10")){
+      classes = "10";
+    }
+    if(widget.basePath!.contains("12")){
+      classes = "12";
+    }
+
+    if(widget.basePath!.contains('mh')){
+      state = "MH";
+    }
+
+    String cleaned = widget.basePath!.replaceAll(classes, "").replaceAll(state.toString().toLowerCase(), "");
+
+
+
 
     // Ensure imagePath is a List
     List<dynamic> imagePaths = widget.imagePath is String
@@ -40,9 +59,9 @@ class _TextAnswerState extends State<TextAnswer> {
     List<File> loadedFiles = [];
 
     for (String fileName in imagePaths) {
-      for (String ext in [".jpg"]) {
-        print("Pathhs ${basePath}${widget.basePath}$fileName$ext}");
-        File file = File("${basePath}${widget.basePath}$fileName$ext");
+      for (String ext in [".jpg", ".png"]) {
+        print("Pathhs ${basePath}/${classes}/${state}${cleaned}$fileName$ext");
+        File file = File("${basePath}/${classes}/${state}${cleaned}$fileName$ext");
         if (file.existsSync()) {
           loadedFiles.add(file);
           break; // Stop checking if file is found

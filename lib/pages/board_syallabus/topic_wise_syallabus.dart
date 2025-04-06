@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/text_answer/text_answer.dart';
+import 'package:sigma_new/pages/video_explanation/video_explanation.dart';
 import 'package:sigma_new/questions/easy_questions.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
@@ -84,10 +85,10 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
         body: Column(
           children: [
             height10Space,
-            Padding(
-              padding: const EdgeInsets.only(right: 65.0),
+            if(widget.pathQuestion["complexity"].toString().toLowerCase() !="na")Padding(
+              padding: const EdgeInsets.only(right: 10.0, left: 10.0),
               child: Container(
-                width: MediaQuery.of(context).size.width * 0.7,
+                width: MediaQuery.of(context).size.width * 0.9,
                 height: MediaQuery.of(context).size.height * 0.06,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
@@ -118,6 +119,12 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                     Tab(
                       child: Text("Complex"),
                     ),
+                    Tab(
+                      child: Text("Difficult"),
+                    ),
+                    Tab(
+                      child: Text("Advance"),
+                    ),
                   ],
                 ),
               ),
@@ -125,6 +132,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
             const SizedBox(
               height: 15,
             ),
+            //questionData(),
             Expanded(
               child: TabBarView(children: [
                 questionData(),
@@ -146,15 +154,19 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
 
         Row(
           children: [
+            if((widget.pathQuestion["test_answer_string"]!=null) || widget.pathQuestion["description_image_id"].toString().toLowerCase()!="nr")
             TextButton(onPressed: () {
               if(widget.pathQuestion["description_image_id"].toString().toLowerCase()=="nr"){
 
                 Get.to(TextAnswer(imagePath: widget.pathQuestion["test_answer_string"], basePath: "nr",));
 
               }else{
-              Get.to(TextAnswer(imagePath: widget.pathQuestion["description_image_id"],basePath: "/jee/theory/${widget.pathQuestion["subjectid"]}/images/",));
+             // Get.to(TextAnswer(imagePath: widget.pathQuestion["description_image_id"],basePath: "/jee/theory/${widget.pathQuestion["subjectid"]}/images/",));
+              Get.to(TextAnswer(imagePath: widget.pathQuestion["description_image_id"],basePath: "/${widget.pathQuestion["subjectid"]}/images/",));
               }
             }, child: Text('Text Answer')),
+
+
             if ((widget.pathQuestion["explaination_video_id"]
                         .toString()
                         .toLowerCase()) !=
@@ -163,7 +175,9 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                         .toString()
                         .toLowerCase()) !=
                     "nr")
-              TextButton(onPressed: () {}, child: Text('Explanation')),
+              TextButton(onPressed: () {
+                Get.to(VideoExplanation(videoPath: widget.pathQuestion["explaination_video_id"],basePath: "/${widget.pathQuestion["subjectid"]}/videos/",));
+              }, child: Text('Explanation')),
             TextButton(onPressed: () {}, child: Text('Notes')),
             TextButton(onPressed: () {}, child: Text('Bookmarks'))
           ],
