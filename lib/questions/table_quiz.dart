@@ -11,32 +11,31 @@ import 'package:sigma_new/utility/sd_card_utility.dart';
 class TableQuiz extends StatefulWidget {
   String pathQuestion;
   String title;
-  TableQuiz({required this.pathQuestion,required this.title,super.key  });
+  TableQuiz({required this.pathQuestion, required this.title, super.key});
 
   @override
   State<TableQuiz> createState() => _TableQuizState();
 }
 
-class _TableQuizState extends State<TableQuiz> {
-  final GlobalKey<ScaffoldState> _tablequizscaffoldKey =
-      GlobalKey<ScaffoldState>();
+class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
+  final GlobalKey<ScaffoldState> _tablequizscaffoldKey = GlobalKey<ScaffoldState>();
 
-  Map<String, dynamic> parsedJson={};
-  List<dynamic> sigmaData =[];
+  Map<String, dynamic> parsedJson = {};
+  List<dynamic> sigmaData = [];
 
+  List<dynamic> simple = [];
+  List<dynamic> medium = [];
+  List<dynamic> complex = [];
+  List<dynamic> difficult = [];
+  List<dynamic> advanced = [];
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-
     getQuestionList();
-
   }
 
-
-  getQuestionList() async{
-
+  getQuestionList() async {
     var newPath;
     var board;
     final prefs = await SharedPreferences.getInstance();
@@ -47,194 +46,123 @@ class _TableQuizState extends State<TableQuiz> {
       board = prefs.getString('board');
     }
 
-    if (widget.pathQuestion!.contains("10")) {
+    if (widget.pathQuestion.contains("10")) {
       newPath = "10/";
-    } else if (widget.pathQuestion!.contains("12")) {
+    } else if (widget.pathQuestion.contains("12")) {
       newPath = "12/";
     }
 
     var inputFile = await SdCardUtility.getSubjectEncJsonData('${newPath}${board}testseries/${widget.pathQuestion}.json');
-
-
-     parsedJson = jsonDecode(inputFile!);
-
+    parsedJson = jsonDecode(inputFile!);
     sigmaData = parsedJson["sigma_data"];
-    print("Sig ${parsedJson["sigma_data"][0]["complexity"]}");
 
-    createFinalList();
-  }
-
-  Future<void> createFinalList() async {
-    if (true) {
-      // Get the stored test level based on subject
-      // currentTestLevel = prefs.getString("${widget.jeeData.first.question.trim().toUpperCase()}_LEVEL") ?? "s";
-
-      List<dynamic> simple = [];
-      List<dynamic> medium = [];
-      List<dynamic> complex = [];
-      List<dynamic> difficult = [];
-      List<dynamic> advanced = [];
-
-      // Categorize questions by complexity
-      for (var data in parsedJson["sigma_data"]) {
-        switch (data["complexity"]) {
-          case "s":
-            simple.add(data);
-            print("Simplesss $data");
-            break;
-          case "m":
-            medium.add(data);
-            print("Simplessm $data");
-            break;
-          case "c":
-            complex.add(data);
-            print("Simplessc $data");
-            break;
-          case "d":
-            difficult.add(data);
-            print("Simplessd $data");
-            break;
-          case "a":
-            advanced.add(data);
-            print("Simplessa $data");
-            break;
-        }
+    for (var data in sigmaData) {
+      switch (data["complexity"]) {
+        case "s":
+          simple.add(data);
+          break;
+        case "m":
+          medium.add(data);
+          break;
+        case "c":
+          complex.add(data);
+          break;
+        case "d":
+          difficult.add(data);
+          break;
+        case "a":
+          advanced.add(data);
+          break;
       }
+    }
 
-      for (int j = 0; j < medium.length; j++) {
-        //JeeDatum data = simpleque.get(arraySimple[j]);
-      //  data.setArrange(allquestions.size() + 1);
-       // allquestions.add(data.getQuestion());
-       // finalArr.put(data.getJson());
-       // randomList.add(data);
-
-        print(medium.length);
-        print("Simple ${medium}  Complexity ${sigmaData[j]["complexity"]}");
-      }
-      // Select random questions
-      List<int> getRandomIndices(int size, int count) {
-        if (size == 0) return [];
-        List<int> indices = List.generate(size, (i) => i);
-        indices.shuffle();
-        return indices.take(count.clamp(0, size)).toList();
-      }
-
-      // Select based on test level
-
-
-      // Prepare final JSON structure
-
-
-     // print("SimpleData ${simple.first}");
-      setState(() {});
-    }// Refresh UI
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    print("Path Q ${widget.pathQuestion}");
     double height = MediaQuery.of(context).size.height;
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
 
-    final isPortrait =
-        MediaQuery.of(context).orientation == Orientation.portrait;
     return DefaultTabController(
-      length: 5,
+      length: [simple, medium, complex, advanced, difficult].where((list) => list.isNotEmpty).length,
       child: Scaffold(
         drawer: DrawerWidget(context),
         key: _tablequizscaffoldKey,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
-            (isPortrait) ? height * 0.08 : height * 0.5,
+            (isPortrait) ? height * 0.13 : height * 0.5,
           ),
           child: Stack(
             children: [
               AppBar(
-                  // backgroundColor: backgroundColor,
-                  leading: InkWell(
-                    onTap: () {
-                      _tablequizscaffoldKey.currentState?.openDrawer();
-                    },
-                    child: const Icon(Icons.menu),
-                  ),
-                  flexibleSpace: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          backgroundColor,
-                          backgroundColor,
-                          backgroundColor,
-                          whiteColor,
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
+                leading: InkWell(
+                  onTap: () {
+                    _tablequizscaffoldKey.currentState?.openDrawer();
+                  },
+                  child: const Icon(Icons.menu),
+                ),
+                flexibleSpace: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        backgroundColor,
+                        backgroundColor,
+                        backgroundColor,
+                        whiteColor,
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
                   ),
-                  title: Text(
-                    widget.title,
-                    style: black20w400MediumTextStyle,
-                  )),
+                ),
+                title: Text(
+                  widget.title,
+                  style: black20w400MediumTextStyle,
+                ),
+              ),
             ],
           ),
         ),
         body: Column(
           children: [
-            height10Space,
+            const SizedBox(height: 10),
             Padding(
-              padding: const EdgeInsets.only(right: 10.0,left: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Container(
                 width: Get.width * 0.95,
                 height: Get.height * 0.06,
                 decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    color: Colors.white),
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colors.white,
+                ),
                 child: TabBar(
-                  indicator: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: primaryColor.withOpacity(0.1),
-                    shape: BoxShape.rectangle,
+                  isScrollable: true,
+                  indicator: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    color: Color(0xFFE0E0E0),
                   ),
-                  padding: const EdgeInsets.all(5),
-                  labelPadding: const EdgeInsets.all(5),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  dividerColor: Colors.transparent,
-                  labelColor: primaryColor,
-                  unselectedLabelColor: blackColor,
-                  splashBorderRadius: BorderRadius.circular(5),
-                  indicatorColor: backgroundColor,
-                  tabs: const [
-                    Tab(
-                      child: Text(
-                        "Easy",
-                      ),
-                    ),
-                    Tab(
-                      child: Text("Medium"),
-                    ),
-                    Tab(
-                      child: Text("Complex"),
-                    ),
-
-                    Tab(
-                      child: Text("Advance"),
-                    ),
-
-                    Tab(
-                      child: Text("Difficult"),
-                    ),
+                  tabs: [
+                    if (simple.isNotEmpty) Tab(child: Text("Easy")),
+                    if (medium.isNotEmpty) Tab(child: Text("Medium")),
+                    if (complex.isNotEmpty) Tab(child: Text("Complex")),
+                    if (advanced.isNotEmpty) Tab(child: Text("Advance")),
+                    if (difficult.isNotEmpty) Tab(child: Text("Difficult")),
                   ],
                 ),
               ),
             ),
-            const SizedBox(
-              height: 15,
-            ),
-             Expanded(
-              child: TabBarView(children: [
-                EasyQuestions(easyQuestion: sigmaData),
-              //  MediumQuestions(),
-              //  ComplexQuestions()
-              ]),
+            const SizedBox(height: 15),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  if (simple.isNotEmpty) EasyQuestions(easyQuestion: simple),
+                  if (medium.isNotEmpty) EasyQuestions(easyQuestion: medium),
+                  if (complex.isNotEmpty) EasyQuestions(easyQuestion: complex),
+                  if (advanced.isNotEmpty) EasyQuestions(easyQuestion: advanced),
+                  if (difficult.isNotEmpty) EasyQuestions(easyQuestion: difficult),
+                ],
+              ),
             ),
             const SizedBox(height: 15),
           ],
