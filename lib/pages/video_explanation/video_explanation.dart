@@ -46,7 +46,7 @@ class _VideoExplanationState extends State<VideoExplanation> {
         .replaceAll(state.toLowerCase(), "");
 
     // Split video paths
-    List<String> videoPaths = widget.videoPath is String
+    List<dynamic> videoPaths = widget.videoPath is String
         ? widget.videoPath
         .split(",")
         .map((e) => e.trim())
@@ -57,6 +57,7 @@ class _VideoExplanationState extends State<VideoExplanation> {
     List<VideoPlayerController> controllers = [];
 
     for (String fileName in videoPaths) {
+      print("Pathhs ${basePath}/${classes}/${state}${cleaned}$fileName.mp4");
       String path = "$basePath/$classes/$state$cleaned$fileName.mp4";
       File file = File(path);
       if (file.existsSync()) {
