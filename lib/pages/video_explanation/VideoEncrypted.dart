@@ -61,6 +61,7 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
         final file = File(path);
 
         if (!await file.exists()) {
+
           debugPrint("❌ File does not exist: $path");
 
           _initializationFailed = true;
