@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/text_answer/text_answer.dart';
+import 'package:sigma_new/pages/video_explanation/VideoEncrypted.dart';
 import 'package:sigma_new/pages/video_explanation/video_explanation.dart';
 import 'package:sigma_new/questions/easy_questions.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
@@ -154,7 +155,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
 
         Row(
           children: [
-            if((widget.pathQuestion["test_answer_string"]!=null) || widget.pathQuestion["description_image_id"].toString().toLowerCase()!="nr")
+            if((widget.pathQuestion["test_answer_string"]!=null) &&(widget.pathQuestion["test_answer_string"].toString().toLowerCase()!="nr") || widget.pathQuestion["description_image_id"].toString().toLowerCase()!="nr")
             TextButton(onPressed: () {
               if(widget.pathQuestion["description_image_id"].toString().toLowerCase()=="nr"){
 
@@ -166,7 +167,6 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
               }
             }, child: Text('Text Answer')),
 
-
             if ((widget.pathQuestion["explaination_video_id"]
                         .toString()
                         .toLowerCase()) !=
@@ -176,7 +176,9 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                         .toLowerCase()) !=
                     "nr")
               TextButton(onPressed: () {
-                Get.to(VideoExplanation(videoPath: widget.pathQuestion["explaination_video_id"],basePath: "/${widget.pathQuestion["subjectid"]}/videos/",));
+
+                //Get.to(VideoExplanation(videoPath: widget.pathQuestion["explaination_video_id"],basePath: "/${widget.pathQuestion["subjectid"]}/videos/",));
+                Get.to(EncryptedVideoPlayer(filePath: widget.pathQuestion["explaination_video_id"], basePath: "${widget.pathQuestion["subjectid"]}/videos/",));
               }, child: Text('Explanation')),
             TextButton(onPressed: () {}, child: Text('Notes')),
             TextButton(onPressed: () {}, child: Text('Bookmarks'))
