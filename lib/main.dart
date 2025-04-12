@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:sigma_new/pages/welcomePage/welcomePage.dart';
 import 'package:sigma_new/supports/fetchDeviceDetails.dart';
@@ -22,6 +23,10 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const WelcomePage(),
+      localizationsDelegates: [
+
+        FlutterQuillLocalizations.delegate,
+      ],
     );
   }
 }
