@@ -236,6 +236,7 @@ import 'package:sigma_new/pages/video_explanation/VideoEncrypted.dart';
 import 'package:sigma_new/questions/easy_questions.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import '../../math_view/math_text.dart';
 import '../notepad/noteswrite.dart';
 
 class TopicWiseSyllabus extends StatefulWidget {
@@ -385,7 +386,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
     return Column(
       children: [
         if (widget.pathQuestion["description"] != null)
-          Text(widget.pathQuestion["description"]),
+          MathText(expression: widget.pathQuestion["description"]),
         Row(
           children: [
             if ((widget.pathQuestion["test_answer_string"] != null &&

@@ -32,7 +32,11 @@ android {
 
     dependencies {
         // Other dependencies
-        implementation "androidx.work:work-runtime-ktx:2.7.1" // Use the latest version available
+        implementation "androidx.work:work-runtime-ktx:2.7.1"
+       // implementation files('libs/MathView-0.0.6.aar')
+        implementation(name: 'MathView-0.0.6', ext: 'aar')
+    
+        // Use the latest version available
     }
 
     buildTypes {

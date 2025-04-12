@@ -144,7 +144,6 @@ class _NotepadPageState extends State<NotepadPage> {
   }
 }*/
 
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;

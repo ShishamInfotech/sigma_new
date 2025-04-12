@@ -30,6 +30,17 @@ class _MockExamScreenState extends State<MockExamScreen> {
   List<SubCahpDatum> questions = [];
   List<String> selectedAnswers = [];
 
+  final int SUB1_Q_COUNT = 98;
+  final int SUB2_Q_COUNT = 52;
+  final int SUB3_Q_COUNT = 50;
+
+  final String MAT_FILE_PREFIX = "jeemcqmathch";
+  final String PHY_FILE_PREFIX = "jeemcqphych";
+  final String CHE_FILE_PREFIX = "jeemcqchech";
+  final String BIO_FILE_PREFIX = "jeemcqbioch";
+
+  int totalQueCount = 0;
+
   int correct = 0;
   int wrong = 0;
 
@@ -46,12 +57,80 @@ class _MockExamScreenState extends State<MockExamScreen> {
   }
 
   Future<void> _initialize() async {
+
     prefs = await SharedPreferences.getInstance();
     await _loadQuestions();
     _startTimer();
   }
 
+
   Future<void> _loadQuestions() async {
+    totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
+
+
+    List<Uri> mathsFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
+    List<Uri> phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
+    List<Uri> cheFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
+
+    final mathUri = FileUri(
+      files: mathsFiles,
+      perChapterCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT ~/ mathsFiles.length : 0,
+      remainCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT % mathsFiles.length : 0,
+    );
+
+    final phyUri = FileUri(
+      files: phyFiles,
+      perChapterCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT ~/ phyFiles.length : 0,
+      remainCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT % phyFiles.length : 0,
+    );
+
+    final cheUri = FileUri(
+      files: cheFiles,
+      perChapterCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT ~/ cheFiles.length : 0,
+      remainCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT % cheFiles.length : 0,
+    );
+
+    final List<SubCahpDatum> selectedQuestions = [];
+
+    for (var uriGroup in [mathUri, phyUri, cheUri]) {
+      for (int i = 0; i < uriGroup.files.length; i++) {
+        final file = uriGroup.files[i];
+        final jsonStr = await SdCardUtility.getSubjectEncJsonDataForMock(file.path);
+        if (jsonStr == null) continue;
+
+        final decoded = jsonDecode(jsonStr);
+
+        if (decoded == null || decoded['sigma_data'] == null) {
+          continue; // Skip if no questions in this file
+        }
+        final sigmaList = decoded['sigma_data'] as List<dynamic>;
+
+        final questionList = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
+        questionList.shuffle(); // Randomize
+
+        int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
+        selectedQuestions.addAll(questionList.take(takeCount));
+      }
+    }
+
+    selectedQuestions.shuffle(); // Mix all subjects together
+
+    setState(() {
+      questions = selectedQuestions;
+      _loadMathJax(questions.first.question ?? '');
+    });
+
+    print("Total questions loaded: ${questions.length}");
+  }
+
+  /*Future<void> _loadQuestions() async {
+    totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
+
+    List<Uri> mathsFile = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
+    List<Uri> phyFile = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
+    List<Uri> cheFile = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
+
+    print("Maths File $mathsFile");
     final jsonStr = await SdCardUtility.getSubjectEncJsonData(widget.path);
     if (jsonStr == null) return;
 
@@ -62,7 +141,9 @@ class _MockExamScreenState extends State<MockExamScreen> {
       questions = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
       _loadMathJax(questions.first.question ?? '');
     });
-  }
+
+    print("Question List ${questions}");
+  }*/
 
   void _startTimer() {
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -147,7 +228,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
-              'Question \${currentIndex + 1} of \${questions.length}',
+              'Question ${currentIndex + 1} of ${questions.length}',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -217,4 +298,17 @@ class _MockExamScreenState extends State<MockExamScreen> {
     countdownTimer?.cancel();
     super.dispose();
   }
+}
+
+
+class FileUri {
+  final List<Uri> files;
+  final int perChapterCount;
+  final int remainCount;
+
+  FileUri({
+    required this.files,
+    required this.perChapterCount,
+    required this.remainCount,
+  });
 }

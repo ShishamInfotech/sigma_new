@@ -10,7 +10,7 @@ import 'package:external_path/external_path.dart';
 import 'package:sigma_new/utility/crypto_utils.dart';
 import 'constants.dart';
 
-class SdCardUtility {
+  class SdCardUtility {
   /// Request storage permission.
   static Future<bool> requestStoragePermission() async {
     var status = await Permission.storage.request();
@@ -190,6 +190,50 @@ class SdCardUtility {
 
       // Construct full file path
       String fullFilePath = "${basePath}/$path";
+     // String fullFilePath = "$path";
+
+      print("Full File Path: $fullFilePath");
+
+      File encryptedFile = File(fullFilePath);
+      if (await encryptedFile.exists()) {
+        // Read and decrypt file
+        String decryptedData = await CryptoUtils.decryptStream(encryptionKey,encryptedFile);
+        print("Decrypted Data: $decryptedData");
+        if(decryptedData.contains("{")){
+          return decryptedData;
+        }else {
+          String fixedData = _fixBase64(decryptedData);
+          // Decode Base64 to bytes, then decode bytes to a UTF-8 string.
+          final decodedBytes = base64Decode(fixedData);
+          final jsonString = utf8.decode(decodedBytes);
+          print("Decoded JSON: $jsonString");
+          return jsonString;
+        }
+      } else {
+        print("File does not exist.");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+    return null;
+  }
+
+
+  static Future<String?> getSubjectEncJsonDataForMock(String path) async {
+    try {
+      // Get base path (like getSdcardName in Java)
+      String basePath = await getBasePath();
+      if (basePath == null) {
+        print("Storage not available.");
+        return null;
+      }
+
+      print('basePath ${basePath}');
+
+      // Construct full file path
+     // String fullFilePath = "${basePath}/$path";
+       String fullFilePath = "$path";
+
       print("Full File Path: $fullFilePath");
 
       File encryptedFile = File(fullFilePath);
@@ -224,6 +268,75 @@ class SdCardUtility {
     }
     return input;
   }
+
+
+
+
+
+  //For Mock Exammm
+
+ static Future<List<Uri>?> getFileListBasedOnPref(
+      BuildContext context, String path, String pref) async {
+    // Request storage permission
+    var status = await Permission.storage.request();
+    if (!status.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Storage permission is not granted')),
+      );
+      return null;
+    }
+
+    // External storage directory
+    Directory? externalDir = await getExternalStorageDirectory();
+    if (externalDir == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error! No external storage found.')),
+      );
+      return null;
+    }
+
+    // Construct full path
+
+    String basePath = await getBasePath();
+    if (basePath == null) {
+      print("Storage not available.");
+      return null;
+    }
+
+    print('basePath ${basePath}');
+
+    // Construct full file path
+    String fullFilePath = "${basePath}/$path";
+
+    final directoryPath = fullFilePath;
+    final directory = Directory(directoryPath);
+
+    if (!directory.existsSync()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Directory not found: $directoryPath')),
+      );
+      return null;
+    }
+
+    final files = directory.listSync();
+    final uriList = <Uri>[];
+
+    for (var file in files) {
+      if (file is File && file.path.contains(pref)) {
+        final uri = Uri.file(file.path);
+        if (uri.toString().isNotEmpty) {
+          uriList.add(uri);
+        } else {
+          debugPrint("Empty URI");
+        }
+      }
+    }
+
+    return uriList;
+  }
+
+
+
 
 }
 
