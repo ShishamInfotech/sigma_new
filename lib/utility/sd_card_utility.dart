@@ -29,9 +29,9 @@ class SdCardUtility {
   static Future<String> getBasePath() async {
     // First, try to get removable storage.
     try {
-      List<String> extPaths = await ExternalPath.getExternalStorageDirectories();
+      List<String>? extPaths = await ExternalPath.getExternalStorageDirectories();
       print("External paths: $extPaths");
-      for (String path in extPaths) {
+      for (String path in extPaths!) {
         if (!path.toLowerCase().contains("emulated")) {
           final sigmaDir = Directory("$path/${Constants.SIGMA_DIR}");
           if (await sigmaDir.exists()) {
