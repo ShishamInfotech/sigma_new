@@ -10,6 +10,8 @@ import 'package:sigma_new/pages/home/jee/mock_exam/jeemockexam.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
+import 'mock_exam/MockExamScreen.dart';
+
 class JeeSubjectwise extends StatefulWidget {
   String path;
 
@@ -292,7 +294,12 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                                           child: const Text('Yes'),
                                           onPressed: () {
                                             Navigator.of(context).pop();
-                                            Get.to(const JeeMockExam());
+                                            Get.to(MockExamScreen(
+                                              subjectId: subjectsId[index],
+                                              title: subjectsTopic[index],
+                                              path: 'JEE/MCQ/sigma_data.json',
+                                            ));
+
                                           },
                                         ),
                                         TextButton(
