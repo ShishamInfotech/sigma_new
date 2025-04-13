@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
+import 'package:sigma_new/pages/usage_report/usage_report_page.dart';
 import 'package:sigma_new/pages/welcomePage/welcomePage.dart';
 import 'package:sigma_new/supports/fetchDeviceDetails.dart';
+
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
+  AppUsageTracker.startTracking();
+  AppUsageTracker.startAutoSave();
 }
 
 class MyApp extends StatelessWidget {

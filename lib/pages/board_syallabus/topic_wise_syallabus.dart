@@ -226,10 +226,9 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
 }
 */
 
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/text_answer/text_answer.dart';
 import 'package:sigma_new/pages/video_explanation/VideoEncrypted.dart';
@@ -258,18 +257,33 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
   List<dynamic> difficult = [];
   List<dynamic> advanced = [];
 
+  bool isBookmarked = false;
+
   @override
   void initState() {
     super.initState();
-
-    final complexity = widget.pathQuestion["complexity"].toString().toLowerCase();
+    checkIfBookmarked();
+    final complexity =
+        widget.pathQuestion["complexity"].toString().toLowerCase();
     if (complexity != "na") getQuestionList();
+
+  }
+
+
+  void checkIfBookmarked() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarks = prefs.getStringList('bookmarks') ?? [];
+    final currentId = widget.pathQuestion["id"].toString();
+    setState(() {
+      isBookmarked = bookmarks.contains(currentId);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
-    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
 
     return DefaultTabController(
       length: 5, // Fixed: match TabBarView count
@@ -277,7 +291,8 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
         key: _scaffoldKey,
         drawer: DrawerWidget(context),
         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(isPortrait ? height * 0.08 : height * 0.5),
+          preferredSize:
+              Size.fromHeight(isPortrait ? height * 0.08 : height * 0.5),
           child: Stack(
             children: [
               AppBar(
@@ -288,7 +303,12 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                 flexibleSpace: Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [backgroundColor, backgroundColor, backgroundColor, whiteColor],
+                      colors: [
+                        backgroundColor,
+                        backgroundColor,
+                        backgroundColor,
+                        whiteColor
+                      ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
@@ -305,7 +325,8 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
         body: Column(
           children: [
             height10Space,
-            if (widget.pathQuestion["complexity"].toString().toLowerCase() != "na")
+            if (widget.pathQuestion["complexity"].toString().toLowerCase() !=
+                "na")
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Container(
@@ -344,9 +365,9 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
               child: TabBarView(
                 children: [
                   questionData(), // 1st tab: Static question
-                  EasyQuestions(easyQuestion: simple),    // 2nd tab: simple
-                  EasyQuestions(easyQuestion: medium),    // 3rd tab: medium
-                  EasyQuestions(easyQuestion: complex),   // 4th tab: complex
+                  EasyQuestions(easyQuestion: simple), // 2nd tab: simple
+                  EasyQuestions(easyQuestion: medium), // 3rd tab: medium
+                  EasyQuestions(easyQuestion: complex), // 4th tab: complex
                   EasyQuestions(easyQuestion: difficult),
                 ],
               ),
@@ -359,7 +380,8 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
   }
 
   void getQuestionList() {
-    final complexity = (widget.pathQuestion["complexity"] ?? "").toString().toLowerCase();
+    final complexity =
+        (widget.pathQuestion["complexity"] ?? "").toString().toLowerCase();
 
     switch (complexity) {
       case "s":
@@ -390,11 +412,20 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
         Row(
           children: [
             if ((widget.pathQuestion["test_answer_string"] != null &&
-                widget.pathQuestion["test_answer_string"].toString().toLowerCase() != "nr") ||
-                widget.pathQuestion["description_image_id"].toString().toLowerCase() != "nr")
+                    widget.pathQuestion["test_answer_string"]
+                            .toString()
+                            .toLowerCase() !=
+                        "nr") ||
+                widget.pathQuestion["description_image_id"]
+                        .toString()
+                        .toLowerCase() !=
+                    "nr")
               TextButton(
                 onPressed: () {
-                  if (widget.pathQuestion["description_image_id"].toString().toLowerCase() == "nr") {
+                  if (widget.pathQuestion["description_image_id"]
+                          .toString()
+                          .toLowerCase() ==
+                      "nr") {
                     Get.to(TextAnswer(
                       imagePath: widget.pathQuestion["test_answer_string"],
                       basePath: "nr",
@@ -408,8 +439,16 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                 },
                 child: const Text('Text Answer'),
               ),
-            if ((widget.pathQuestion["explaination_video_id"]?.toString().toLowerCase() ?? "") != "na" &&
-                (widget.pathQuestion["explaination_video_id"]?.toString().toLowerCase() ?? "") != "nr")
+            if ((widget.pathQuestion["explaination_video_id"]
+                            ?.toString()
+                            .toLowerCase() ??
+                        "") !=
+                    "na" &&
+                (widget.pathQuestion["explaination_video_id"]
+                            ?.toString()
+                            .toLowerCase() ??
+                        "") !=
+                    "nr")
               TextButton(
                 onPressed: () {
                   Get.to(EncryptedVideoPlayer(
@@ -419,17 +458,40 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                 },
                 child: const Text('Explanation'),
               ),
-            TextButton(onPressed: () {
-              Get.to(NotepadPage(
-                subjectId: widget.subjectId ?? "unknown",
-                chapter: widget.pathQuestion["chapter"] ?? "chapter",
-              ));
-            }, child: const Text('Notes')),
-
-            TextButton(onPressed: () {}, child: const Text('Bookmarks')),
+            TextButton(
+                onPressed: () {
+                  Get.to(NotepadPage(
+                    subjectId: widget.subjectId ?? "unknown",
+                    chapter: widget.pathQuestion["chapter"] ?? "chapter",
+                  ));
+                },
+                child: const Text('Notes')),
+            TextButton(
+                onPressed: toggleBookmark,
+                child: Text(isBookmarked ? 'Unbookmark' : 'Bookmark')),
           ],
         )
       ],
     );
+  }
+
+  void toggleBookmark() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarks = prefs.getStringList('bookmarks') ?? [];
+    final currentId = widget.pathQuestion["id"].toString();
+
+    if (bookmarks.contains(currentId)) {
+      bookmarks.remove(currentId);
+      setState(() {
+        isBookmarked = false;
+      });
+    } else {
+      bookmarks.add(currentId);
+      setState(() {
+        isBookmarked = true;
+      });
+    }
+
+    await prefs.setStringList('bookmarks', bookmarks);
   }
 }

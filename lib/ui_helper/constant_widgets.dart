@@ -29,7 +29,7 @@ Widget infoCard({
           ),
           Text(
             number,
-            style: black44MediumTextStyle,
+            style: black24MediumTextStyle,
           ),
         ],
       ),

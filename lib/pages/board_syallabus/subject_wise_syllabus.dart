@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/board_syallabus/chapter_wise_syllabus.dart';
+import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
 class BoardWiseSyllabus extends StatefulWidget {
@@ -123,6 +124,25 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      bottomNavigationBar: Container(
+        margin: EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+          color: primaryColor,
+          boxShadow:[
+            BoxShadow(
+              color: whiteColor,
+            )
+          ],
+          borderRadius: BorderRadius.circular(10)
+        ),
+        height: 60,
+        alignment: Alignment.center,
+        child: InkWell(
+          onTap: (){
+          },
+          child: Text('Last Minute Revision', style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),),
+        ),
+      ),
       appBar: AppBar(
         title: Row(
           children: [
