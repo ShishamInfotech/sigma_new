@@ -241,6 +241,7 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
 
   List<String> subjects = [];
   Map<String, List<Map<String, dynamic>>> groupedData = {};
+  Map<String, List<Map<String, dynamic>>> groupedSubchapterQuestions = {};
 
   String removeTestSeriesFromSubjectTitle(String title) {
     if (title.toLowerCase().contains("test series")) {
@@ -281,13 +282,28 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
     subjects = sigmaData.map((data) => data["subject"].toString()).toList();
 
     if (sigmaData.isNotEmpty) {
+      for (var item1 in sigmaData) {
+        String subjectNumber = item1["subchapter_number"].toString();
+
+
+        // Initialize the group if not present
+        if (!groupedSubchapterQuestions.containsKey(subjectNumber)) {
+          groupedSubchapterQuestions[subjectNumber] = [];
+        } else {
+          print(subjectNumber + ":" + item1.toString());
+          groupedSubchapterQuestions[subjectNumber]!.add(item1);
+        }
+      }
+
       for (var item in sigmaData) {
         String subjectNumber = item["chapter_number"].toString();
+
 
         // Initialize the group if not present
         if (!groupedData.containsKey(subjectNumber)) {
           groupedData[subjectNumber] = [];
         }
+
 
         // Check for duplicates based on subchapter_number
         bool alreadyExists = groupedData[subjectNumber]!.any((existingItem) =>
@@ -305,8 +321,14 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    double screenHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -407,17 +429,27 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
     );
   }
 
+
   void onSublistItemClick(Map<String, dynamic> item) {
-    print("Clicked on: ${item["subchapter"]}");
-    Get.to(TopicWiseSyllabus(pathQuestion: item));
+    final String subchapterNumber = item["subchapter_number"]
+        .toString()
+        .trim()
+        .toLowerCase();
+    final questions = groupedSubchapterQuestions[subchapterNumber];
+
+    if (questions != null && questions.isNotEmpty) {
+      Get.to(() =>
+          TopicWiseSyllabus(
+            pathQuestionList: questions,
+            subjectId: item["subjectid"],
+          ));
+    } else {
+      Get.snackbar(
+        "No Questions Found",
+        "There are no questions available for this subchapter.",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 3),
+      );
+    }
   }
-
-  /*void onSublistItemClick(Map<String, dynamic> item) {
-    // Find all subchapters under the same chapter
-    final String chapterNumber = item["chapter_number"].toString();
-    final List<Map<String, dynamic>> subchapterList = groupedData[chapterNumber] ?? [];
-
-    // Navigate and pass the list instead of a single item
-    Get.to(TopicWiseSyllabus(pathQuestionList: subchapterList));
-  }*/
 }

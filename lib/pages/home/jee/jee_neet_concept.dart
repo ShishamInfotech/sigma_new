@@ -228,14 +228,25 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
   }
 
 
+  // void onSublistItemClick(Map<String, dynamic> item) {
+  //   // Handle item click
+  //   print("Clicked on: ${item["description_image_id"]}");
+  //
+  //   Get.to(TopicWiseSyllabus(pathQuestion: item, subjectId: widget.subjectId,));
+  //
+  // }
+
   void onSublistItemClick(Map<String, dynamic> item) {
-    // Handle item click
-    print("Clicked on: ${item["description_image_id"]}");
+    final String subchapterNumber = item["subchapter_number"];
+    final List<Map<String, dynamic>> allQuestions = [];
 
-    Get.to(TopicWiseSyllabus(pathQuestion: item, subjectId: widget.subjectId,));
+    for (var chapter in groupedData.values) {
+      allQuestions.addAll(chapter.where((q) =>
+      q["subchapter_number"].toString().toLowerCase().trim() ==
+          subchapterNumber.toLowerCase().trim()));
+    }
 
+    Get.to(() => TopicWiseSyllabus(pathQuestionList: allQuestions, subjectId: item["subjectid"]));
   }
-
-
 
 }
