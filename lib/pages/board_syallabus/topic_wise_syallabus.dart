@@ -226,6 +226,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
 }
 */
 
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -235,7 +236,6 @@ import 'package:sigma_new/pages/text_answer/text_answer.dart';
 import 'package:sigma_new/pages/video_explanation/VideoEncrypted.dart';
 import 'package:sigma_new/questions/easy_questions.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
-
 import '../../math_view/math_text.dart';
 import '../notepad/noteswrite.dart';
 
@@ -252,20 +252,20 @@ class TopicWiseSyllabus extends StatefulWidget {
 class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  List<dynamic> simple = [];
-  List<dynamic> medium = [];
-  List<dynamic> complex = [];
-  List<dynamic> difficult = [];
-  List<dynamic> advanced = [];
+  List<Map<String, dynamic>> simple = [];
+  List<Map<String, dynamic>> medium = [];
+  List<Map<String, dynamic>> complex = [];
+  List<Map<String, dynamic>> difficult = [];
+  List<Map<String, dynamic>> advanced = [];
 
   bool isBookmarked = false;
+  late String complexity;
 
   @override
   void initState() {
     super.initState();
     checkIfBookmarked();
-    final complexity =
-    widget.pathQuestion["complexity"].toString().toLowerCase();
+    complexity = widget.pathQuestion["complexity"].toString().toLowerCase();
     if (complexity != "na") getQuestionList();
   }
 
@@ -332,51 +332,62 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
-    final isPortrait =
-        MediaQuery.of(context).orientation == Orientation.portrait;
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
 
-    return DefaultTabController(
-      length: 5,
+    List<Tab> tabs = [];
+    List<Widget> tabViews = [];
+
+    if (simple.isNotEmpty) {
+      tabs.add(const Tab(child: Text("Easy")));
+      tabViews.add(_buildQuestionList(simple));
+    }
+    if (medium.isNotEmpty) {
+      tabs.add(const Tab(child: Text("Medium")));
+      tabViews.add(_buildQuestionList(medium));
+    }
+    if (complex.isNotEmpty) {
+      tabs.add(const Tab(child: Text("Complex")));
+      tabViews.add(_buildQuestionList(complex));
+    }
+    if (difficult.isNotEmpty) {
+      tabs.add(const Tab(child: Text("Difficult")));
+      tabViews.add(_buildQuestionList(difficult));
+    }
+    if (advanced.isNotEmpty) {
+      tabs.add(const Tab(child: Text("Advanced")));
+      tabViews.add(_buildQuestionList(advanced));
+    }
+
+    return complexity == "na"
+        ? _buildNoTabScaffold(context, height)
+        : DefaultTabController(
+      length: tabs.length,
       child: Scaffold(
         key: _scaffoldKey,
         drawer: DrawerWidget(context),
         appBar: PreferredSize(
-          preferredSize:
-          Size.fromHeight(isPortrait ? height * 0.08 : height * 0.5),
-          child: Stack(
-            children: [
-              AppBar(
-                leading: InkWell(
-                  onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                  child: const Icon(Icons.menu),
-                ),
-                flexibleSpace: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        backgroundColor,
-                        backgroundColor,
-                        backgroundColor,
-                        whiteColor
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  widget.pathQuestion["chapter"] ?? "",
-                  style: black20w400MediumTextStyle,
+          preferredSize: Size.fromHeight(isPortrait ? height * 0.08 : height * 0.5),
+          child: AppBar(
+            leading: InkWell(
+              onTap: () => _scaffoldKey.currentState?.openDrawer(),
+              child: const Icon(Icons.menu),
+            ),
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [backgroundColor, backgroundColor, backgroundColor, whiteColor],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
-            ],
+            ),
+            title: Text(widget.pathQuestion["chapter"] ?? "", style: black20w400MediumTextStyle),
           ),
         ),
         body: Column(
           children: [
-            height10Space,
-            if (widget.pathQuestion["complexity"].toString().toLowerCase() !=
-                "na")
+            const SizedBox(height: 10),
+            if (tabs.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Container(
@@ -387,41 +398,20 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                     color: Colors.white,
                   ),
                   child: TabBar(
+                    tabs: tabs,
+                    isScrollable: true,
                     indicator: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       color: primaryColor.withOpacity(0.1),
-                      shape: BoxShape.rectangle,
                     ),
-                    padding: const EdgeInsets.all(5),
-                    labelPadding: const EdgeInsets.all(5),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerColor: Colors.transparent,
                     labelColor: primaryColor,
                     unselectedLabelColor: blackColor,
-                    splashBorderRadius: BorderRadius.circular(5),
-                    indicatorColor: backgroundColor,
-                    tabs: const [
-                      Tab(child: Text("Easy")),
-                      Tab(child: Text("Medium")),
-                      Tab(child: Text("Complex")),
-                      Tab(child: Text("Difficult")),
-                      Tab(child: Text("Advance")),
-                    ],
                   ),
                 ),
               ),
             const SizedBox(height: 15),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  questionData(),
-                  EasyQuestions(easyQuestion: simple),
-                  EasyQuestions(easyQuestion: medium),
-                  EasyQuestions(easyQuestion: complex),
-                  EasyQuestions(easyQuestion: difficult),
-                ],
-              ),
-            ),
+            if (tabs.isNotEmpty)
+              Expanded(child: TabBarView(children: tabViews)),
             const SizedBox(height: 15),
           ],
         ),
@@ -429,56 +419,70 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
     );
   }
 
-  Widget questionData() {
+  Widget _buildNoTabScaffold(BuildContext context, double height) {
+    return Scaffold(
+      key: _scaffoldKey,
+      drawer: DrawerWidget(context),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(height * 0.08),
+        child: AppBar(
+          leading: InkWell(
+            onTap: () => _scaffoldKey.currentState?.openDrawer(),
+            child: const Icon(Icons.menu),
+          ),
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [backgroundColor, backgroundColor, backgroundColor, whiteColor],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          title: Text(widget.pathQuestion["chapter"] ?? "", style: black20w400MediumTextStyle),
+        ),
+      ),
+      body: SingleChildScrollView(child: _buildQuestionCard(widget.pathQuestion)),
+    );
+  }
+
+
+  Widget _buildQuestionList(List<Map<String, dynamic>> questionList) {
+    return ListView.builder(
+      itemCount: questionList.length,
+      itemBuilder: (context, index) {
+        return _buildQuestionCard(questionList[index]);
+      },
+    );
+  }
+
+  Widget  _buildQuestionCard(Map<String, dynamic> question){
     return Column(
       children: [
-        if (widget.pathQuestion["description"] != null)
-          MathText(expression: widget.pathQuestion["description"], height: estimateHeight(widget.pathQuestion["description"])),
+        if (question["description"] != null)
+          MathText(expression: question["description"], height: estimateHeight(question["description"])),
         Row(
           children: [
-            if ((widget.pathQuestion["test_answer_string"] != null &&
-                widget.pathQuestion["test_answer_string"]
-                    .toString()
-                    .toLowerCase() !=
-                    "nr") ||
-                widget.pathQuestion["description_image_id"]
-                    .toString()
-                    .toLowerCase() !=
-                    "nr")
+            if ((question["test_answer_string"] != null &&
+                question["test_answer_string"].toString().toLowerCase() != "nr") ||
+                question["description_image_id"].toString().toLowerCase() != "nr")
               TextButton(
                 onPressed: () {
-                  if (widget.pathQuestion["description_image_id"]
-                      .toString()
-                      .toLowerCase() ==
-                      "nr") {
-                    Get.to(TextAnswer(
-                      imagePath: widget.pathQuestion["test_answer_string"],
-                      basePath: "nr",
-                    ));
-                  } else {
-                    Get.to(TextAnswer(
-                      imagePath: widget.pathQuestion["description_image_id"],
-                      basePath: "/${widget.pathQuestion["subjectid"]}/images/",
-                    ));
-                  }
+                  final isNR = question["description_image_id"].toString().toLowerCase() == "nr";
+                  Get.to(() => TextAnswer(
+                    imagePath: isNR ? question["test_answer_string"] : question["description_image_id"],
+                    basePath: isNR ? "nr" : "/${question["subjectid"]}/images/",
+                  ));
                 },
                 child: const Text('Text Answer'),
               ),
-            if ((widget.pathQuestion["explaination_video_id"]
-                ?.toString()
-                .toLowerCase() ??
-                "") !=
-                "na" &&
-                (widget.pathQuestion["explaination_video_id"]
-                    ?.toString()
-                    .toLowerCase() ??
-                    "") !=
-                    "nr")
+            if ((question["explaination_video_id"]?.toString().toLowerCase() ?? "") != "na" &&
+                (question["explaination_video_id"]?.toString().toLowerCase() ?? "") != "nr")
               TextButton(
                 onPressed: () {
-                  Get.to(EncryptedVideoPlayer(
-                    filePath: widget.pathQuestion["explaination_video_id"],
-                    basePath: "${widget.pathQuestion["subjectid"]}/videos/",
+                  Get.to(() => EncryptedVideoPlayer(
+                    filePath: question["explaination_video_id"],
+                    basePath: "${question["subjectid"]}/videos/",
                   ));
                 },
                 child: const Text('Explanation'),
@@ -487,7 +491,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                 onPressed: () {
                   Get.to(NotepadPage(
                     subjectId: widget.subjectId ?? "unknown",
-                    chapter: widget.pathQuestion["chapter"] ?? "chapter",
+                    chapter: question["chapter"] ?? "chapter",
                   ));
                 },
                 child: const Text('Notes')),
@@ -501,8 +505,11 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
   }
 
 
+
+
   double estimateHeight(String text) {
     final lines = (text.length / 30).ceil(); // assume 30 chars per line
     return lines * 40.0; // assume each line is about 40 pixels tall
   }
+
 }
