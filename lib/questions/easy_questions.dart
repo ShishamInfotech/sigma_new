@@ -27,7 +27,7 @@ class _EasyQuestionsState extends State<EasyQuestions> {
               color: primaryColor,
             ),
           ),*/
-          MathText(expression: widget.easyQuestion["question"])
+          MathText(expression: widget.easyQuestion["question"], height: estimateHeight(widget.easyQuestion["question"]),)
         ),
         if (widget.easyQuestion["options"] != null)
           ...List.generate(widget.easyQuestion["options"].length, (i) {
@@ -51,5 +51,10 @@ class _EasyQuestionsState extends State<EasyQuestions> {
         ),
       ],
     );
+  }
+
+  double estimateHeight(String text) {
+    final lines = (text.length / 30).ceil(); // assume 30 chars per line
+    return lines * 40.0; // assume each line is about 40 pixels tall
   }
 }

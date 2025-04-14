@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/board_syallabus/chapter_wise_syllabus.dart';
+import 'package:sigma_new/pages/last_minute_revision/last_minute_revision.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
@@ -19,14 +20,14 @@ class BoardWiseSyllabus extends StatefulWidget {
 
 class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
   final List<Color> cardColors = [
-    Color(0xFFDBCDF0),
-    Color(0xFFF2C6DF),
-    Color(0xFFC9E4DF),
-    Color(0xFFF8D9C4),
-    Color(0xFFDBCDF0),
-    Color(0xFFF2C6DF),
-    Color(0xFFC9E4DF),
-    Color(0xFFF8D9C4),
+    const Color(0xFFDBCDF0),
+    const Color(0xFFF2C6DF),
+    const Color(0xFFC9E4DF),
+    const Color(0xFFF8D9C4),
+    const Color(0xFFDBCDF0),
+    const Color(0xFFF2C6DF),
+    const Color(0xFFC9E4DF),
+    const Color(0xFFF8D9C4),
   ];
 
   final List<Map<String, dynamic>> cardData = [
@@ -124,38 +125,39 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: Container(
-        margin: EdgeInsets.symmetric(horizontal: 15),
-        decoration: BoxDecoration(
-          color: primaryColor,
-          boxShadow:[
-            BoxShadow(
-              color: whiteColor,
-            )
-          ],
-          borderRadius: BorderRadius.circular(10)
-        ),
-        height: 60,
-        alignment: Alignment.center,
-        child: InkWell(
-          onTap: (){
-          },
-          child: Text('Last Minute Revision', style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),),
+      bottomNavigationBar: InkWell(
+        onTap: (){
+          Get.to(const LastMinuteRevision());
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 15),
+          decoration: BoxDecoration(
+            color: primaryColor,
+            boxShadow:const [
+              BoxShadow(
+                color: whiteColor,
+              )
+            ],
+            borderRadius: BorderRadius.circular(10)
+          ),
+          height: 60,
+          alignment: Alignment.center,
+          child: const Text('Last Minute Revision', style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),),
         ),
       ),
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.chevron_right, size: 24),
-            SizedBox(width: 8),
+            const Icon(Icons.chevron_right, size: 24),
+            const SizedBox(width: 8),
             Text(
               widget.path!,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         leading: IconButton(
-          icon: Icon(Icons.menu, size: 28),
+          icon: const Icon(Icons.menu, size: 28),
           onPressed: () {
             setState(() {
               _showSideNav = !_showSideNav; // Toggle side navigation visibility
@@ -176,7 +178,7 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
                   height: screenHeight * 0.6,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.6),
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(16),
                       bottomRight: Radius.circular(16),
                     ),
@@ -185,11 +187,11 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
                         color: Colors.black.withOpacity(0.2),
                         blurRadius: 10,
                         spreadRadius: 2,
-                        offset: Offset(5, 0),
+                        offset: const Offset(5, 0),
                       ),
                     ],
                   ),
-                  child: Column(
+                  child: const Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Icon(Icons.home, size: 30, color: Colors.black),
@@ -204,7 +206,7 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
 
             // 🔹 Main Content (Scrollable) - Adjust position when side nav is hidden
             AnimatedPositioned(
-              duration: Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 300),
               left: _showSideNav ? screenWidth * 0.18 : screenWidth * 0.05,
               right: screenWidth * 0.05,
               top: screenHeight * 0.04,
@@ -234,7 +236,7 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
                                   color: Colors.black.withOpacity(0.2),
                                   blurRadius: 8,
                                   spreadRadius: 1,
-                                  offset: Offset(4, 0),
+                                  offset: const Offset(4, 0),
                                 ),
                               ],
                             ),
@@ -249,7 +251,7 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
                                       width: screenWidth * 0.55,
                                       child: Text(
                                         subjects[index],
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
@@ -266,7 +268,7 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
 
                         // Expandable Content
                         AnimatedContainer(
-                          duration: Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 300),
                           width: double.infinity,
                           padding: EdgeInsets.symmetric(
                             vertical: isExpanded[index] ? screenHeight * 0.02 : 0,
@@ -281,18 +283,18 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
                                 color: Colors.black.withOpacity(0.1),
                                 blurRadius: 5,
                                 spreadRadius: 2,
-                                offset: Offset(2, 2),
+                                offset: const Offset(2, 2),
                               ),
                             ],
                           ),
                           child: isExpanded[index] && subjects[index].isNotEmpty
-                              ? Column(
+                              ? const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               SizedBox()
                             ],
                           )
-                              : SizedBox(),
+                              : const SizedBox(),
                         ),
                       ],
                     );

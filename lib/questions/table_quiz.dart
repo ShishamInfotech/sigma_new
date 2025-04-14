@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
+import 'package:sigma_new/pages/home/home.dart';
 import 'package:sigma_new/questions/easy_questions.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
@@ -48,7 +49,6 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
   }
 
   void _loadInstructions() {
-
     instructions = getLevelInstructions(title);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showDialog(
@@ -120,10 +120,15 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
     try {
       String? board;
       final prefs = await SharedPreferences.getInstance();
-      board = prefs.getString('board') == "Maharashtra" ? "MH/" : prefs.getString('board');
+      board = prefs.getString('board') == "Maharashtra"
+          ? "MH/"
+          : prefs.getString('board');
 
-      String newPath = widget.pathQuestion.contains("10") ? "10/"
-          : widget.pathQuestion.contains("12") ? "12/" : "";
+      String newPath = widget.pathQuestion.contains("10")
+          ? "10/"
+          : widget.pathQuestion.contains("12")
+              ? "12/"
+              : "";
 
       var inputFile = await SdCardUtility.getSubjectEncJsonData(
           '${newPath}${board}testseries/${widget.pathQuestion}.json');
@@ -140,12 +145,23 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
 
         for (var data in sigmaData) {
           switch (data["complexity"]?.toString().toLowerCase()) {
-            case "s": simple.add(data); break;
-            case "m": medium.add(data); break;
-            case "c": complex.add(data); break;
-            case "d": difficult.add(data); break;
-            case "a": advanced.add(data); break;
-            default: simple.add(data);
+            case "s":
+              simple.add(data);
+              break;
+            case "m":
+              medium.add(data);
+              break;
+            case "c":
+              complex.add(data);
+              break;
+            case "d":
+              difficult.add(data);
+              break;
+            case "a":
+              advanced.add(data);
+              break;
+            default:
+              simple.add(data);
           }
         }
 
@@ -204,13 +220,43 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
-    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
 
     return Scaffold(
       key: _scaffoldKey,
       drawer: DrawerWidget(context),
+      bottomNavigationBar: quizStarted
+          ? InkWell(
+              onTap: () {
+                submitMockExam();
+                //Get.to(const LastMinuteRevision());
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 15),
+                decoration: BoxDecoration(
+                    color: primaryColor,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: whiteColor,
+                      )
+                    ],
+                    borderRadius: BorderRadius.circular(10)),
+                height: 60,
+                alignment: Alignment.center,
+                child: const Text(
+                  'Submit',
+                  style:
+                      TextStyle(color: whiteColor, fontWeight: FontWeight.bold),
+                ),
+              ),
+            )
+          : Container(
+              height: 80,
+            ),
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(isPortrait ? height * 0.13 : height * 0.5),
+        preferredSize:
+            Size.fromHeight(isPortrait ? height * 0.13 : height * 0.5),
         child: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.menu),
@@ -244,12 +290,12 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
                 style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red
-                ),
+                    color: Colors.red),
               ),
             ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: ElevatedButton(
               onPressed: _startQuiz,
               style: ElevatedButton.styleFrom(
@@ -259,20 +305,21 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
             ),
           ),
           if (!quizStarted)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              instructions,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                instructions,
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
             ),
-          ),
           const SizedBox(height: 10),
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : quizStarted
-                ? _buildQuestionList()
-                : _buildPlaceholder(),
+                    ? _buildQuestionList()
+                    : _buildPlaceholder(),
           ),
         ],
       ),
@@ -298,9 +345,17 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
     } else if (widget.title.contains("Level-3")) {
       questions = [...simple.take(10), ...medium.take(10), ...complex.take(10)];
     } else if (widget.title.contains("Level-4")) {
-      questions = [...medium.take(10), ...complex.take(10), ...difficult.take(10)];
+      questions = [
+        ...medium.take(10),
+        ...complex.take(10),
+        ...difficult.take(10)
+      ];
     } else if (widget.title.contains("Level-5")) {
-      questions = [...complex.take(10), ...difficult.take(10), ...advanced.take(10)];
+      questions = [
+        ...complex.take(10),
+        ...difficult.take(10),
+        ...advanced.take(10)
+      ];
     }
 
     return ListView.builder(
@@ -310,6 +365,31 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
         var questionWithSerial = Map<String, dynamic>.from(questions[index]);
         questionWithSerial['serial'] = index + 1; // Add serial number
         return EasyQuestions(easyQuestion: questionWithSerial);
+      },
+    );
+  }
+
+  submitMockExam() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Are you sure want to submit?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Get.offAll(HomePage()); // Close the dialog
+              },
+              child: const Text('Yes'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text('No'),
+            )
+          ],
+        );
       },
     );
   }

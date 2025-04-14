@@ -226,6 +226,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
 }
 */
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -264,19 +265,68 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
     super.initState();
     checkIfBookmarked();
     final complexity =
-        widget.pathQuestion["complexity"].toString().toLowerCase();
+    widget.pathQuestion["complexity"].toString().toLowerCase();
     if (complexity != "na") getQuestionList();
-
   }
-
 
   void checkIfBookmarked() async {
     final prefs = await SharedPreferences.getInstance();
-    final bookmarks = prefs.getStringList('bookmarks') ?? [];
-    final currentId = widget.pathQuestion["id"].toString();
+    final currentDesc = widget.pathQuestion["description"].toString();
+    final bookmarkedData = prefs.getString('bookmarkedQuestions') ?? "{}";
+    final Map<String, dynamic> bookmarksMap =
+    Map<String, dynamic>.from(jsonDecode(bookmarkedData));
+
     setState(() {
-      isBookmarked = bookmarks.contains(currentId);
+      isBookmarked = bookmarksMap.containsKey(currentDesc);
     });
+  }
+
+  void toggleBookmark() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentDesc = widget.pathQuestion["description"].toString();
+
+    final bookmarkedData = prefs.getString('bookmarkedQuestions') ?? "{}";
+    final Map<String, dynamic> bookmarksMap =
+    Map<String, dynamic>.from(jsonDecode(bookmarkedData));
+
+    if (bookmarksMap.containsKey(currentDesc)) {
+      bookmarksMap.remove(currentDesc);
+      setState(() {
+        isBookmarked = false;
+      });
+    } else {
+      bookmarksMap[currentDesc] = widget.pathQuestion;
+      setState(() {
+        isBookmarked = true;
+      });
+    }
+
+    await prefs.setString('bookmarkedQuestions', jsonEncode(bookmarksMap));
+  }
+
+  void getQuestionList() {
+    final complexity =
+    (widget.pathQuestion["complexity"] ?? "").toString().toLowerCase();
+
+    switch (complexity) {
+      case "s":
+        simple.add(widget.pathQuestion);
+        break;
+      case "m":
+        medium.add(widget.pathQuestion);
+        break;
+      case "c":
+        complex.add(widget.pathQuestion);
+        break;
+      case "d":
+        difficult.add(widget.pathQuestion);
+        break;
+      case "a":
+        advanced.add(widget.pathQuestion);
+        break;
+    }
+
+    setState(() {});
   }
 
   @override
@@ -286,13 +336,13 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
         MediaQuery.of(context).orientation == Orientation.portrait;
 
     return DefaultTabController(
-      length: 5, // Fixed: match TabBarView count
+      length: 5,
       child: Scaffold(
         key: _scaffoldKey,
         drawer: DrawerWidget(context),
         appBar: PreferredSize(
           preferredSize:
-              Size.fromHeight(isPortrait ? height * 0.08 : height * 0.5),
+          Size.fromHeight(isPortrait ? height * 0.08 : height * 0.5),
           child: Stack(
             children: [
               AppBar(
@@ -364,10 +414,10 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
             Expanded(
               child: TabBarView(
                 children: [
-                  questionData(), // 1st tab: Static question
-                  EasyQuestions(easyQuestion: simple), // 2nd tab: simple
-                  EasyQuestions(easyQuestion: medium), // 3rd tab: medium
-                  EasyQuestions(easyQuestion: complex), // 4th tab: complex
+                  questionData(),
+                  EasyQuestions(easyQuestion: simple),
+                  EasyQuestions(easyQuestion: medium),
+                  EasyQuestions(easyQuestion: complex),
                   EasyQuestions(easyQuestion: difficult),
                 ],
               ),
@@ -379,52 +429,27 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
     );
   }
 
-  void getQuestionList() {
-    final complexity =
-        (widget.pathQuestion["complexity"] ?? "").toString().toLowerCase();
-
-    switch (complexity) {
-      case "s":
-        simple.add(widget.pathQuestion);
-        break;
-      case "m":
-        medium.add(widget.pathQuestion);
-        break;
-      case "c":
-        complex.add(widget.pathQuestion);
-        break;
-      case "d":
-        difficult.add(widget.pathQuestion);
-        break;
-      case "a":
-        advanced.add(widget.pathQuestion);
-        break;
-    }
-
-    setState(() {});
-  }
-
   Widget questionData() {
     return Column(
       children: [
         if (widget.pathQuestion["description"] != null)
-          MathText(expression: widget.pathQuestion["description"]),
+          MathText(expression: widget.pathQuestion["description"], height: estimateHeight(widget.pathQuestion["description"])),
         Row(
           children: [
             if ((widget.pathQuestion["test_answer_string"] != null &&
-                    widget.pathQuestion["test_answer_string"]
-                            .toString()
-                            .toLowerCase() !=
-                        "nr") ||
+                widget.pathQuestion["test_answer_string"]
+                    .toString()
+                    .toLowerCase() !=
+                    "nr") ||
                 widget.pathQuestion["description_image_id"]
-                        .toString()
-                        .toLowerCase() !=
+                    .toString()
+                    .toLowerCase() !=
                     "nr")
               TextButton(
                 onPressed: () {
                   if (widget.pathQuestion["description_image_id"]
-                          .toString()
-                          .toLowerCase() ==
+                      .toString()
+                      .toLowerCase() ==
                       "nr") {
                     Get.to(TextAnswer(
                       imagePath: widget.pathQuestion["test_answer_string"],
@@ -440,14 +465,14 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                 child: const Text('Text Answer'),
               ),
             if ((widget.pathQuestion["explaination_video_id"]
-                            ?.toString()
-                            .toLowerCase() ??
-                        "") !=
-                    "na" &&
+                ?.toString()
+                .toLowerCase() ??
+                "") !=
+                "na" &&
                 (widget.pathQuestion["explaination_video_id"]
-                            ?.toString()
-                            .toLowerCase() ??
-                        "") !=
+                    ?.toString()
+                    .toLowerCase() ??
+                    "") !=
                     "nr")
               TextButton(
                 onPressed: () {
@@ -475,23 +500,9 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
     );
   }
 
-  void toggleBookmark() async {
-    final prefs = await SharedPreferences.getInstance();
-    final bookmarks = prefs.getStringList('bookmarks') ?? [];
-    final currentId = widget.pathQuestion["id"].toString();
 
-    if (bookmarks.contains(currentId)) {
-      bookmarks.remove(currentId);
-      setState(() {
-        isBookmarked = false;
-      });
-    } else {
-      bookmarks.add(currentId);
-      setState(() {
-        isBookmarked = true;
-      });
-    }
-
-    await prefs.setStringList('bookmarks', bookmarks);
+  double estimateHeight(String text) {
+    final lines = (text.length / 30).ceil(); // assume 30 chars per line
+    return lines * 40.0; // assume each line is about 40 pixels tall
   }
 }

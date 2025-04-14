@@ -3,13 +3,14 @@ import 'package:flutter/services.dart';
 
 class MathText extends StatelessWidget {
   final String expression;
+  final double height;
 
-  const MathText({super.key, required this.expression});
+  const MathText({super.key, required this.expression, required this.height});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 150,
+    return Container(
+      height: height,
       child: AndroidView(
         viewType: 'mathview-native',
         layoutDirection: TextDirection.ltr,
