@@ -127,7 +127,7 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
       backgroundColor: Colors.white,
       bottomNavigationBar: InkWell(
         onTap: (){
-          Get.to(const LastMinuteRevision());
+          Get.to(LastMinuteRevision(path: widget.path,));
         },
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 15),

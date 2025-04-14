@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sigma_new/pages/last_minute_revision/screen_details_screen.dart';
- // Import the SubjectDetailsScreen
+import 'package:sigma_new/pages/board_syallabus/topic_wise_syallabus.dart';
+import 'package:sigma_new/utility/sd_card_utility.dart';
+import 'package:sigma_new/ui_helper/constant.dart';
 
 class LastMinuteRevision extends StatefulWidget {
-  const LastMinuteRevision({super.key});
+  final String? path;
+  const LastMinuteRevision({super.key, this.path});
 
   @override
   State<LastMinuteRevision> createState() => _LastMinuteRevisionState();
@@ -13,181 +16,364 @@ class LastMinuteRevision extends StatefulWidget {
 
 class _LastMinuteRevisionState extends State<LastMinuteRevision> {
   final List<Color> cardColors = [
-    Color(0xFFDBCDF0),
-    Color(0xFFC9E4DF),
-    Color(0xFFF2C6DF),
-    Color(0xFFC5DEF2),
-    Color(0xFFFAEDCB),
+    const Color(0xFFDBCDF0),
+    const Color(0xFFF2C6DF),
+    const Color(0xFFC9E4DF),
+    const Color(0xFFF8D9C4),
   ];
 
-  Map<String, List<Map<String, dynamic>>> groupedData = {};
+  Map<String, Map<String, Map<String, List<Map<String, dynamic>>>>> structuredData = {};
+  List<bool> isExpanded = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
+  bool _showSideNav = true;
+  int _totalBookmarkedQuestions = 0;
 
   @override
   void initState() {
     super.initState();
-    getBookMark();
+    loadStructuredBookmarks();
   }
 
-  Future<void> getBookMark() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('bookmarkedQuestions');
+  Future<void> loadStructuredBookmarks() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+        _totalBookmarkedQuestions = 0;
+        structuredData = {};
+      });
 
-    if (jsonString != null && jsonString.isNotEmpty) {
-      final Map<String, dynamic> decodedMap = json.decode(jsonString);
+      final prefs = await SharedPreferences.getInstance();
+      final List<String>? bookmarkedIds = prefs.getStringList('bookmarks');
 
-      Map<String, List<Map<String, dynamic>>> subjectGroups = {};
+      debugPrint('Bookmarked IDs from storage: ${bookmarkedIds?.join(', ') ?? 'None'}');
 
-      for (var entry in decodedMap.entries) {
-        var item = entry.value;
-        if (item is Map<String, dynamic>) {
-          String subject = item['subject'] ?? 'Unknown';
-          subjectGroups.putIfAbsent(subject, () => []);
-          subjectGroups[subject]!.add(item);
+      if (bookmarkedIds == null || bookmarkedIds.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'No bookmarks found. Please bookmark some questions first.';
+        });
+        return;
+      }
+
+      String board = prefs.getString('board') == "Maharashtra" ? "MH/" : prefs.getString('board') ?? '';
+      String newPath = widget.path?.contains("10") == true ? "10/" : "12/";
+      String sigmaDataPath = '${newPath}${board}sigma_data.json';
+
+      // Step 1: Load sigma_data.json to get subject mappings
+      final sigmaDataFile = await SdCardUtility.getSubjectEncJsonData(sigmaDataPath);
+      if (sigmaDataFile == null) throw Exception('Failed to load sigma_data.json');
+
+      Map<String, dynamic> parsedSigmaData = jsonDecode(sigmaDataFile);
+      List<dynamic> allSubjectsData = parsedSigmaData["sigma_data"];
+
+      final Map<String, List<Map<String, dynamic>>> bookmarkedQuestionsBySubject = {};
+      // Create a map of question_serial_number to subjectid
+      final Map<String, String> questionToSubjectMap = {};
+      for (var subjectData in allSubjectsData) {
+        //String questionId = subjectData["question_serial_number"]?.toString() ?? '';
+        String subjectId = subjectData["subjectid"]?.toString() ?? '';
+
+
+        if (subjectId != null) {
+          // Load the subject file (e.g., 12mhmat.json)
+          String subjectFilePath = '${newPath}${board}${subjectId}.json';
+          final subjectFile = await SdCardUtility.getSubjectEncJsonData(subjectFilePath);
+
+          if (subjectFile != null) {
+            Map<String, dynamic> parsedSubjectData = jsonDecode(subjectFile);
+            List<dynamic> subjectQuestions = parsedSubjectData["sigma_data"] ?? [];
+
+            // Find the specific bookmarked question
+            for (var question in subjectQuestions) {
+              if (bookmarkedIds.contains(question["question_serial_number"]?.toString() ?? '')) {
+                bookmarkedQuestionsBySubject.putIfAbsent(subjectId, () => []);
+                bookmarkedQuestionsBySubject[subjectId]!.add(question);
+                _totalBookmarkedQuestions++;
+                //break;
+              }
+            }
+          }
+        }
+      }
+
+      debugPrint('Total bookmarked questions found: $_totalBookmarkedQuestions');
+
+      if (_totalBookmarkedQuestions == 0) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'No matching bookmarks found in the current syllabus.';
+        });
+        return;
+      }
+
+      // Step 3: Structure the data by subject → chapter → subchapter
+      final result = <String, Map<String, Map<String, List<Map<String, dynamic>>>>>{};
+
+      for (var subjectEntry in bookmarkedQuestionsBySubject.entries) {
+        String subjectId = subjectEntry.key;
+        List<Map<String, dynamic>> questions = subjectEntry.value;
+
+        // Get subject name from first question (all should be same subject)
+        String subjectName = questions.first["subject"]?.toString() ?? 'Unknown Subject';
+
+        for (var question in questions) {
+          final chapter = question["chapter_number"]?.toString() ?? '0';
+          final subchapter = question["subchapter_number"]?.toString() ?? '0.0';
+
+          result.putIfAbsent(subjectName, () => {});
+          result[subjectName]!.putIfAbsent(chapter, () => {});
+          result[subjectName]![chapter]!.putIfAbsent(subchapter, () => []);
+          result[subjectName]![chapter]![subchapter]!.add(question);
         }
       }
 
       setState(() {
-        groupedData = subjectGroups;
+        structuredData = result;
+        isExpanded = List.filled(result.length, false);
+        _isLoading = false;
+      });
+
+    } catch (e) {
+      debugPrint('Error loading bookmarks: $e');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to load bookmarks. Please try again.';
       });
     }
   }
 
-  Widget buildBulletCircle(int number) {
-    return CircleAvatar(
-      radius: 14,
-      backgroundColor: Colors.white,
-      child: Text(
-        '$number',
-        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
-  Widget buildRevisionCard(int index, Color bgColor, String subject, int count, Map<String, dynamic> subjectData) {
-    return InkWell(
-      onTap: () {
-        // Navigate to the SubjectDetailsScreen and pass the list of subject data
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SubjectDetailsScreen(
-              subject: subject,
-              subjectDataList: groupedData[subject]!, // Pass the list of bookmarks for that subject
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Row(
+          children: [
+            const Icon(Icons.chevron_right, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              "Last Minute Revision (${_totalBookmarkedQuestions})",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-          ),
-        );
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 100,
-            height: 80,
-            margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Stack(
-              alignment: Alignment.center,
-              clipBehavior: Clip.none,
-              children: [
-                Container(
+          ],
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.menu, size: 28),
+          onPressed: () {
+            setState(() {
+              _showSideNav = !_showSideNav;
+            });
+          },
+        ),
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            if (_showSideNav)
+              Positioned(
+                top: screenHeight * 0.05,
+                left: -10,
+                child: Container(
+                  width: screenWidth * 0.15,
+                  height: screenHeight * 0.6,
                   decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white.withOpacity(0.6),
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
                         spreadRadius: 2,
-                        blurRadius: 6,
-                        offset: Offset(2, 4),
+                        offset: const Offset(5, 0),
                       ),
                     ],
                   ),
-                  padding: EdgeInsets.all(18),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      Image.asset(
-                        'assets/svg/open_folder.png',
-                        width:45,
-                        height: 40,
-                        fit: BoxFit.contain,
-                      ),
+                      Icon(Icons.home, size: 30, color: Colors.black),
+                      Icon(Icons.book, size: 30, color: Colors.black),
+                      Icon(Icons.bar_chart, size: 30, color: Colors.black),
+                      Icon(Icons.edit, size: 30, color: Colors.black),
+                      Icon(Icons.search, size: 30, color: Colors.black),
                     ],
                   ),
                 ),
-                Positioned(
-                  top: -15,
-                  left: 20,
-                  child: buildBulletCircle(count),
+              ),
+
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 300),
+              left: _showSideNav ? screenWidth * 0.18 : screenWidth * 0.05,
+              right: screenWidth * 0.05,
+              top: screenHeight * 0.04,
+              bottom: screenHeight * 0.03,
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _errorMessage.isNotEmpty
+                  ? Center(child: Text(_errorMessage, textAlign: TextAlign.center))
+                  : structuredData.isEmpty
+                  ? const Center(child: Text('No bookmarked questions found.'))
+                  : SingleChildScrollView(
+                child: Column(
+                  children: structuredData.entries.map((subjectEntry) {
+                    final subjectIndex = structuredData.keys.toList().indexOf(subjectEntry.key);
+                    final subjectQuestions = _countQuestionsInSubject(subjectEntry.value);
+
+                    return Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              isExpanded[subjectIndex] = !isExpanded[subjectIndex];
+                            });
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(
+                              vertical: screenHeight * 0.02,
+                              horizontal: screenWidth * 0.04,
+                            ),
+                            margin: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+                            decoration: BoxDecoration(
+                              color: cardColors[subjectIndex % cardColors.length],
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                  offset: const Offset(4, 0),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(_getIconForSubject(subjectEntry.key), size: 18),
+                                    SizedBox(width: screenWidth * 0.02),
+                                    Container(
+                                      width: screenWidth * 0.55,
+                                      child: Text(
+                                        '${subjectEntry.key} ($subjectQuestions)',
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Icon(
+                                  isExpanded[subjectIndex] ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                  size: 24,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (isExpanded[subjectIndex])
+                          ...subjectEntry.value.entries.map((chapterEntry) {
+                            final chapterQuestions = _countQuestionsInChapter(chapterEntry.value);
+                            return Padding(
+                              padding: EdgeInsets.only(left: screenWidth * 0.05),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Chapter ${chapterEntry.key} ($chapterQuestions)",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  ...chapterEntry.value.entries.map((subchapterEntry) {
+                                    final first = subchapterEntry.value.first;
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Get.to(() => TopicWiseSyllabus(
+                                          pathQuestionList: subchapterEntry.value,
+                                          subjectId: first["subjectid"],
+                                        ));
+                                      },
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: screenHeight * 0.015,
+                                          horizontal: screenWidth * 0.04,
+                                        ),
+                                        margin: EdgeInsets.symmetric(vertical: screenHeight * 0.005),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(8),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.05),
+                                              blurRadius: 4,
+                                              spreadRadius: 1,
+                                              offset: const Offset(2, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Text(
+                                          "${subchapterEntry.key}: ${first["subchapter"]} (${subchapterEntry.value.length})",
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey[800],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  SizedBox(height: screenHeight * 0.01),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                      ],
+                    );
+                  }).toList(),
                 ),
-              ],
+              ),
             ),
-          ),
-          Container(
-            width: 100,
-            child: Text(
-              subject,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final subjects = groupedData.keys.toList();
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        leading: Icon(Icons.arrow_back),
-        title: Text("Last Minutes Revisions"),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.black,
-      ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        alignment: Alignment.topCenter,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFFE7FE),
-              Colors.white,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(12),
-            child: groupedData.isEmpty
-                ? Center(child: Text("No bookmarked data found"))
-                : Wrap(
-              spacing: 10,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
-              children: List.generate(subjects.length, (index) {
-                final subject = subjects[index];
-                final count = groupedData[subject]?.length ?? 0;
-                final subjectData = groupedData[subject]!.first; // Take the first data for the subject
-                return buildRevisionCard(
-                  index,
-                  cardColors[index % cardColors.length],
-                  subject,
-                  count,
-                  subjectData,
-                );
-              }),
-            ),
-          ),
-        ),
-      ),
-    );
+  int _countQuestionsInSubject(Map<String, Map<String, List<Map<String, dynamic>>>> subjectData) {
+    int count = 0;
+    subjectData.forEach((chapter, subchapters) {
+      subchapters.forEach((subchapter, questions) {
+        count += questions.length;
+      });
+    });
+    return count;
+  }
+
+  int _countQuestionsInChapter(Map<String, List<Map<String, dynamic>>> chapterData) {
+    int count = 0;
+    chapterData.forEach((subchapter, questions) {
+      count += questions.length;
+    });
+    return count;
+  }
+
+  IconData _getIconForSubject(String subject) {
+    if (subject.toLowerCase().contains("math")) return Icons.calculate;
+    if (subject.toLowerCase().contains("science")) return Icons.science;
+    if (subject.toLowerCase().contains("physics")) return Icons.bolt;
+    if (subject.toLowerCase().contains("chemistry")) return Icons.science;
+    if (subject.toLowerCase().contains("biology")) return Icons.eco;
+    return Icons.book;
   }
 }
