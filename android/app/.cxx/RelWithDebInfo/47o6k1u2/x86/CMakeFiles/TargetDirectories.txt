@@ -1,0 +1,2 @@
+D:/Imperative/SSSIGMA/sigma_new/android/app/.cxx/RelWithDebInfo/47o6k1u2/x86/CMakeFiles/edit_cache.dir
+D:/Imperative/SSSIGMA/sigma_new/android/app/.cxx/RelWithDebInfo/47o6k1u2/x86/CMakeFiles/rebuild_cache.dir

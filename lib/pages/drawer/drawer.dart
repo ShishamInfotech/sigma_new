@@ -75,7 +75,7 @@ Widget DrawerWidget(BuildContext context) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const EvolutionPage(),
+                builder: (context) => const EvaluationPage(),
               ),
             );
           },
@@ -87,7 +87,7 @@ Widget DrawerWidget(BuildContext context) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const EvolutionPage(),
+                builder: (context) => const EvaluationPage(),
               ),
             );
           },

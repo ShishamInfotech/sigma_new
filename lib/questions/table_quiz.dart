@@ -25,6 +25,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
   bool quizStarted = false;
   bool isLoading = true;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  List<Map<String, dynamic>> selectedQuestions = [];
 
   Map<String, dynamic> parsedJson = {};
   List<dynamic> sigmaData = [];
@@ -358,13 +359,21 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
       ];
     }
 
+    selectedQuestions = questions.asMap().entries.map((entry) {
+      final index = entry.key;
+      final question = Map<String, dynamic>.from(entry.value);
+      question['serial'] = index + 1;
+      return question;
+    }).toList();
+
     return ListView.builder(
       padding: const EdgeInsets.all(12),
       itemCount: questions.length,
       itemBuilder: (context, index) {
-        var questionWithSerial = Map<String, dynamic>.from(questions[index]);
+       /* var questionWithSerial = Map<String, dynamic>.from(questions[index]);
         questionWithSerial['serial'] = index + 1; // Add serial number
-        return EasyQuestions(easyQuestion: questionWithSerial);
+  */   //   return EasyQuestions(easyQuestion: questionWithSerial);
+        return EasyQuestions(easyQuestion: selectedQuestions[index]);
       },
     );
   }
@@ -374,11 +383,43 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Are you sure want to submit?'),
+          title: const Text('Are you sure want to submit?'),
           actions: [
             TextButton(
-              onPressed: () {
-                Get.offAll(HomePage()); // Close the dialog
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+
+                final newSubmission = {
+                  'title': widget.title,
+                  'timestamp': DateTime.now().toIso8601String(),
+                  'questions': selectedQuestions,
+                };
+
+                // Load existing submissions
+                final storedSubmissions = prefs.getString('mock_submissions');
+                List<dynamic> allSubmissions = [];
+
+                if (storedSubmissions != null) {
+                  try {
+                    allSubmissions = jsonDecode(storedSubmissions);
+                  } catch (e) {
+                    allSubmissions = [];
+                  }
+                }
+
+                // Append new submission
+                allSubmissions.add(newSubmission);
+
+                // Optional: Keep only the last 30 submissions
+                if (allSubmissions.length > 30) {
+                  allSubmissions = allSubmissions.sublist(allSubmissions.length - 30);
+                }
+
+                // Save updated list
+                await prefs.setString('mock_submissions', jsonEncode(allSubmissions));
+
+                // Optionally: Navigate to homepage or evaluation
+                Get.offAll(HomePage());
               },
               child: const Text('Yes'),
             ),
@@ -393,4 +434,5 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
       },
     );
   }
+
 }
