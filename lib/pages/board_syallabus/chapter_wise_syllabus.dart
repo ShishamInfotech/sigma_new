@@ -436,6 +436,9 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
         .toString()
         .trim()
         .toLowerCase();
+
+    print("Sub Chapter No:=  "+subchapterNumber);
+
     final questions = groupedSubchapterQuestions[subchapterNumber];
 
     if (questions != null && questions.isNotEmpty) {

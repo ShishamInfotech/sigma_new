@@ -34,7 +34,7 @@ Widget DrawerWidget(BuildContext context) {
           },
         ),
         ListTile(
-          title: const Text('Books'),
+          title: const Text('Library'),
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -45,7 +45,7 @@ Widget DrawerWidget(BuildContext context) {
           },
         ),
         ListTile(
-          title: const Text('Report'),
+          title: const Text('Real Time Monitoring Report'),
           onTap: () {
             Navigator.pop(context);
             Navigator.push(
@@ -57,7 +57,7 @@ Widget DrawerWidget(BuildContext context) {
           },
         ),
         ListTile(
-          title: const Text('Exam Prep'),
+          title: const Text('Exam Preperation'),
           onTap: () {
             Navigator.pop(context);
             Navigator.push(
@@ -69,7 +69,7 @@ Widget DrawerWidget(BuildContext context) {
           },
         ),
         ListTile(
-          title: const Text('Evaluation'),
+          title: const Text('Exam Evaluation'),
           onTap: () {
             Navigator.pop(context);
             Navigator.push(

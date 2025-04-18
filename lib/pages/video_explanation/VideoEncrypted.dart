@@ -9,8 +9,9 @@ import 'package:path_provider/path_provider.dart';
 class EncryptedVideoPlayer extends StatefulWidget {
   final dynamic filePath;
   final String basePath;
+  final String title;
 
-  const EncryptedVideoPlayer({Key? key, required this.filePath, required this.basePath}) : super(key: key);
+  const EncryptedVideoPlayer({Key? key, required this.filePath, required this.basePath, required this.title}) : super(key: key);
 
   @override
   _EncryptedVideoPlayerState createState() => _EncryptedVideoPlayerState();
@@ -38,6 +39,7 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
   Future<void> _initVideoPlayer() async {
     try {
 
+      print("filePath ${widget.filePath}");
       final basePath = await SdCardUtility.getBasePath();
       debugPrint("BasePath from SdCardUtility: $basePath");
 
@@ -190,7 +192,7 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text("Video Player")),
+      appBar: AppBar(title: Text(widget.title)),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Center(
