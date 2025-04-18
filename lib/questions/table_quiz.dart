@@ -243,7 +243,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
                       )
                     ],
                     borderRadius: BorderRadius.circular(10)),
-                height: 60,
+                height: 40,
                 alignment: Alignment.center,
                 child: const Text(
                   'Submit',
@@ -365,7 +365,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
       question['serial'] = index + 1;
       return question;
     }).toList();
-
+    print("selectedQuestions==="+ questions.toString());
     return ListView.builder(
       padding: const EdgeInsets.all(12),
       itemCount: questions.length,

@@ -136,7 +136,6 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
   }
 
   Widget _buildQuestionList(List<Map<String, dynamic>> questionList) {
-    print("Question =========="+ questionList.length.toString());
     return ListView.builder(
       itemCount: questionList.length,
       itemBuilder: (context, index) {
@@ -154,8 +153,8 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                 return Row(
                   children: [
                     if ((question["test_answer_string"] != null &&
-                        question["test_answer_string"].toString().toLowerCase() != "nr") ||
-                        question["description_image_id"].toString().toLowerCase() != "nr")
+                        question["test_answer_string"].toString().toLowerCase() != "nr" && question["test_answer_string"].toString().toLowerCase() != "na") ||
+                (question["description_image_id"].toString().toLowerCase() != "nr" && question["description_image_id"].toString().toLowerCase() != "na"))
                       TextButton(
                         onPressed: () {
                           final isNR = question["description_image_id"].toString().toLowerCase() == "nr";
@@ -172,6 +171,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                       TextButton(
                         onPressed: () {
                           Get.to(() => EncryptedVideoPlayer(
+                            title: widget.pathQuestionList[0]["chapter"] ?? "",
                             filePath: question["explaination_video_id"],
                             basePath: "${question["subjectid"]}/videos/",
                           ));
