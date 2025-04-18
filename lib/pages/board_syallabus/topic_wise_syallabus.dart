@@ -11,16 +11,18 @@ import '../../math_view/math_text.dart';
 import '../notepad/noteswrite.dart';
 
 class TopicWiseSyllabus extends StatefulWidget {
-  final List<Map<String, dynamic>> pathQuestionList;
+  //final List<Map<String, dynamic>> pathQuestionList;
+  var pathQuestionList;
   final String? subjectId;
 
-  const TopicWiseSyllabus({required this.pathQuestionList, this.subjectId, super.key});
+  TopicWiseSyllabus({required this.pathQuestionList, this.subjectId, super.key});
 
   @override
   State<TopicWiseSyllabus> createState() => _TopicWiseSyllabusState();
 }
 
 class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   List<Map<String, dynamic>> simple = [];
@@ -28,24 +30,31 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
   List<Map<String, dynamic>> complex = [];
   List<Map<String, dynamic>> difficult = [];
   List<Map<String, dynamic>> advanced = [];
+  List<Map<String, dynamic>> others= [];
+
+
 
   @override
   void initState() {
     super.initState();
+
+
+
     getQuestionList();
   }
 
   void getQuestionList() {
     print("Questions----------"+ widget.pathQuestionList.toString());
 
-    for (var question in widget.pathQuestionList) {
+     for(var question in widget.pathQuestionList) {
       final complexity = (question["complexity"] ?? "").toString().toLowerCase();
       switch (complexity) {
-        case "s": simple.add(question); break;
-        case "m": medium.add(question); break;
-        case "c": complex.add(question); break;
-        case "d": difficult.add(question); break;
-        case "a": advanced.add(question); break;
+      case "s": simple.add(question); break;
+      case "m": medium.add(question); break;
+      case "c": complex.add(question); break;
+      case "d": difficult.add(question); break;
+      case "a": advanced.add(question); break;
+      default: others.add(question);break;
       }
     }
     setState(() {});
@@ -94,6 +103,11 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
       tabs.add(const Tab(text: "Advanced"));
       tabViews.add(_buildQuestionList(advanced));
     }
+    if (others.isNotEmpty) {
+      tabs.add(const Tab(text: "Other"));
+      tabViews.add(_buildQuestionList(others));
+    }
+
 
     return DefaultTabController(
       length: tabs.length,
@@ -101,7 +115,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
         key: _scaffoldKey,
         drawer: DrawerWidget(context),
         appBar: AppBar(
-          title: Text(widget.pathQuestionList.first["chapter"] ?? ""),
+          title: Text(widget.pathQuestionList[0]["chapter"] ?? ""),
         ),
         body: Column(
           children: [
@@ -146,6 +160,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                         onPressed: () {
                           final isNR = question["description_image_id"].toString().toLowerCase() == "nr";
                           Get.to(() => TextAnswer(
+                            title: widget.pathQuestionList[0]["chapter"] ?? "",
                             imagePath: isNR ? question["test_answer_string"] : question["description_image_id"],
                             basePath: isNR ? "nr" : "/${question["subjectid"]}/images/",
                           ));
@@ -170,7 +185,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                           chapter: question["chapter"] ?? "chapter",
                         ));
                       },
-                      child: const Text("Notes"),
+                      child: const Text("Notepad"),
                     ),
                     TextButton(
                       onPressed: () => toggleBookmark(questionId),

@@ -7,8 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.sigma_new"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    compileSdk = 35
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -25,7 +25,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -35,17 +35,23 @@ android {
         implementation "androidx.work:work-runtime-ktx:2.7.1"
        // implementation files('libs/MathView-0.0.6.aar')
         implementation(name: 'MathView-0.0.6', ext: 'aar')
+        implementation files('libs/commons-beanutils-1.9.4.jar')
 
 
+        implementation 'net.minidev:json-smart:2.4.8' // For net.minidev.json
+       // implementation 'org.javolution:javolution-core-java:6.0.0' // For JEP
+        // For Java Beans (if needed)
+      //  implementation 'org.apache.commons:commons-beanutils:1.9.4'
        // implementation 'com.github.madrobot:madrobot-core:1.0.7'
+       // implementation 'org.apache.commons:commons-beanutils2:2.0.1'
     
         // Use the latest version available
     }
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
+            shrinkResources false
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.debug

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
@@ -8,8 +9,9 @@ import 'package:sigma_new/utility/sd_card_utility.dart';
 class TextAnswer extends StatefulWidget {
   dynamic imagePath; // Can be String or List
   String? basePath;
+  String title;
 
-  TextAnswer({required this.imagePath, this.basePath, super.key});
+  TextAnswer({required this.imagePath, this.basePath,required this.title, super.key});
 
   @override
   State<TextAnswer> createState() => _TextAnswerState();
@@ -77,7 +79,7 @@ class _TextAnswerState extends State<TextAnswer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Images from Memory Card")),
+      appBar: AppBar(title: Text(widget.title)),
       body: widget.basePath == "nr"
           ? SingleChildScrollView(
             child: Container(
@@ -87,9 +89,10 @@ class _TextAnswerState extends State<TextAnswer> {
                   
                     color: blackColor.withOpacity(0.1),
                     borderRadius: const BorderRadius.all(Radius.circular(10))),
-                child: Text(
-                  widget.imagePath,
-                  style: black16MediumTextStyle,
+                child: MathText(
+                   expression: widget.imagePath,
+                 height: estimateHeight(widget.imagePath),
+                 // style: black16MediumTextStyle,
                 ),
               ),
           )
@@ -106,5 +109,10 @@ class _TextAnswerState extends State<TextAnswer> {
                   },
                 ),
     );
+  }
+
+  double estimateHeight(String text) {
+    final lines = (text.length / 30).ceil(); // assume 30 chars per line
+    return lines * 40.0; // assume each line is about 40 pixels tall
   }
 }

@@ -214,6 +214,7 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
 
 
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -444,12 +445,20 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
             subjectId: item["subjectid"],
           ));
     } else {
-      Get.snackbar(
+
+      print("Item ${item}");
+      Get.to(() =>
+          TopicWiseSyllabus(
+            pathQuestionList: [item],
+            subjectId: item["subjectid"],
+          ));
+
+      /*Get.snackbar(
         "No Questions Found",
         "There are no questions available for this subchapter.",
         snackPosition: SnackPosition.BOTTOM,
         duration: Duration(seconds: 3),
-      );
+      );*/
     }
   }
 }

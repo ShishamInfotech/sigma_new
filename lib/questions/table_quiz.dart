@@ -302,7 +302,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 48),
               ),
-              child: Text(quizStarted ? "Quiz in Progress" : "Start Quiz"),
+              child: Text(quizStarted ? "Exam in Progress" : "Start Exam"),
             ),
           ),
           if (!quizStarted)
@@ -330,7 +330,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
   Widget _buildPlaceholder() {
     return const Center(
       child: Text(
-        "Press 'Start Quiz' to begin",
+        "Press 'Start Exam' to begin",
         style: TextStyle(fontSize: 18, color: Colors.grey),
       ),
     );
