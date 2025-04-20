@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:sigma_new/math_view/math_text.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
@@ -242,7 +243,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
             final opt = question.toJson()['option_${index + 1}'];
             if (opt == null || opt.toString().trim().isEmpty) return const SizedBox();
             return ListTile(
-              title: Text(opt),
+              title: MathText(expression: opt, height: 20,),
               leading: Radio<String>(
                 value: opt,
                 groupValue: selectedOption,

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:video_player/video_player.dart';
@@ -22,6 +23,8 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
   bool _isLoading = true;
   String? _tempFilePath;
   bool _initializationFailed = false;
+
+  late FlickManager flickManager;
 
   @override
   void initState() {
@@ -79,9 +82,13 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
               _initializationFailed = true;
               return;
             }
-            _controller = VideoPlayerController.file(File(_tempFilePath!));
+
+            flickManager = FlickManager(videoPlayerController: VideoPlayerController.file(File(_tempFilePath!)));
+          //  _controller = VideoPlayerController.file(File(_tempFilePath!));
           } else {
-            _controller = VideoPlayerController.file(File(path));
+
+            flickManager = FlickManager(videoPlayerController: VideoPlayerController.file(File(path)));
+           // _controller = VideoPlayerController.file(File(path));
           }
 
         }
@@ -99,9 +106,9 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
       // Check if file is encrypted
 
 
-      await _controller!.initialize();
-      await _controller!.setLooping(true);
-      await _controller!.play();
+    //  await _controller!.initialize();
+   //   await _controller!.setLooping(true);
+    //  await _controller!.play();
 
       setState(() {
         _isLoading = false;
@@ -174,7 +181,7 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
 
   @override
   void dispose() {
-    _controller?.dispose(); // Safe call with null check
+    flickManager.dispose(); // Safe call with null check
     // Clean up temporary file if it exists
     if (_tempFilePath != null) {
       File(_tempFilePath!).delete();
@@ -197,24 +204,12 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
           ? Center(child: CircularProgressIndicator())
           : Center(
         child: AspectRatio(
-          aspectRatio: _controller!.value.aspectRatio,
-          child: VideoPlayer(_controller!),
+          aspectRatio: flickManager.flickVideoManager?.videoPlayerController!.value.aspectRatio ?? 16 / 9,
+         child: FlickVideoPlayer(flickManager: flickManager),
+         // child: VideoPlayer(_controller!),
         ),
       ),
-      floatingActionButton: _controller != null && _controller!.value.isInitialized
-          ? FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _controller!.value.isPlaying
-                ? _controller!.pause()
-                : _controller!.play();
-          });
-        },
-        child: Icon(
-          _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
-        ),
-      )
-          : null,
+
     );
   }
 }

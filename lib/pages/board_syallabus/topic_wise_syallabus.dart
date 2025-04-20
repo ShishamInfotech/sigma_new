@@ -162,6 +162,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                             title: widget.pathQuestionList[0]["chapter"] ?? "",
                             imagePath: isNR ? question["test_answer_string"] : question["description_image_id"],
                             basePath: isNR ? "nr" : "/${question["subjectid"]}/images/",
+                            stream: question["stream"],
                           ));
                         },
                         child: const Text("Text Answer"),

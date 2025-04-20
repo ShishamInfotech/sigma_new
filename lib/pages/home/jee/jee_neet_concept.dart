@@ -72,6 +72,19 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
     setState(() {});
   }*/
 
+
+  Map<String, List<Map<String, dynamic>>> groupedSubchapterQuestions = {};
+
+  String removeTestSeriesFromSubjectTitle(String title) {
+    if (title.toLowerCase().contains("test series")) {
+      List<String> parts = title.split("-");
+      if (parts.length > 1) {
+        return "Board Mock Exam - ${parts[1].trim()}";
+      }
+    }
+    return title;
+  }
+
   subjectWiseTest() async {
     var inputFile = await SdCardUtility.getSubjectEncJsonData(
         'JEE/THEORY/${widget.subjectId}.json');
@@ -90,27 +103,43 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
     List<Map<String, dynamic>> sigmaData =
     List<Map<String, dynamic>>.from(parsedJson["sigma_data"]);
 
+    subjects = sigmaData.map((data) => data["subject"].toString()).toList();
+
     // Filtering only records where complexity is "a" or "e"
-    sigmaData = sigmaData.where((data) {
-      String complexity = data["complexity"].toString().toLowerCase();
-      return complexity == widget.complexity;
-    }).toList();
+    if (sigmaData.isNotEmpty) {
+      for (var item1 in sigmaData) {
+        String subjectNumber = item1["subchapter_number"].toString();
 
-    // Group data by chapter
-    groupedData.clear();
-    for (var item in sigmaData) {
-      String chapterName = item["chapter"].toString(); // Use chapter name for grouping
 
-      if (!groupedData.containsKey(chapterName)) {
-        groupedData[chapterName] = [];
+        // Initialize the group if not present
+        if (!groupedSubchapterQuestions.containsKey(subjectNumber)) {
+          groupedSubchapterQuestions[subjectNumber] = [];
+        } else {
+          print(subjectNumber + ":" + item1.toString());
+          groupedSubchapterQuestions[subjectNumber]!.add(item1);
+        }
       }
-      groupedData[chapterName]!.add(item);
+
+      for (var item in sigmaData) {
+        String subjectNumber = item["chapter_number"].toString();
+
+
+        // Initialize the group if not present
+        if (!groupedData.containsKey(subjectNumber)) {
+          groupedData[subjectNumber] = [];
+        }
+
+
+        // Check for duplicates based on subchapter_number
+        bool alreadyExists = groupedData[subjectNumber]!.any((existingItem) =>
+        existingItem["subchapter_number"].toString().trim().toLowerCase() ==
+            item["subchapter_number"].toString().trim().toLowerCase());
+
+        if (!alreadyExists) {
+          groupedData[subjectNumber]!.add(item);
+        }
+      }
     }
-
-    // Update subjects list based on grouped data
-    subjects = groupedData.keys.toList();
-
-    print("Grouped Chapters (Complexity: A or E): $groupedData");
 
     setState(() {});
   }
@@ -190,30 +219,25 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
               bottom: screenHeight * 0.03,
               child: ListView(
                 children: groupedData.entries.map((entry) {
-                  int chapterIndex = groupedData.keys.toList().indexOf(entry.key) + 1;
                   return ExpansionTile(
                     title: Text(
-                      "${chapterIndex}: ${entry.value[0]["chapter"]}",
+                      "${entry.key}: ${entry.value[0]["chapter"]}",
                       style:
                       TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    children: entry.value.asMap().entries.map((subEntry)  {
-                      int subIndex = subEntry.key + 1;
-                      var item = subEntry.value;
+                    children: entry.value.map((item) {
                       return ListTile(
                         title: Container(
                           margin: EdgeInsets.symmetric(horizontal: 10),
                           padding: EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
-                            "$chapterIndex.$subIndex: ${item["subchapter"]}" ??
+                            "${item["subchapter_number"]}: ${item["subchapter"]}" ??
                                 "No Subchapter",
                             style: TextStyle(fontSize: 16),
-
                           ),
-
                         ),
-                        trailing: Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
-
+                        trailing: Icon(Icons.arrow_forward_ios,
+                            size: 18, color: Colors.grey),
                         onTap: () => onSublistItemClick(item),
                       );
                     }).toList(),
@@ -237,16 +261,37 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
   // }
 
   void onSublistItemClick(Map<String, dynamic> item) {
-    final String subchapterNumber = item["subchapter_number"];
-    final List<Map<String, dynamic>> allQuestions = [];
+    final String subchapterNumber = item["subchapter_number"]
+        .toString()
+        .trim()
+        .toLowerCase();
 
-    for (var chapter in groupedData.values) {
-      allQuestions.addAll(chapter.where((q) =>
-      q["subchapter_number"].toString().toLowerCase().trim() ==
-          subchapterNumber.toLowerCase().trim()));
+    print("Sub Chapter No:=  "+subchapterNumber);
+
+    final questions = groupedSubchapterQuestions[subchapterNumber];
+
+    if (questions != null && questions.isNotEmpty) {
+      Get.to(() =>
+          TopicWiseSyllabus(
+            pathQuestionList: questions,
+            subjectId: item["subjectid"],
+          ));
+    } else {
+
+      print("Item ${item}");
+      Get.to(() =>
+          TopicWiseSyllabus(
+            pathQuestionList: [item],
+            subjectId: item["subjectid"],
+          ));
+
+      /*Get.snackbar(
+        "No Questions Found",
+        "There are no questions available for this subchapter.",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 3),
+      );*/
     }
-
-    Get.to(() => TopicWiseSyllabus(pathQuestionList: allQuestions, subjectId: item["subjectid"]));
   }
 
 }

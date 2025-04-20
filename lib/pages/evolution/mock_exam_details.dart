@@ -81,7 +81,7 @@ class MockExamDetailPage extends StatelessWidget {
                              // onPressed: () => showInfoDialog(context, "Answer", answer),
                               onPressed: () => Get.to(TextAnswer(
                                 title: title,
-                                imagePath:answer ,basePath:q['answer'].toString().toLowerCase()=="nr" ? "nr":"/${q["subjectid"]}/images/" ,)),
+                                imagePath:answer,stream: q['stream'] ,basePath:q['answer'].toString().toLowerCase()=="nr" ? "nr":"/${q["subjectid"]}/images/" ,)),
                             ),
                             const SizedBox(width: 10),
                             ElevatedButton.icon(

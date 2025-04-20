@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
 class SimpleQuestions extends StatefulWidget {
@@ -75,12 +76,8 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                   ),
                 ),
                 Expanded(
-                  child: Math.tex(
-                    preprocessLaTeX(question),
-                    textStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w300,
-                        color: primaryColor),
+                  child: MathText(
+                    expression: question, height: 150,
                   ),
                 ),
               ],
@@ -105,7 +102,10 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: RadioListTile<String>(
-                    title: Text(
+
+                    title:
+                        MathText(expression: option, height: 35),
+                    /*Text(
                       option,
                       style: TextStyle(
                         color: isSubmitted
@@ -116,7 +116,7 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                             : Colors.black))
                             : Colors.black,
                       ),
-                    ),
+                    ),*/
                     value: option,
                     groupValue: selectedAnswers[index],
                     onChanged: isSubmitted

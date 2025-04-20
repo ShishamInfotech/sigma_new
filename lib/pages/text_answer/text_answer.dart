@@ -10,8 +10,9 @@ class TextAnswer extends StatefulWidget {
   dynamic imagePath; // Can be String or List
   String? basePath;
   String title;
+  String? stream;
 
-  TextAnswer({required this.imagePath, this.basePath,required this.title, super.key});
+  TextAnswer({required this.imagePath, this.basePath,required this.title, this.stream, super.key});
 
   @override
   State<TextAnswer> createState() => _TextAnswerState();
@@ -30,21 +31,33 @@ class _TextAnswerState extends State<TextAnswer> {
     String basePath = await SdCardUtility.getBasePath();
     print("Basepath $basePath --- ${widget.basePath},, ${widget.imagePath}");
     var classes;
-    var state;
+    var state="";
     var subject;
 
-    if(widget.basePath!.contains("10")){
+    if(widget.stream!.contains("10")){
       classes = "10";
     }
-    if(widget.basePath!.contains("12")){
+    if(widget.stream!.contains("12")){
       classes = "12";
     }
 
-    if(widget.basePath!.contains('mh')){
-      state = "MH";
+    if(widget.stream!.contains("jee")){
+      classes = "JEE/THEORY";
     }
 
-    String cleaned = widget.basePath!.replaceAll(classes, "").replaceAll(state.toString().toLowerCase(), "");
+    if(widget.basePath!.contains('mh')  && !widget.stream!.contains("jee")){
+      state = "/MH";
+    }
+
+    String cleaned="";
+    if(widget.stream!.contains("jee")){
+      cleaned = widget.basePath!.replaceAll(classes, "").replaceAll(state.toString().toLowerCase(), "");
+    }else {
+      cleaned = widget.basePath!.replaceAll(classes, "").replaceAll(
+          state.toString().toLowerCase(), "/");
+    }
+
+    print("Cleaned $cleaned");
 
 
 
@@ -62,8 +75,8 @@ class _TextAnswerState extends State<TextAnswer> {
 
     for (String fileName in imagePaths) {
       for (String ext in [".jpg", ".png"]) {
-        print("Pathhs ${basePath}/${classes}/${state}${cleaned}$fileName$ext");
-        File file = File("${basePath}/${classes}/${state}${cleaned}$fileName$ext");
+        print("Pathhs ${basePath}/${classes}${state}${cleaned}$fileName$ext");
+        File file = File("${basePath}/${classes}${state}${cleaned}$fileName$ext");
         if (file.existsSync()) {
           loadedFiles.add(file);
           break; // Stop checking if file is found
