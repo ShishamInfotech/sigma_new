@@ -79,9 +79,28 @@ class MockExamDetailPage extends StatelessWidget {
                               icon: const Icon(Icons.check),
                               label: const Text("Answer"),
                              // onPressed: () => showInfoDialog(context, "Answer", answer),
-                              onPressed: () => Get.to(TextAnswer(
-                                title: title,
-                                imagePath:answer,stream: q['stream'] ,basePath:q['answer'].toString().toLowerCase()=="nr" ? "nr":"/${q["subjectid"]}/images/" ,)),
+
+                                onPressed: () {
+                                  final isNR = q['answer'].toString().toLowerCase() == "nr";
+
+                                  if (isNR && (q['description_image_id'].toString().toLowerCase() != "nr"
+                                                || q['description_image_id'].toString().toLowerCase() != "na")) {
+                                    // Show image answer
+                                    Get.to(TextAnswer(
+                                      title: title,
+                                      imagePath: q['description_image_id'],
+                                      stream: q['stream'],
+                                      basePath: "/${q["subjectid"]}/images/",
+                                    ));
+                                  } else {
+                                    // Show text answer in dialog/snackbar/another screen
+                                    Get.to(TextAnswer(
+                                      title: title,
+                                      imagePath:answer,stream: q['stream'] ,
+                                        basePath:q['answer'].toString().toLowerCase()=="nr" ? "nr":"/${q["subjectid"]}/images/" ,));
+                                  }
+                                }
+
                             ),
                             const SizedBox(width: 10),
                             ElevatedButton.icon(
