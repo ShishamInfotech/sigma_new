@@ -5,6 +5,8 @@ import 'package:sigma_new/pages/exam_preparation/exam_preparation.dart';
 import 'package:sigma_new/pages/home/quick_guide/quick_guide.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import '../pdf/PdfFolderListPage.dart';
+
 class OtherPage extends StatefulWidget {
   const OtherPage({super.key});
 
@@ -32,44 +34,36 @@ class _Appbar2State extends State<OtherPage> {
           color: 0xFFC5DEF2,
           imagePath: 'assets/svg/motivational_stories.svg',
           navigation: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("UI not defined in WireFrame"),
-                duration: Duration(seconds: 2),
-              ),
-            );
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) =>
+                const PdfFolderListPage(title: 'Motivation Stories', folderName: 'motivationstories',)));
           },
           title: 'Motivation Stories'),
       Menu(
           color: 0xFFC9E4DF,
           imagePath: 'assets/svg/logbook.svg',
           navigation: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("UI not defined in WireFrame"),
-                duration: Duration(seconds: 2),
-              ),
-            );
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) =>
+                const PdfFolderListPage(title: 'Log Book', folderName: 'logbook',)));
           },
           title: 'Log Book'),
       Menu(
           color: 0xFFF8D9C4,
           imagePath: 'assets/svg/quick_guide.svg',
           navigation: () {
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const QuickGuide()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) =>
+                const PdfFolderListPage(title: 'Quick Guide', folderName: 'quickguide',)));
           },
           title: 'Quick Guide'),
       Menu(
           color: 0xFFDBCDF0,
           imagePath: 'assets/svg/course_outline.svg',
           navigation: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("UI not defined in WireFrame"),
-                duration: Duration(seconds: 2),
-              ),
-            );
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) =>
+                  const PdfFolderListPage(title: 'Course Outline', folderName: 'courseoutline',)));
           },
           title: 'Course Outline'),
       Menu(
@@ -77,7 +71,8 @@ class _Appbar2State extends State<OtherPage> {
           imagePath: 'assets/svg/exam_prep.svg',
           navigation: () {
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const ExamPreparation()));
+                MaterialPageRoute(builder: (context) =>
+                const PdfFolderListPage(title: 'Exam Preparation', folderName: 'examprep',)));
           },
           title: 'Exam Preparation'),
     ];
