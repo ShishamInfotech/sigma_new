@@ -69,7 +69,7 @@ Widget DrawerWidget(BuildContext context) {
           },
         ),
         ListTile(
-          title: const Text('Exam Evaluation'),
+          title: const Text('Exam Evaluation Bucket'),
           onTap: () {
             Navigator.pop(context);
             Navigator.push(

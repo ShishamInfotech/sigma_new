@@ -73,37 +73,38 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
     if (title.contains("Level-1")) {
       return "1. Total 30 questions will be asked\n\n"
           "2. The duration is 150 minutes\n\n"
-          "3. All questions are from Simple category\n\n"
-          "4. Solve the questions using answer sheet\n\n"
-          "5. After exam, check model answers in Evaluation\n\n"
-          "6. Complete 50 exams to unlock next level";
+          "3. The mock examination consists of all the 30 questions from simple category question bank\n\n"
+          "4. Solve the question paper on his own using answer sheet.\n\n"
+          "5. After exam, check model answers in Evaluation Bucket\n\n"
+          "6. Needs to attempt 15 exams in the category to enable himself to go to next level\n\n"
+          "7. Each of the mock exam will be stored in Evaluation Bucket";
     } else if (title.contains("Level-2")) {
       return "1. Total 30 questions will be asked\n\n"
           "2. The duration is 150 minutes\n\n"
           "3. 10 Simple + 20 Medium questions\n\n"
           "4. Solve the questions using answer sheet\n\n"
-          "5. After exam, check model answers in Evaluation\n\n"
+          "5. After exam, check model answers in Evaluation Bucket\n\n"
           "6. Complete 30 exams to unlock next level";
     } else if (title.contains("Level-3")) {
       return "1. Total 30 questions will be asked\n\n"
           "2. The duration is 150 minutes\n\n"
           "3. 10 Simple + 10 Medium + 10 Complex\n\n"
           "4. Solve the questions using answer sheet\n\n"
-          "5. After exam, check model answers in Evaluation\n\n"
+          "5. After exam, check model answers in Evaluation Bucket\n\n"
           "6. Complete 30 exams to unlock next level";
     } else if (title.contains("Level-4")) {
       return "1. Total 30 questions will be asked\n\n"
           "2. The duration is 150 minutes\n\n"
           "3. 10 Medium + 10 Complex + 10 Difficult\n\n"
           "4. Solve the questions using answer sheet\n\n"
-          "5. After exam, check model answers in Evaluation\n\n"
+          "5. After exam, check model answers in Evaluation Bucket\n\n"
           "6. Complete 30 exams to unlock next level";
     } else if (title.contains("Level-5")) {
       return "1. Total 30 questions will be asked\n\n"
           "2. The duration is 150 minutes\n\n"
           "3. 10 Complex + 10 Difficult + 10 Advanced\n\n"
           "4. Solve the questions using answer sheet\n\n"
-          "5. After exam, check model answers in Evaluation\n\n"
+          "5. After exam, check model answers in Evaluation Bucket\n\n"
           "6. Complete 30 exams to unlock next level\n\n"
           "7. Complete all 170 exams to access any level";
     }

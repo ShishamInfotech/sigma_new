@@ -157,7 +157,7 @@ class _WelcomePageState extends State<WelcomePage> {
                 } else {*/
 
                 final prefs = await SharedPreferences.getInstance();
-                Get.snackbar("Error", " ${prefs.containsKey('firstName')}");
+
                 print(prefs.containsKey('firstName'));
                 // For this example, we assume the device is registered if deviceID is non-empty.
                 if (!prefs.containsKey('firstName')) {

@@ -25,12 +25,17 @@ class _ViewQuestionsState extends State<ViewQuestions>
   List<dynamic> sigmaData = [];
   late TabController _tabController;
   int _selectedTabIndex = 0;
+  List<dynamic> simple = [];
+  List<dynamic> medium = [];
+  List<dynamic> complex = [];
+  List<dynamic> difficult = [];
+  List<dynamic> advanced = [];
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length:5 , vsync: this);
     _tabController.addListener(() {
       setState(() {
         _selectedTabIndex = _tabController.index; // Update tab index on change
@@ -75,34 +80,30 @@ class _ViewQuestionsState extends State<ViewQuestions>
       // Get the stored test level based on subject
       // currentTestLevel = prefs.getString("${widget.jeeData.first.question.trim().toUpperCase()}_LEVEL") ?? "s";
 
-      List<dynamic> simple = [];
-      List<dynamic> medium = [];
-      List<dynamic> complex = [];
-      List<dynamic> difficult = [];
-      List<dynamic> advanced = [];
+
 
       // Categorize questions by complexity
       for (var data in parsedJson["sigma_data"]) {
         switch (data["complexity"]) {
           case "s":
             simple.add(data);
-            print("Simplesss $data");
+          //  print("Simplesss $data");
             break;
           case "m":
             medium.add(data);
-            print("Simplessm $data");
+          //  print("Simplessm $data");
             break;
           case "c":
             complex.add(data);
-            print("Simplessc $data");
+          //  print("Simplessc $data");
             break;
           case "d":
             difficult.add(data);
-            print("Simplessd $data");
+          //  print("Simplessd $data");
             break;
           case "a":
             advanced.add(data);
-            print("Simplessa $data");
+          //  print("Simplessa $data");
             break;
         }
       }
@@ -115,7 +116,8 @@ class _ViewQuestionsState extends State<ViewQuestions>
         // randomList.add(data);
 
         print(medium.length);
-        print("Simple ${medium}  Complexity ${sigmaData[j]["complexity"]}");
+     //   print("Simple ${medium}  Complexity ${sigmaData[j]["complexity"]}");
+
       }
       // Select random questions
       List<int> getRandomIndices(int size, int count) {
@@ -124,6 +126,11 @@ class _ViewQuestionsState extends State<ViewQuestions>
         indices.shuffle();
         return indices.take(count.clamp(0, size)).toList();
       }
+      print("simple ${simple.length}");
+      print("Medium ${medium.length}");
+      print("Complex ${complex.length}");
+      print("Advance ${advanced.length}");
+      print("Difficult ${difficult.length}");
 
       setState(() {});
     } // Refresh UI
@@ -229,11 +236,25 @@ class _ViewQuestionsState extends State<ViewQuestions>
             Expanded(
               child: TabBarView(controller: _tabController, children: [
                 if (sigmaData.isEmpty) Center(child: CircularProgressIndicator(),) else SimpleQuestions(
-                  easyQuestion: sigmaData,
+                  easyQuestion: simple,
                   key: ValueKey(_selectedTabIndex),
                 ),
-                Container(), // Placeholder for Medium Questions
-                Container(),
+                if (sigmaData.isEmpty) Center(child: CircularProgressIndicator(),) else SimpleQuestions(
+                  easyQuestion: medium,
+                  key: ValueKey(_selectedTabIndex),
+                ), // Placeholder for Medium Questions
+                if (sigmaData.isEmpty) Center(child: CircularProgressIndicator(),) else SimpleQuestions(
+                  easyQuestion: complex,
+                  key: ValueKey(_selectedTabIndex),
+                ),
+                if (sigmaData.isEmpty) Center(child: CircularProgressIndicator(),) else SimpleQuestions(
+                  easyQuestion: difficult,
+                  key: ValueKey(_selectedTabIndex),
+                ),
+                if (advanced.isEmpty) Center(child: CircularProgressIndicator(),) else SimpleQuestions(
+                  easyQuestion: advanced,
+                  key: ValueKey(_selectedTabIndex),
+                ),
                 //  MediumQuestions(),
                 //  ComplexQuestions()
               ]),

@@ -7,9 +7,11 @@ import 'package:sigma_new/models/menu_models.dart';
 import 'package:sigma_new/pages/home/jee/jee_neet_concept.dart';
 import 'package:sigma_new/pages/home/jee/jee_neet_mcq.dart';
 import 'package:sigma_new/pages/home/jee/mock_exam/jeemockexam.dart';
+import 'package:sigma_new/pages/last_minute_revision/last_minute_revision_mcq.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
+import '../../last_minute_revision/last_minute_revision.dart';
 import 'mock_exam/MockExamScreen.dart';
 
 class JeeSubjectwise extends StatefulWidget {
@@ -151,10 +153,33 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
     print("Subject ${widget.path}");
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
-    final isPortrait =
-        MediaQuery.of(context).orientation == Orientation.portrait;
+
     return Scaffold(
       backgroundColor: Colors.white,
+      bottomNavigationBar:widget.path.toString().toLowerCase() =="multiple choice question" || widget.path.toString().toLowerCase() =="concept"?InkWell(
+        onTap: (){
+          if(widget.path.toString().toLowerCase() =="concept" ) {
+            Get.to(LastMinuteRevision(path: "JEE/",));
+          }else{
+            Get.to(LastMinuteRevisionMcq(path: "JEE/MCQ/",));
+          }
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 15),
+          decoration: BoxDecoration(
+              color: primaryColor,
+              boxShadow:const [
+                BoxShadow(
+                  color: whiteColor,
+                )
+              ],
+              borderRadius: BorderRadius.circular(10)
+          ),
+          height: 60,
+          alignment: Alignment.center,
+          child: const Text('Last Minute Revision', style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),),
+        ),
+      ) : Container(height: 10,),
       appBar: AppBar(
           // backgroundColor: backgroundColor,
           leading: InkWell(

@@ -63,6 +63,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
   Future<bool> isBookmarked(String id) async {
     final prefs = await SharedPreferences.getInstance();
     final bookmarked = prefs.getStringList('bookmarks') ?? [];
+    print("BOOKMARKS ${bookmarked}");
     return bookmarked.contains(id);
   }
 
@@ -74,6 +75,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
     } else {
       bookmarked.add(id);
     }
+
     await prefs.setStringList('bookmarks', bookmarked);
     setState(() {});
   }
@@ -104,7 +106,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
       tabViews.add(_buildQuestionList(advanced));
     }
     if (others.isNotEmpty) {
-      tabs.add(const Tab(text: "Other"));
+      tabs.add(const Tab(text: "Theory"));
       tabViews.add(_buildQuestionList(others));
     }
 

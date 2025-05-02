@@ -204,7 +204,7 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
           ? Center(child: CircularProgressIndicator())
           : Center(
         child: AspectRatio(
-          aspectRatio: flickManager.flickVideoManager?.videoPlayerController!.value.aspectRatio ?? 16 / 9,
+          aspectRatio:  16 / 9,
          child: FlickVideoPlayer(flickManager: flickManager),
          // child: VideoPlayer(_controller!),
         ),

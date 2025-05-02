@@ -279,12 +279,12 @@ import 'constants.dart';
       BuildContext context, String path, String pref) async {
     // Request storage permission
     var status = await Permission.storage.request();
-    if (!status.isGranted) {
+    /*if (!status.isGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Storage permission is not granted')),
       );
       return null;
-    }
+    }*/
 
     // External storage directory
     Directory? externalDir = await getExternalStorageDirectory();

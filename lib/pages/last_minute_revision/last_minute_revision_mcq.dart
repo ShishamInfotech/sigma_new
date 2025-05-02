@@ -1,21 +1,26 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sigma_new/pages/board_syallabus/topic_wise_syallabus.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
-import 'package:sigma_new/ui_helper/constant.dart';
 
-class LastMinuteRevision extends StatefulWidget {
+import '../board_syallabus/topic_wise_syallabus.dart';
+
+class LastMinuteRevisionMcq extends StatefulWidget {
   final String? path;
-  const LastMinuteRevision({super.key, this.path});
+  const LastMinuteRevisionMcq({super.key, this.path});
 
   @override
-  State<LastMinuteRevision> createState() => _LastMinuteRevisionState();
+  State<LastMinuteRevisionMcq> createState() => _LastMinuteRevisionMcqState();
 }
 
-class _LastMinuteRevisionState extends State<LastMinuteRevision> {
+class _LastMinuteRevisionMcqState extends State<LastMinuteRevisionMcq> {
   final List<Color> cardColors = [
+    const Color(0xFFDBCDF0),
+    const Color(0xFFF2C6DF),
+    const Color(0xFFC9E4DF),
+    const Color(0xFFF8D9C4),
     const Color(0xFFDBCDF0),
     const Color(0xFFF2C6DF),
     const Color(0xFFC9E4DF),
@@ -60,7 +65,7 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
       print("Last Minute ${widget.path}");
       print("Last Minute Board${prefs.getString('board')}");
       String board =widget.path!.contains("10") ||widget.path!.contains("12") ? prefs.getString('board') == "Maharashtra" ? "MH/" : prefs.getString('board') ?? '' : "";
-      String newPath = widget.path?.contains("10") == true ? "10/" :widget.path?.contains("12")==true ? "12/" : "JEE/THEORY/" ;
+      String newPath = widget.path?.contains("10") == true ? "10/" :widget.path?.contains("12")==true ? "12/" : "jee/mcq/" ;
       String sigmaDataPath = '${newPath}${board}sigma_data.json';
 
       // Step 1: Load sigma_data.json to get subject mappings
@@ -89,7 +94,7 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
 
             // Find the specific bookmarked question
             for (var question in subjectQuestions) {
-              if (bookmarkedIds.contains(question["question_serial_number"]?.toString() ?? '')) {
+              if (bookmarkedIds.contains(question["contentcode"]?.toString() ?? '')) {
                 bookmarkedQuestionsBySubject.putIfAbsent(subjectId, () => []);
                 bookmarkedQuestionsBySubject[subjectId]!.add(question);
                 _totalBookmarkedQuestions++;

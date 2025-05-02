@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sigma_new/math_view/math_text.dart';
+import 'package:sigma_new/pages/text_answer/text_answer.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
 class OfflineQuestions extends StatefulWidget {
   final String chapterId;
-  OfflineQuestions({required this.chapterId, super.key});
+  const OfflineQuestions({required this.chapterId, super.key});
 
   @override
   State<OfflineQuestions> createState() => _OfflineQuestionsState();
@@ -19,7 +22,11 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
   String? selectedAnswer;
   bool showResult = false;
   bool showEvaluation = false;
-  List<Map<String, dynamic>> userAnswers = []; // Stores selected and correct answers
+  List<Map<String, dynamic>> userAnswers = [];
+  Map<int, bool> bookmarkedQuestions = {};
+  Map<int, bool> showTextAnswer = {};
+  Map<int, bool> showExplanation = {};
+  Map<int, bool> showNotes = {};
 
   @override
   void initState() {
@@ -34,10 +41,29 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
     var inputFile = await SdCardUtility.getSubjectEncJsonData('jee/mcq/${widget.chapterId}.json');
     if (inputFile != null) {
       var parsedJson = jsonDecode(inputFile);
+      print("Parsed ${parsedJson.length}");
       setState(() {
         sigmaData = parsedJson["sigma_data"].take(20).toList();
       });
     }
+  }
+
+  void toggleShowTextAnswer(int index) {
+    setState(() {
+      showTextAnswer[index] = !(showTextAnswer[index] ?? false);
+    });
+  }
+
+  void toggleShowExplanation(int index) {
+    setState(() {
+      showExplanation[index] = !(showExplanation[index] ?? false);
+    });
+  }
+
+  void toggleShowNotes(int index) {
+    setState(() {
+      showNotes[index] = !(showNotes[index] ?? false);
+    });
   }
 
   void submitAnswer() {
@@ -45,7 +71,6 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
 
     bool isCorrect = selectedAnswer == sigmaData[currentQuestionIndex]["answer"];
 
-    // Save answer for evaluation
     userAnswers.add({
       "question": sigmaData[currentQuestionIndex]["question"],
       "selected": selectedAnswer,
@@ -56,7 +81,10 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
         sigmaData[currentQuestionIndex]["option_3"],
         sigmaData[currentQuestionIndex]["option_4"],
         sigmaData[currentQuestionIndex]["option_5"],
-      ]
+      ],
+      "explanation": sigmaData[currentQuestionIndex]["ans_explaination"] ?? "No explanation available",
+      "notes": sigmaData[currentQuestionIndex]["notes"] ?? "No notes available",
+      "text_answer": sigmaData[currentQuestionIndex]["ans_explaination"] ?? "No text answer available",
     });
 
     setState(() {
@@ -65,18 +93,19 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
       } else {
         wrongAnswers++;
       }
-    });
 
-    // Move to next question
-    Future.delayed(Duration(milliseconds: 500), () {
-      setState(() {
-        if (currentQuestionIndex < sigmaData.length - 1) {
-          currentQuestionIndex++;
-          selectedAnswer = null; // Reset selection
-        } else {
-          showResult = true;
-        }
-      });
+      if (currentQuestionIndex < sigmaData.length - 1) {
+        currentQuestionIndex++;
+        selectedAnswer = null;
+      } else {
+        showResult = true;
+      }
+    });
+  }
+
+  void toggleBookmark(int questionIndex) {
+    setState(() {
+      bookmarkedQuestions[questionIndex] = !(bookmarkedQuestions[questionIndex] ?? false);
     });
   }
 
@@ -95,11 +124,12 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Quiz Completed!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text("Correct Answers: $correctAnswers", style: TextStyle(fontSize: 18, color: Colors.green)),
-              Text("Wrong Answers: $wrongAnswers", style: TextStyle(fontSize: 18, color: Colors.red)),
-              SizedBox(height: 20),
+              const Text("Quiz Completed!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text("Correct Answers: $correctAnswers", style: const TextStyle(fontSize: 18, color: Colors.green)),
+              Text("Wrong Answers: $wrongAnswers", style: const TextStyle(fontSize: 18, color: Colors.red)),
+              const SizedBox(height: 20),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
                     onPressed: () {
@@ -108,13 +138,13 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
                         showResult = false;
                       });
                     },
-                    child: Text("Evaluation"),
+                    child: const Text("Evaluation"),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: Text("Back"),
+                    child: const Text("Back"),
                   ),
                 ],
               ),
@@ -126,45 +156,244 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
 
     if (showEvaluation) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Evaluation")),
+        appBar: AppBar(
+          title: const Text("Evaluation"),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.bookmark),
+              onPressed: () {
+                // Show all bookmarked questions
+                // You can implement this functionality if needed
+              },
+            ),
+          ],
+        ),
         body: ListView.builder(
           itemCount: userAnswers.length,
           itemBuilder: (context, index) {
             var questionData = userAnswers[index];
+            bool isCorrect = questionData["selected"] == questionData["correct"];
 
             return Card(
-              margin: EdgeInsets.all(10),
+              margin: const EdgeInsets.all(10),
               child: Padding(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Q${index + 1}: ${questionData['question']}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: MathText(
+                              expression: "Q${index + 1}: ${questionData['question']}" ,
+                              height: 100,
+                              //style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            bookmarkedQuestions[index] ?? false
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                            color: bookmarkedQuestions[index] ?? false
+                                ? Colors.blue
+                                : null,
+                          ),
+                          onPressed: () => toggleBookmark(index),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Options with color coding
                     Column(
                       children: questionData["options"]
                           .where((option) => option != null && option != "NA")
                           .map<Widget>((option) {
                         Color optionColor = Colors.white;
                         if (option == questionData["correct"]) {
-                          optionColor = Colors.green; // Correct answer
-                        } else if (option == questionData["selected"]) {
-                          optionColor = Colors.red; // Wrong selected answer
+                          optionColor = Colors.green.withOpacity(0.2);
+                        } else if (option == questionData["selected"] && option != questionData["correct"]) {
+                          optionColor = Colors.red.withOpacity(0.2);
                         }
 
                         return Container(
-                          margin: EdgeInsets.symmetric(vertical: 5),
+                          margin: const EdgeInsets.symmetric(vertical: 5),
                           decoration: BoxDecoration(
                             color: optionColor,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.black),
+                            border: Border.all(
+                              color: option == questionData["correct"]
+                                  ? Colors.green
+                                  : option == questionData["selected"]
+                                  ? Colors.red
+                                  : Colors.black,
+                              width: option == questionData["correct"] || option == questionData["selected"] ? 2 : 1,
+                            ),
                           ),
                           child: ListTile(
-                            title: Text(option),
+                            title: MathText(expression: option,  height:80 ,),
+                            leading: option == questionData["correct"]
+                                ? const Icon(Icons.check, color: Colors.green)
+                                : option == questionData["selected"] && !isCorrect
+                                ? const Icon(Icons.close, color: Colors.red)
+                                : null,
                           ),
                         );
                       }).toList(),
                     ),
+
+                    // Result indicator
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isCorrect ? Colors.green : Colors.red,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isCorrect ? Icons.check_circle : Icons.error,
+                            color: isCorrect ? Colors.green : Colors.red,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isCorrect ? "Correct Answer!" : "Wrong Answer!",
+                            style: TextStyle(
+                              color: isCorrect ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Action buttons row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: Icon(
+                            showTextAnswer[index] ?? false ? Icons.visibility_off : Icons.visibility,
+                            size: 18,
+                          ),
+                          label: Text(showTextAnswer[index] ?? false ? "Hide Answer" : "Show Answer"),
+                          onPressed: () {
+                            print("Questionsss $questionData");
+                            Get.to(TextAnswer(imagePath: questionData["text_answer"], title: "MCQ",basePath: "nr",stream: 'jee',));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue[50],
+                            foregroundColor: Colors.blue,
+                          ),
+                        ),
+                        /*ElevatedButton.icon(
+                          icon: Icon(
+                            showExplanation[index] ?? false ? Icons.visibility_off : Icons.visibility,
+                            size: 18,
+                          ),
+                          label: Text(showExplanation[index] ?? false ? "Hide Explanation" : "Show Explanation"),
+                          onPressed: () => toggleShowExplanation(index),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[50],
+                            foregroundColor: Colors.green,
+                          ),
+                        ),*/
+                        /*ElevatedButton.icon(
+                          icon: Icon(
+                            showNotes[index] ?? false ? Icons.visibility_off : Icons.visibility,
+                            size: 18,
+                          ),
+                          label: Text("Notepad"),
+                          onPressed: () => toggleShowNotes(index),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange[50],
+                            foregroundColor: Colors.orange,
+                          ),
+                        ),*/
+                      ],
+                    ),
+
+                    // Text Answer (shown when toggled)
+                    if (showTextAnswer[index] ?? false)
+                      Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Text Answer:",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(questionData["text_answer"]),
+                          ],
+                        ),
+                      ),
+
+                    // Explanation (shown when toggled)
+                    if (showExplanation[index] ?? false)
+                      Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Explanation:",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(questionData["explanation"]),
+                          ],
+                        ),
+                      ),
+
+                    // Notes (shown when toggled)
+                    if (showNotes[index] ?? false)
+                      Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Notes:",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(questionData["notes"]),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -185,56 +414,50 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text("Question ${currentQuestionIndex + 1}/20")),
+      appBar: AppBar(title: Text("Question ${currentQuestionIndex + 1}/${sigmaData.length}")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              questionData["question"],
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: 15),
-
-            // Options
-            Column(
-              children: options.map((option) {
-                return Container(
-                  margin: EdgeInsets.symmetric(vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.black),
-                  ),
-                  child: RadioListTile<String>(
-                    title: Text(option),
-                    value: option,
-                    groupValue: selectedAnswer,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedAnswer = value;
-                      });
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-
-            SizedBox(height: 20),
-
-            // Submit Button
-            Center(
-              child: ElevatedButton(
-                onPressed: submitAnswer,
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue,
-                ),
-                child: Text("Submit"),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MathText(key: ValueKey('question_$currentQuestionIndex'), expression: questionData["question"], height: 100),
+              const SizedBox(height: 15),
+              Column(
+                children: options.map((option) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.black),
+                    ),
+                    child: RadioListTile<String>(
+                      title: MathText(key: ValueKey('option_${options.indexOf(option)}_$currentQuestionIndex'),expression: option, height: 80),
+                      value: option,
+                      groupValue: selectedAnswer,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedAnswer = value;
+                        });
+                      },
+                    ),
+                  );
+                }).toList(),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: submitAnswer,
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.blue,
+                  ),
+                  child: const Text("Submit"),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

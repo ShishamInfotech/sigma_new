@@ -29,7 +29,7 @@ class _TextAnswerState extends State<TextAnswer> {
 
   loadImage() async {
     String basePath = await SdCardUtility.getBasePath();
-    print("Basepath $basePath --- ${widget.basePath},, ${widget.imagePath}");
+    print("Basepath $basePath --- ${widget.basePath},, ${widget.imagePath}, ${widget.stream}");
     var classes;
     var state="";
     var subject;

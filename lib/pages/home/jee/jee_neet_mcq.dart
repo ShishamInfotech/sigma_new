@@ -151,7 +151,7 @@ class _JeeNeetMcqState extends State<JeeNeetMcq> {
                         if(widget.title.toLowerCase().contains("offline")){
                           showDialog(context: context, builder: (BuildContext context){
                             return AlertDialog(
-                              title: Text('Begin Test ?'),
+                              title: Text('Begin Exam ?'),
                               actions: [
                                 TextButton(
                                   style: TextButton.styleFrom(

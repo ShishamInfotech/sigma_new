@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:sigma_new/math_view/math_text.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:sigma_new/models/sub_cahp_datum.dart';
@@ -38,7 +37,6 @@ class _MockExamScreenState extends State<MockExamScreen> {
   final String MAT_FILE_PREFIX = "jeemcqmathch";
   final String PHY_FILE_PREFIX = "jeemcqphych";
   final String CHE_FILE_PREFIX = "jeemcqchech";
-  final String BIO_FILE_PREFIX = "jeemcqbioch";
 
   int totalQueCount = 0;
 
@@ -49,7 +47,6 @@ class _MockExamScreenState extends State<MockExamScreen> {
   Duration duration = const Duration(minutes: 120);
 
   String? selectedOption;
-  WebViewController? _questionWebController;
 
   @override
   void initState() {
@@ -58,16 +55,13 @@ class _MockExamScreenState extends State<MockExamScreen> {
   }
 
   Future<void> _initialize() async {
-
     prefs = await SharedPreferences.getInstance();
     await _loadQuestions();
     _startTimer();
   }
 
-
   Future<void> _loadQuestions() async {
     totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
-
 
     List<Uri> mathsFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
     List<Uri> phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
@@ -100,51 +94,25 @@ class _MockExamScreenState extends State<MockExamScreen> {
         if (jsonStr == null) continue;
 
         final decoded = jsonDecode(jsonStr);
+        if (decoded == null || decoded['sigma_data'] == null) continue;
 
-        if (decoded == null || decoded['sigma_data'] == null) {
-          continue; // Skip if no questions in this file
-        }
         final sigmaList = decoded['sigma_data'] as List<dynamic>;
-
         final questionList = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
-        questionList.shuffle(); // Randomize
+        questionList.shuffle();
 
         int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
         selectedQuestions.addAll(questionList.take(takeCount));
       }
     }
 
-    selectedQuestions.shuffle(); // Mix all subjects together
+    selectedQuestions.shuffle();
 
     setState(() {
       questions = selectedQuestions;
-      _loadMathJax(questions.first.question ?? '');
     });
 
     print("Total questions loaded: ${questions.length}");
   }
-
-  /*Future<void> _loadQuestions() async {
-    totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
-
-    List<Uri> mathsFile = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
-    List<Uri> phyFile = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
-    List<Uri> cheFile = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
-
-    print("Maths File $mathsFile");
-    final jsonStr = await SdCardUtility.getSubjectEncJsonData(widget.path);
-    if (jsonStr == null) return;
-
-    final decoded = jsonDecode(jsonStr);
-    final sigmaList = decoded['sigma_data'] as List<dynamic>;
-
-    setState(() {
-      questions = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
-      _loadMathJax(questions.first.question ?? '');
-    });
-
-    print("Question List ${questions}");
-  }*/
 
   void _startTimer() {
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -175,33 +143,11 @@ class _MockExamScreenState extends State<MockExamScreen> {
       setState(() {
         currentIndex++;
         selectedOption = null;
-        _loadMathJax(questions[currentIndex].question ?? '');
       });
     } else {
       countdownTimer?.cancel();
       _showResultPopup();
     }
-  }
-
-  void _loadMathJax(String latex) {
-    final htmlContent = '''
-      <html>
-        <head>
-          <script type="text/x-mathjax-config">
-            MathJax.Hub.Config({
-              tex2jax: {inlineMath: [['\$','\$'], ['\\(','\\)']]},
-              showMathMenu: false
-            });
-          </script>
-          <script src="assets/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        </head>
-        <body style="font-size:18px;">\$${latex}\$</body>
-      </html>
-    ''';
-
-    _questionWebController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadHtmlString(htmlContent);
   }
 
   @override
@@ -216,53 +162,60 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              'Time Left: ${duration.inMinutes.toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}',
-              style: const TextStyle(fontSize: 18),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text(
-              'Question ${currentIndex + 1} of ${questions.length}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _questionWebController != null
-                ? WebViewWidget(controller: _questionWebController!)
-                : const SizedBox(),
-          ),
-          ...List.generate(5, (index) {
-            final opt = question.toJson()['option_${index + 1}'];
-            if (opt == null || opt.toString().trim().isEmpty) return const SizedBox();
-            return ListTile(
-              title: MathText(expression: opt, height: 20,),
-              leading: Radio<String>(
-                value: opt,
-                groupValue: selectedOption,
-                onChanged: (value) {
-                  setState(() {
-                    selectedOption = value;
-                  });
-                },
+      body: SingleChildScrollView(
+        child: KeyedSubtree(
+          key: ValueKey(currentIndex),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Time Left: ${duration.inMinutes.toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}',
+                  style: const TextStyle(fontSize: 18),
+                ),
               ),
-            );
-          }),
-          Center(
-            child: ElevatedButton(
-              onPressed: selectedOption != null ? () => _submitAnswer(selectedOption!) : null,
-              child: const Text("Submit Answer"),
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  'Question ${currentIndex + 1} of ${questions.length}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: MathText(
+                  expression: question.question ?? '',
+                  height: estimateHeight(question.question ?? ''),
+                ),
+              ),
+              ...List.generate(4, (index) {
+                final opt = question.toJson()['option_${index + 1}'];
+                if (opt == null || opt.toString().trim().isEmpty) return const SizedBox();
+                return ListTile(
+                  title: MathText(expression: opt, height: estimateHeight(opt)),
+                  leading: Radio<String>(
+                    value: opt,
+                    groupValue: selectedOption,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOption = value;
+                      });
+                    },
+                  ),
+                );
+              }),
+              Center(
+                child: ElevatedButton(
+                  onPressed: selectedOption != null ? () => _submitAnswer(selectedOption!) : null,
+                  child: const Text("Submit Answer"),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
           ),
-          const SizedBox(height: 10),
-        ],
+        ),
       ),
     );
   }
@@ -299,8 +252,13 @@ class _MockExamScreenState extends State<MockExamScreen> {
     countdownTimer?.cancel();
     super.dispose();
   }
-}
 
+
+  double estimateHeight(String text) {
+    final lines = (text.length / 30).ceil(); // assume 30 chars per line
+    return lines * 35.0; // assume each line is about 40 pixels tall
+  }
+}
 
 class FileUri {
   final List<Uri> files;

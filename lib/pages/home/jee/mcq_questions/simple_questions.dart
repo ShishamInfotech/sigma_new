@@ -1,8 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/math_view/math_text.dart';
+import 'package:sigma_new/pages/text_answer/text_answer.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
+
+import '../../../notepad/noteswrite.dart';
 
 class SimpleQuestions extends StatefulWidget {
   final List<dynamic> easyQuestion;
@@ -14,35 +19,11 @@ class SimpleQuestions extends StatefulWidget {
 }
 
 class _SimpleQuestionsState extends State<SimpleQuestions> {
-  List<dynamic> selectedQuestions = [];
-  bool isLoading = false;
-  bool isInitialized = false;
   Map<int, String?> selectedAnswers = {}; // Store selected answers per question
-  Map<int, bool?> answerResults = {};
-  // Store correct/wrong status per question
-
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    print("SimpleQuestions: didChangeDependencies called");
-    // You can reinitialize your question list here
-  }
+  Map<int, bool?> answerResults = {}; // Store correct/wrong status per question
 
   @override
   Widget build(BuildContext context) {
-
-
-    /*if (!isInitialized) {
-      selectRandomQuestions();
-      isInitialized = true;
-    }*/
-
-   // selectRandomQuestions();
-
-
-
-
     return ListView.builder(
       physics: const ScrollPhysics(),
       itemCount: widget.easyQuestion.length,
@@ -77,7 +58,8 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                 ),
                 Expanded(
                   child: MathText(
-                    expression: question, height: 150,
+                    expression: question,
+                    height: 150,
                   ),
                 ),
               ],
@@ -94,33 +76,19 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                   decoration: BoxDecoration(
                     color: isSubmitted
                         ? (isCorrect
-                        ? Colors.green.withOpacity(0.2) // Green for correct
+                        ? Colors.green.withOpacity(0.2)
                         : (selectedAnswers[index] == option
-                        ? Colors.red.withOpacity(0.2) // Red for wrong
+                        ? Colors.red.withOpacity(0.2)
                         : Colors.transparent))
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: RadioListTile<String>(
-
-                    title:
-                        MathText(expression: option, height: 35),
-                    /*Text(
-                      option,
-                      style: TextStyle(
-                        color: isSubmitted
-                            ? (isCorrect
-                            ? Colors.green // Green text for correct
-                            : (selectedAnswers[index] == option
-                            ? Colors.red // Red text for wrong
-                            : Colors.black))
-                            : Colors.black,
-                      ),
-                    ),*/
+                    title: MathText(expression: option, height: 35),
                     value: option,
                     groupValue: selectedAnswers[index],
                     onChanged: isSubmitted
-                        ? null // Disable selection after submission
+                        ? null
                         : (value) {
                       setState(() {
                         selectedAnswers[index] = value;
@@ -131,10 +99,11 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
               }).toList(),
             ),
 
-            // Show submit button only when an option is selected
-            if (selectedAnswers[index] != null && !answerResults.containsKey(index))
+            // Submit Button
+            if (selectedAnswers[index] != null &&
+                !answerResults.containsKey(index))
               Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
+                padding: const EdgeInsets.only(bottom: 10.0),
                 child: Center(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -142,7 +111,8 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                       backgroundColor: primaryColor,
                     ),
                     onPressed: () {
-                      bool isCorrect = selectedAnswers[index] == correctAnswer;
+                      bool isCorrect =
+                          selectedAnswers[index] == correctAnswer;
 
                       setState(() {
                         answerResults[index] = isCorrect;
@@ -152,9 +122,12 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            isCorrect ? "✅ Correct!" : "❌ Wrong! Correct Answer: $correctAnswer",
+                            isCorrect
+                                ? "✅ Correct!"
+                                : "❌ Wrong! Correct Answer: $correctAnswer",
                           ),
-                          backgroundColor: isCorrect ? Colors.green : Colors.red,
+                          backgroundColor:
+                          isCorrect ? Colors.green : Colors.red,
                         ),
                       );
                     },
@@ -170,6 +143,48 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                 ),
               ),
 
+            // Action Buttons Row
+            if (answerResults.containsKey(index))
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: FutureBuilder<bool>(
+                  future: isBookmarked(questionData["contentcode"]),
+                  builder: (context, snapshot) {
+                    final bookmarked = snapshot.data ?? false;
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildActionButton("Text Answer", Icons.article, () {
+                          // TODO: Implement Text Answer View
+                          Get.to(TextAnswer(
+                            imagePath: questionData["ans_explaination"],
+                            title: "MCQ",
+                            stream: questionData["stream"],
+                            basePath: "nr",));
+                        }),
+                        /*_buildActionButton("Explanation", Icons.info_outline, () {
+                        // TODO: Implement Explanation View
+                        _showSnack("Explanation tapped");
+                      }),*/
+                        _buildActionButton("Notepad", Icons.note_add, () {
+                          // TODO: Implement Notes Feature
+                          Get.to(() =>
+                              NotepadPage(
+                                subjectId: questionData["contentcode"].toString() ??
+                                    "unknown",
+                                chapter: questionData["chapter"] ?? "chapter",
+                              ));
+                        }),
+                        TextButton(
+                          onPressed: () =>
+                              toggleBookmark(questionData["contentcode"]),
+                          child: Text(bookmarked ? "Unbookmark" : "Bookmark"),
+                        ),
+                      ],
+                    );
+                  },),
+              ),
+
             const Divider(
               color: primaryColor,
               thickness: 1.5,
@@ -182,14 +197,43 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
     );
   }
 
-  String preprocessLaTeX(String question) {
-    return question
-        .replaceAll(r"\(", " ")
-        .replaceAll(r"\)", " ")
-        .replaceAll(r"\[", " ")
-        .replaceAll(r"\]", " ")
-        .replaceAll(r"$", " ")
-        .replaceAll(r"\right", " ")
-        .replaceAll(r"\leqb", " ");
+  Future<bool> isBookmarked(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarked = prefs.getStringList('bookmarks') ?? [];
+    return bookmarked.contains(id);
+  }
+
+  Future<void> toggleBookmark(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarked = prefs.getStringList('bookmarks') ?? [];
+    if (bookmarked.contains(id)) {
+      bookmarked.remove(id);
+    } else {
+      bookmarked.add(id);
+    }
+    await prefs.setStringList('bookmarks', bookmarked);
+    setState(() {});
+  }
+
+  Widget _buildActionButton(
+      String label, IconData icon, VoidCallback onPressed) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.grey.shade200,
+        foregroundColor: primaryColor,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      icon: Icon(icon, size: 18,color: blackColor,),
+      label: Text(label, style: const TextStyle(fontSize: 12, color: Colors.black)),
+      onPressed: onPressed,
+    );
+  }
+
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      duration: const Duration(seconds: 1),
+    ));
   }
 }
