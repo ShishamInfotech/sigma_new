@@ -36,7 +36,7 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
           color: 0xFFC9E4DF,
           imagePath: 'assets/svg/subject_wise_test.svg',
           navigation: () {},
-          title: 'Subject Wise Exam'),
+          title: 'Subject Wise Test'),
       Menu(
           color: 0xFFDBCDF0,
           imagePath: 'assets/svg/mock_test.svg',
@@ -98,8 +98,6 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
                         InkWell(
                           splashColor: Colors.transparent,
                           onTap: () {
-
-
                             if (examPreparationMenu[index].navigation != null) {
                               examPreparationMenu[index].navigation!();
                               Get.to(JeeSubjectwise(path: examPreparationMenu[index].title,));

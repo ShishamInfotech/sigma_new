@@ -27,3 +27,7 @@ plugins {
 }
 
 include ":app"
+
+//def flutterProjectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+//apply from: "$flutterProjectRoot/.flutter-plugins"
+//apply from: "$flutterProjectRoot/.flutter-plugins-dependencies"

@@ -13,10 +13,12 @@ import android.provider.Settings
 class MainActivity : FlutterFragmentActivity() {
 
     private val CHANNEL = "com.example.sigma_new/device_info"
+  //  private val MATH_VIEW_HEIGHT_CHANNEL = "mathview_height_channel"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+       // val heightChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, MATH_VIEW_HEIGHT_CHANNEL)
 
         flutterEngine
             .platformViewsController
