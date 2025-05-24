@@ -214,7 +214,7 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
 
 
 import 'dart:convert';
-import 'dart:ffi';
+
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -258,7 +258,7 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
     var newPath;
     var board;
     final prefs = await SharedPreferences.getInstance();
-    String? course = prefs.getString('course');
+    //String? course = prefs.getString('course');
 
     if (prefs.getString('board') == "Maharashtra") {
       board = "MH/";
@@ -336,16 +336,16 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.chevron_right, size: 24),
-            SizedBox(width: 8),
+            const Icon(Icons.chevron_right, size: 24),
+            const SizedBox(width: 8),
             Text(
               widget.path!,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         leading: IconButton(
-          icon: Icon(Icons.menu, size: 28),
+          icon: const Icon(Icons.menu, size: 28),
           onPressed: () {
             setState(() {
               _showSideNav = !_showSideNav;
@@ -365,7 +365,7 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
                   height: screenHeight * 0.6,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.6),
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(16),
                       bottomRight: Radius.circular(16),
                     ),
@@ -374,11 +374,11 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
                         color: Colors.black.withOpacity(0.2),
                         blurRadius: 10,
                         spreadRadius: 2,
-                        offset: Offset(5, 0),
+                        offset: const Offset(5, 0),
                       ),
                     ],
                   ),
-                  child: Column(
+                  child: const Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Icon(Icons.home, size: 30, color: Colors.black),
@@ -391,7 +391,7 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
                 ),
               ),
             AnimatedPositioned(
-              duration: Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 300),
               left: _showSideNav ? screenWidth * 0.18 : screenWidth * 0.05,
               right: screenWidth * 0.05,
               top: screenHeight * 0.04,
@@ -402,20 +402,20 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
                     title: Text(
                       "${entry.key}: ${entry.value[0]["chapter"]}",
                       style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     children: entry.value.map((item) {
                       return ListTile(
                         title: Container(
-                          margin: EdgeInsets.symmetric(horizontal: 10),
-                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
                             "${item["subchapter_number"]}: ${item["subchapter"]}" ??
                                 "No Subchapter",
-                            style: TextStyle(fontSize: 16),
+                            style: const TextStyle(fontSize: 16),
                           ),
                         ),
-                        trailing: Icon(Icons.arrow_forward_ios,
+                        trailing: const Icon(Icons.arrow_forward_ios,
                             size: 18, color: Colors.grey),
                         onTap: () => onSublistItemClick(item),
                       );

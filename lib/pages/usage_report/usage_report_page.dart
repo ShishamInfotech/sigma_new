@@ -1,3 +1,4 @@
+/*
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -232,6 +233,152 @@ class _UsageReportPageState extends State<UsageReportPage> {
   }
 }
 
+ */
+
+
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sigma_new/pages/usage_report/mock_exam_detail_page.dart';
+
+import '../../ui_helper/constant.dart';
+import '../../ui_helper/constant_widgets.dart';
+import '../evolution/mock_exam_details.dart';
+
+class UsageReportPage extends StatefulWidget {
+  const UsageReportPage({super.key});
+
+  @override
+  State<UsageReportPage> createState() => _UsageReportPageState();
+}
+
+class _UsageReportPageState extends State<UsageReportPage> {
+  Map<String, List<Map<String, dynamic>>> subjectAttempts = {};
+  Duration today = Duration.zero;
+  Duration yesterday = Duration.zero;
+  Duration total = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUsageData();
+    loadMockAttempts();
+  }
+
+  Future<void> loadMockAttempts() async {
+    final prefs = await SharedPreferences.getInstance();
+    Map<String, List<Map<String, dynamic>>> temp = {};
+
+    for (var key in prefs.getKeys()) {
+      if (key.startsWith('offline_quiz_')) {
+        final jsonStr = prefs.getString(key);
+        if (jsonStr != null) {
+          final decoded = jsonDecode(jsonStr);
+
+          // Check if it's a List (old format) or Map (new format)
+          if (decoded is Map<String, dynamic>) {
+            final subject = decoded['subject'] ?? 'Unknown';
+            temp.putIfAbsent(subject, () => []);
+            temp[subject]!.add(decoded);
+          } else {
+            debugPrint("Invalid format in key: $key");
+          }
+        }
+      }
+    }
+
+    setState(() {
+      subjectAttempts = temp;
+    });
+  }
+
+
+  Future<void> loadUsageData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+
+    String todayKey = "${now.year}-${now.month}-${now.day}";
+    String yesterdayKey = "${now.year}-${now.month}-${now.day - 1}";
+
+    int todayDuration = prefs.getInt(todayKey) ?? 0;
+    int yesterdayDuration = prefs.getInt(yesterdayKey) ?? 0;
+
+    Duration todayDurationObj = Duration(seconds: todayDuration);
+    Duration yesterdayDurationObj = Duration(seconds: yesterdayDuration);
+    Duration totalDuration = Duration.zero;
+
+    for (var key in prefs.getKeys()) {
+      final value = prefs.get(key);
+      if (value is int) {
+        totalDuration += Duration(seconds: value);
+      }
+    }
+
+    setState(() {
+      today = todayDurationObj;
+      yesterday = yesterdayDurationObj;
+      total = totalDuration;
+    });
+  }
+
+  String formatTime(Duration d) {
+    return "${d.inHours}h ${d.inMinutes.remainder(60)}m";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Usage Report")),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Study Time", style: black14BoldTextStyle),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                infoCard(title: "Yesterday", number: formatTime(yesterday), color: Colors.orange, context: context),
+                infoCard(title: "Today", number: formatTime(today), color: Colors.green, context: context),
+                infoCard(title: "To Date", number: formatTime(total), color: Colors.blue, context: context),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text("Mock Exam Summary", style: black14BoldTextStyle),
+            DataTable(
+              columns: const [
+                DataColumn(label: Text("Subject")),
+                DataColumn(label: Text("Attempts")),
+              ],
+              rows: subjectAttempts.entries.map((entry) {
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(entry.key),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MockExamDetailPageReport(subject: entry.key, attempts: entry.value),
+                          ),
+                        );
+                      },
+                    ),
+                    DataCell(Text("${entry.value.length}")),
+                  ],
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 
 
@@ -279,3 +426,4 @@ class AppUsageTracker {
     });
   }
 }
+

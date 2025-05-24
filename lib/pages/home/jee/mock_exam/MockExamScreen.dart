@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:sigma_new/math_view/math_text.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:sigma_new/models/sub_cahp_datum.dart';
 
@@ -45,6 +46,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   Timer? countdownTimer;
   Duration duration = const Duration(minutes: 120);
+  bool timerStarted = false;
 
   String? selectedOption;
 
@@ -57,7 +59,6 @@ class _MockExamScreenState extends State<MockExamScreen> {
   Future<void> _initialize() async {
     prefs = await SharedPreferences.getInstance();
     await _loadQuestions();
-    _startTimer();
   }
 
   Future<void> _loadQuestions() async {
@@ -85,9 +86,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       remainCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT % cheFiles.length : 0,
     );
 
-    final List<SubCahpDatum> selectedQuestions = [];
-
-    for (var uriGroup in [mathUri, phyUri, cheUri]) {
+    Future<void> processFiles(FileUri uriGroup) async {
       for (int i = 0; i < uriGroup.files.length; i++) {
         final file = uriGroup.files[i];
         final jsonStr = await SdCardUtility.getSubjectEncJsonDataForMock(file.path);
@@ -101,14 +100,27 @@ class _MockExamScreenState extends State<MockExamScreen> {
         questionList.shuffle();
 
         int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
-        selectedQuestions.addAll(questionList.take(takeCount));
+        final selected = questionList.take(takeCount).toList();
+
+        setState(() {
+          questions.addAll(selected);
+          selectedAnswers.addAll(List.filled(selected.length, ''));
+          if (!timerStarted && questions.isNotEmpty) {
+            _startTimer();
+            timerStarted = true;
+          }
+        });
       }
     }
 
-    selectedQuestions.shuffle();
+    await Future.wait([
+      processFiles(mathUri),
+      processFiles(phyUri),
+      processFiles(cheUri),
+    ]);
 
     setState(() {
-      questions = selectedQuestions;
+      questions.shuffle();
     });
 
     print("Total questions loaded: ${questions.length}");
@@ -131,7 +143,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     if (questions.isEmpty) return;
 
     final current = questions[currentIndex];
-    selectedAnswers.add(answer);
+    selectedAnswers[currentIndex] = answer;
 
     if (answer.trim() == current.answer?.trim()) {
       correct++;
@@ -253,10 +265,9 @@ class _MockExamScreenState extends State<MockExamScreen> {
     super.dispose();
   }
 
-
   double estimateHeight(String text) {
     final lines = (text.length / 30).ceil(); // assume 30 chars per line
-    return lines * 35.0; // assume each line is about 40 pixels tall
+    return lines * 35.0; // assume each line is about 35 pixels tall
   }
 }
 

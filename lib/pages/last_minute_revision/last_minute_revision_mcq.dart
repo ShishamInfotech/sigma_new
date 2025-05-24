@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sigma_new/pages/last_minute_revision/topicwisesyllabusmcq.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
 import '../board_syallabus/topic_wise_syallabus.dart';
@@ -93,7 +94,11 @@ class _LastMinuteRevisionMcqState extends State<LastMinuteRevisionMcq> {
             List<dynamic> subjectQuestions = parsedSubjectData["sigma_data"] ?? [];
 
             // Find the specific bookmarked question
+
+
+
             for (var question in subjectQuestions) {
+              print("Questions ${question["contentcode"]}");
               if (bookmarkedIds.contains(question["contentcode"]?.toString() ?? '')) {
                 bookmarkedQuestionsBySubject.putIfAbsent(subjectId, () => []);
                 bookmarkedQuestionsBySubject[subjectId]!.add(question);
@@ -288,7 +293,9 @@ class _LastMinuteRevisionMcqState extends State<LastMinuteRevisionMcq> {
                           ),
                         ),
                         if (isExpanded[subjectIndex])
+
                           ...subjectEntry.value.entries.map((chapterEntry) {
+                            print("Chapter Entry $chapterEntry");
                             final chapterQuestions = _countQuestionsInChapter(chapterEntry.value);
                             return Padding(
                               padding: EdgeInsets.only(left: screenWidth * 0.05),
@@ -307,9 +314,9 @@ class _LastMinuteRevisionMcqState extends State<LastMinuteRevisionMcq> {
                                     final first = subchapterEntry.value.first;
                                     return GestureDetector(
                                       onTap: () {
-                                        Get.to(() => TopicWiseSyllabus(
+                                        Get.to(() => TopicWiseSyllabusMcq(
                                           pathQuestionList: subchapterEntry.value,
-                                          subjectId: first["subjectid"],
+                                          subjectId: first["chapterid"],
                                         ));
                                       },
                                       child: Container(
@@ -332,7 +339,7 @@ class _LastMinuteRevisionMcqState extends State<LastMinuteRevisionMcq> {
                                           ],
                                         ),
                                         child: Text(
-                                          "${subchapterEntry.key}: ${first["subchapter"]} (${subchapterEntry.value.length})",
+                                          "${subchapterEntry.key}: ${first["chapter"]} (${subchapterEntry.value.length})",
                                           style: TextStyle(
                                             fontSize: 13,
                                             color: Colors.grey[800],

@@ -162,7 +162,7 @@ class _JeeNeetMcqState extends State<JeeNeetMcq> {
                                       'Yes'),
                                   onPressed: () {
                                     Navigator.of(context).pop();
-                                    Get.to(OfflineQuestions(chapterId: subjectsId[index],));
+                                    Get.to(OfflineQuestions(chapterId: subjectsId[index],title: subjects[index],));
                                     //
                                   },
                                 ),

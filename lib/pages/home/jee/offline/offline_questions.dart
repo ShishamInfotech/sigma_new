@@ -1,3 +1,4 @@
+/*
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -293,7 +294,8 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
                             foregroundColor: Colors.blue,
                           ),
                         ),
-                        /*ElevatedButton.icon(
+                        */
+/*ElevatedButton.icon(
                           icon: Icon(
                             showExplanation[index] ?? false ? Icons.visibility_off : Icons.visibility,
                             size: 18,
@@ -304,8 +306,10 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
                             backgroundColor: Colors.green[50],
                             foregroundColor: Colors.green,
                           ),
-                        ),*/
-                        /*ElevatedButton.icon(
+                        ),*//*
+
+                        */
+/*ElevatedButton.icon(
                           icon: Icon(
                             showNotes[index] ?? false ? Icons.visibility_off : Icons.visibility,
                             size: 18,
@@ -316,7 +320,8 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
                             backgroundColor: Colors.orange[50],
                             foregroundColor: Colors.orange,
                           ),
-                        ),*/
+                        ),*//*
+
                       ],
                     ),
 
@@ -434,6 +439,352 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
                     ),
                     child: RadioListTile<String>(
                       title: MathText(key: ValueKey('option_${options.indexOf(option)}_$currentQuestionIndex'),expression: option, height: 80),
+                      value: option,
+                      groupValue: selectedAnswer,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedAnswer = value;
+                        });
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: submitAnswer,
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.blue,
+                  ),
+                  child: const Text("Submit"),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}*/
+
+
+
+
+
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sigma_new/math_view/math_text.dart';
+import 'package:sigma_new/pages/text_answer/text_answer.dart';
+import 'package:sigma_new/utility/sd_card_utility.dart';
+
+class OfflineQuestions extends StatefulWidget {
+  final String chapterId;
+  final String title;
+
+  const OfflineQuestions({required this.chapterId,required this.title, super.key});
+
+  @override
+  State<OfflineQuestions> createState() => _OfflineQuestionsState();
+}
+
+class _OfflineQuestionsState extends State<OfflineQuestions> {
+  List<dynamic> sigmaData = [];
+  int currentQuestionIndex = 0;
+  int correctAnswers = 0;
+  int wrongAnswers = 0;
+  String? selectedAnswer;
+  bool showResult = false;
+  bool showEvaluation = false;
+  List<Map<String, dynamic>> userAnswers = [];
+  Map<int, bool> bookmarkedQuestions = {};
+  Map<int, bool> showTextAnswer = {};
+  Map<int, bool> showExplanation = {};
+  Map<int, bool> showNotes = {};
+
+  @override
+  void initState() {
+    super.initState();
+    getQuestionList();
+  }
+
+  getQuestionList() async {
+    final prefs = await SharedPreferences.getInstance();
+    var board = prefs.getString('board') == "Maharashtra" ? "MH/" : prefs.getString('board');
+
+    var inputFile = await SdCardUtility.getSubjectEncJsonData('jee/mcq/${widget.chapterId}.json');
+    if (inputFile != null) {
+      var parsedJson = jsonDecode(inputFile);
+      setState(() {
+        sigmaData = parsedJson["sigma_data"].take(20).toList();
+      });
+    }
+  }
+
+  Future<void> saveUserAnswersToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final attempt = {
+      "subject": widget.title,        // <-- Add subject name
+      "chapter": widget.title,          // <-- Chapter ID or name
+      "timestamp": DateTime.now().toIso8601String(),
+      "questions": userAnswers              // <-- List of answered questions
+    };
+
+    await prefs.setString('offline_quiz_${widget.chapterId}', jsonEncode(attempt));
+  }
+
+  void submitAnswer() {
+    if (selectedAnswer == null) return;
+
+    bool isCorrect = selectedAnswer == sigmaData[currentQuestionIndex]["answer"];
+
+    userAnswers.add({
+      "question": sigmaData[currentQuestionIndex]["question"],
+      "selected": selectedAnswer,
+      "correct": sigmaData[currentQuestionIndex]["answer"],
+      "options": [
+        sigmaData[currentQuestionIndex]["option_1"],
+        sigmaData[currentQuestionIndex]["option_2"],
+        sigmaData[currentQuestionIndex]["option_3"],
+        sigmaData[currentQuestionIndex]["option_4"],
+        sigmaData[currentQuestionIndex]["option_5"],
+      ],
+      "explanation": sigmaData[currentQuestionIndex]["ans_explaination"] ?? "No explanation available",
+      "notes": sigmaData[currentQuestionIndex]["notes"] ?? "No notes available",
+      "text_answer": sigmaData[currentQuestionIndex]["ans_explaination"] ?? "No text answer available",
+    });
+
+    setState(() {
+      if (isCorrect) {
+        correctAnswers++;
+      } else {
+        wrongAnswers++;
+      }
+
+      if (currentQuestionIndex < sigmaData.length - 1) {
+        currentQuestionIndex++;
+        selectedAnswer = null;
+      } else {
+        showResult = true;
+        saveUserAnswersToPrefs(); // 🔄 Save after last question
+      }
+    });
+  }
+
+  void toggleBookmark(int questionIndex) {
+    setState(() {
+      bookmarkedQuestions[questionIndex] = !(bookmarkedQuestions[questionIndex] ?? false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (sigmaData.isEmpty) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (showResult) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Quiz Result")),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Quiz Completed!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text("Correct Answers: $correctAnswers", style: const TextStyle(fontSize: 18, color: Colors.green)),
+              Text("Wrong Answers: $wrongAnswers", style: const TextStyle(fontSize: 18, color: Colors.red)),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        showEvaluation = true;
+                        showResult = false;
+                      });
+                    },
+                    child: const Text("Evaluation"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Back"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (showEvaluation) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Evaluation")),
+        body: ListView.builder(
+          itemCount: userAnswers.length,
+          itemBuilder: (context, index) {
+            var questionData = userAnswers[index];
+            bool isCorrect = questionData["selected"] == questionData["correct"];
+
+            return Card(
+              margin: const EdgeInsets.all(10),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: MathText(
+                            expression: "Q${index + 1}: ${questionData['question']}",
+                            height: 100,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            bookmarkedQuestions[index] ?? false
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                            color: bookmarkedQuestions[index] ?? false ? Colors.blue : null,
+                          ),
+                          onPressed: () => toggleBookmark(index),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Column(
+                      children: questionData["options"]
+                          .where((option) => option != null && option != "NA")
+                          .map<Widget>((option) {
+                        Color optionColor = Colors.white;
+                        if (option == questionData["correct"]) {
+                          optionColor = Colors.green.withOpacity(0.2);
+                        } else if (option == questionData["selected"] && option != questionData["correct"]) {
+                          optionColor = Colors.red.withOpacity(0.2);
+                        }
+
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          decoration: BoxDecoration(
+                            color: optionColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: option == questionData["correct"]
+                                  ? Colors.green
+                                  : option == questionData["selected"]
+                                  ? Colors.red
+                                  : Colors.black,
+                              width: option == questionData["correct"] || option == questionData["selected"] ? 2 : 1,
+                            ),
+                          ),
+                          child: ListTile(
+                            title: MathText(expression: option, height: 80),
+                            leading: option == questionData["correct"]
+                                ? const Icon(Icons.check, color: Colors.green)
+                                : option == questionData["selected"] && !isCorrect
+                                ? const Icon(Icons.close, color: Colors.red)
+                                : null,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isCorrect ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isCorrect ? Colors.green : Colors.red),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(isCorrect ? Icons.check_circle : Icons.error,
+                              color: isCorrect ? Colors.green : Colors.red),
+                          const SizedBox(width: 8),
+                          Text(
+                            isCorrect ? "Correct Answer!" : "Wrong Answer!",
+                            style: TextStyle(
+                              color: isCorrect ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.visibility),
+                      label: const Text("Show Answer"),
+                      onPressed: () {
+                        Get.to(TextAnswer(
+                          imagePath: questionData["text_answer"],
+                          title: "MCQ",
+                          basePath: "nr",
+                          stream: 'jee',
+                        ));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[50],
+                        foregroundColor: Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    var questionData = sigmaData[currentQuestionIndex];
+    List<String> options = [];
+
+    for (int i = 1; i <= 5; i++) {
+      String key = "option_$i";
+      if (questionData[key] != null && questionData[key] != "NA") {
+        options.add(questionData[key]);
+      }
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text("Question ${currentQuestionIndex + 1}/${sigmaData.length}")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MathText(
+                  key: ValueKey('question_$currentQuestionIndex'),
+                  expression: questionData["question"],
+                  height: 100),
+              const SizedBox(height: 15),
+              Column(
+                children: options.map((option) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.black),
+                    ),
+                    child: RadioListTile<String>(
+                      title: MathText(
+                          key: ValueKey('option_${options.indexOf(option)}_$currentQuestionIndex'),
+                          expression: option,
+                          height: 80),
                       value: option,
                       groupValue: selectedAnswer,
                       onChanged: (value) {

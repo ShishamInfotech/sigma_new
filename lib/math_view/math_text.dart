@@ -13,7 +13,7 @@ class MathText extends StatefulWidget {
 
 class _MathTextState extends State<MathText> {
 
-  double _height = 50.0;
+  double _height =10;
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _MathTextState extends State<MathText> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: _height,
+      height: widget.height,
       child: AndroidView(
         viewType: 'mathview-native',
         layoutDirection: TextDirection.ltr,
