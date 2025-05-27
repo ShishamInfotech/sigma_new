@@ -6,6 +6,8 @@ import 'package:sigma_new/pages/usage_report/usage_report_page.dart';
 import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import '../library/LibraryHome.dart';
+
 @override
 Widget DrawerWidget(BuildContext context) {
   return Drawer(
@@ -36,12 +38,8 @@ Widget DrawerWidget(BuildContext context) {
         ListTile(
           title: const Text('Library'),
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("UI not defined in WireFrame"),
-                duration: Duration(seconds: 3),
-              ),
-            );
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryHome()));
           },
         ),
         ListTile(
