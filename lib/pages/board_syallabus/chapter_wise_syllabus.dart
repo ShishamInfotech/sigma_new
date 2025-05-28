@@ -224,8 +224,9 @@ import 'package:sigma_new/utility/sd_card_utility.dart';
 
 class ChapterWiseSyllabus extends StatefulWidget {
   String? path;
+  String? title;
 
-  ChapterWiseSyllabus({this.path, super.key});
+  ChapterWiseSyllabus({this.path,this.title, super.key});
 
   @override
   _ChapterWiseSyllabusState createState() => _ChapterWiseSyllabusState();
@@ -338,8 +339,8 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
           children: [
             const Icon(Icons.chevron_right, size: 24),
             const SizedBox(width: 8),
-            Text(
-              widget.path!,
+             Text(
+              "${widget.title}",
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],

@@ -219,7 +219,7 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
                         // Main Card
                         GestureDetector(
                           onTap: () {
-                            Get.to(ChapterWiseSyllabus(path: subjectsId[index],));
+                            Get.to(ChapterWiseSyllabus(path: subjectsId[index],title:subjects[index] ,));
                           },
                           child: Container(
                             width: double.infinity,

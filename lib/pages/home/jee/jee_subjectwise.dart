@@ -125,7 +125,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
 
         if (widget.path.removeAllWhitespace
                 .toLowerCase()
-                .contains("subjectwisetest") &&
+                .contains("subjectwiseexam") &&
             subjects[i].contains("Offline")) {
           subjectsTopic.add(subjects[i]);
         }
@@ -156,30 +156,43 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar:widget.path.toString().toLowerCase() =="multiple choice question" || widget.path.toString().toLowerCase() =="concept"?InkWell(
-        onTap: (){
-          if(widget.path.toString().toLowerCase() =="concept" ) {
-            Get.to(LastMinuteRevision(path: "JEE/",));
-          }else{
-            Get.to(LastMinuteRevisionMcq(path: "JEE/MCQ/",));
-          }
-        },
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 15),
-          decoration: BoxDecoration(
-              color: primaryColor,
-              boxShadow:const [
-                BoxShadow(
-                  color: whiteColor,
-                )
-              ],
-              borderRadius: BorderRadius.circular(10)
-          ),
-          height: 60,
-          alignment: Alignment.center,
-          child: const Text('Last Minute Revision', style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),),
-        ),
-      ) : Container(height: 10,),
+      bottomNavigationBar: widget.path.toString().toLowerCase() ==
+                  "multiple choice question" ||
+              widget.path.toString().toLowerCase() == "concept"
+          ? InkWell(
+              onTap: () {
+                if (widget.path.toString().toLowerCase() == "concept") {
+                  Get.to(LastMinuteRevision(
+                    path: "JEE/",
+                  ));
+                } else {
+                  Get.to(LastMinuteRevisionMcq(
+                    path: "JEE/MCQ/",
+                  ));
+                }
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 15),
+                decoration: BoxDecoration(
+                    color: primaryColor,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: whiteColor,
+                      )
+                    ],
+                    borderRadius: BorderRadius.circular(10)),
+                height: 60,
+                alignment: Alignment.center,
+                child: const Text(
+                  'Last Minute Revision',
+                  style:
+                      TextStyle(color: whiteColor, fontWeight: FontWeight.bold),
+                ),
+              ),
+            )
+          : Container(
+              height: 10,
+            ),
       appBar: AppBar(
           // backgroundColor: backgroundColor,
           leading: InkWell(
@@ -237,7 +250,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                                       .contains("multiplechoicequestion") ||
                                   widget.path.removeAllWhitespace
                                       .toLowerCase()
-                                      .contains("subjectwisetest")) {
+                                      .contains("subjectwiseexam")) {
                                 Get.to(JeeNeetMcq(
                                   title: subjectsTopic[index],
                                   subjectId: subjectsId[index],
@@ -266,6 +279,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                                               Get.to(JeeNeetConcept(
                                                 subjectId: subjectsId[index],
                                                 complexity: "e",
+                                                title: subjects[index],
                                               ));
                                               //
                                             },
@@ -309,7 +323,9 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                                     return AlertDialog(
                                       title: const Text('Exam information'),
                                       content: const Text(
-                                          'Your Current Test Average: 0.00 \n\nCurrent Test Level Qualified for: SIMPLE \n\nBegin Test?', style: black14BoldTextStyleInter,),
+                                        'Your Current Test Average: 0.00 \n\nCurrent Test Level Qualified for: SIMPLE \n\nBegin Test?',
+                                        style: black14BoldTextStyleInter,
+                                      ),
                                       actions: [
                                         TextButton(
                                           style: TextButton.styleFrom(
@@ -319,12 +335,14 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                                           child: const Text('Yes'),
                                           onPressed: () {
                                             Navigator.of(context).pop();
-                                            Get.to(MockExamScreen(
+                                            instructionMockExam(
+                                                subjectsId[index],
+                                                subjectsTopic[index]);
+                                            /*Get.to(MockExamScreen(
                                               subjectId: subjectsId[index],
                                               title: subjectsTopic[index],
                                               path: 'JEE/MCQ/sigma_data.json',
-                                            ));
-
+                                            ));*/
                                           },
                                         ),
                                         TextButton(
@@ -385,5 +403,42 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
         ],
       ),
     );
+  }
+
+  instructionMockExam(String subjectId, String title) {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Exam information'),
+            content: const Text(
+              '1. The group consists of Physics, Chemistry and Mathematics.\n2. The duration of the examination will be 120 minutes.\n3. You need to attempt all the 198 Multi-Choice Questions.\n4. The mock examination consists of 50 questions each from Physics and Chemistry, 98 questions from Mathematics.\n5. All the questions in level-1 mock examination will appear from simple category questions bank.\n6. You need to score 70% and more marks in each of the 50 consecutive examinations to qualify for the next level.\n7. In case, you want to leave the examination due to some unavoidable situation, the same examination will continue for the remaining time. You will not be able to attempt the next examination.\n8. All your attempted examinations will be saved in the Evaluation bucket to enable to monitor your average score.\n9. You will also be able to evaluate each and every attempted examination question by question in the Evaluation bucket.',
+              style: black14BoldTextStyleInter,
+            ),
+            actions: [
+              TextButton(
+                style: TextButton.styleFrom(
+                    textStyle: Theme.of(context).textTheme.labelLarge),
+                child: const Text('Yes'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Get.to(MockExamScreen(
+                    subjectId: subjectId,
+                    title: title,
+                    path: 'JEE/MCQ/sigma_data.json',
+                  ));
+                },
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                    textStyle: Theme.of(context).textTheme.labelLarge),
+                child: const Text('No'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
   }
 }

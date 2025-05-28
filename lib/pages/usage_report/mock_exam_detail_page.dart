@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:sigma_new/math_view/math_text.dart';
+import 'package:sigma_new/pages/text_answer/text_answer.dart';
 
 class MockExamDetailPageReport extends StatelessWidget {
   final String subject;
@@ -36,6 +38,7 @@ class MockExamDetailPageReport extends StatelessWidget {
                 final questionText = q['question'] ?? 'No Question';
                 final selected = q['selected'] ?? 'Not Answered';
                 final correct = q['correct'] ?? 'Unknown';
+                final answerExplanation = q['text_answer'] ?? 'No explanation available';
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -44,8 +47,26 @@ class MockExamDetailPageReport extends StatelessWidget {
                     children: [
                       MathText(expression: "Q$qIndex: $questionText", height: estimateHeight(questionText),),
                       const SizedBox(height: 4),
-                      MathText(expression: "Your Answer: $selected",height: 80),
-                      MathText(expression: "Correct Answer: $correct", height: 80,),
+                      MathText(expression: "Your Answer: $selected", height: 80),
+                      MathText(expression: "Correct Answer: $correct", height: 80),
+
+                      // Answer button and explanation
+                      StatefulBuilder(
+                        builder: (context, setState) {
+                          bool showAnswer = false;
+                          return Column(
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  Get.to(TextAnswer(imagePath: answerExplanation, title: "chapter",basePath: "nr",));
+                                },
+                                child: Text("Show Answer"),
+                              ),
+
+                            ],
+                          );
+                        },
+                      ),
                       const Divider(),
                     ],
                   ),
@@ -57,7 +78,6 @@ class MockExamDetailPageReport extends StatelessWidget {
       ),
     );
   }
-
 
   double estimateHeight(String text) {
     final lines = (text.length / 30).ceil(); // assume 30 chars per line

@@ -117,7 +117,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
         key: _scaffoldKey,
         drawer: DrawerWidget(context),
         appBar: AppBar(
-          title: Text(widget.pathQuestionList[0]["chapter"] ?? ""),
+          title: Text("${widget.pathQuestionList[0]["chapter"]} : ${widget.pathQuestionList[0]["subchapter"]} " ?? ""),
         ),
         body: Column(
           children: [

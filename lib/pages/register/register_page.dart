@@ -235,7 +235,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   ),
                                 ),
                                 // Standard Dropdown
-                                const Padding(
+                                /*const Padding(
                                   padding: EdgeInsets.only(top: 5.0),
                                   child: Text("Standard", style: black16MediumTextStyle),
                                 ),
@@ -269,7 +269,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       ),
                                     ),
                                   ),
-                                ),
+                                ),*/
                                 // Board Dropdown
                                 const Padding(
                                   padding: EdgeInsets.only(top: 5.0),
