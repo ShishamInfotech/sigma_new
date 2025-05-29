@@ -103,4 +103,20 @@ class CryptoUtils {
       throw CryptoException("Error decrypting file strea$e");
     }
   }
+
+  static final _key = encrypt.Key.fromUtf8('1234567890123456'); // 16-char key
+  static final _iv = encrypt.IV.fromLength(16);
+
+  static List<int> encrypt1(String text) {
+    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
+    final encrypted = encrypter.encrypt(text, iv: _iv);
+    return encrypted.bytes;
+  }
+
+  static String decrypt(List<int> encryptedBytes) {
+    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
+    final encrypted = encrypt.Encrypted(Uint8List.fromList(encryptedBytes)); // ✅ fix
+    return encrypter.decrypt(encrypted, iv: _iv);
+  }
+
 }

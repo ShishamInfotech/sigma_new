@@ -1,14 +1,19 @@
 // lib/utils/sd_card_utility.dart
 import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show MethodChannel, PlatformException, rootBundle;
 import 'package:get/get.dart';
+import 'package:path/path.dart' as Saf;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:external_path/external_path.dart';
 import 'package:sigma_new/utility/crypto_utils.dart';
 import 'constants.dart';
+import 'crypto_exception.dart';
 
   class SdCardUtility {
   /// Request storage permission.
@@ -335,10 +340,110 @@ import 'constants.dart';
     return uriList;
   }
 
+  static const platform = MethodChannel('com.example.sigma_new/device_info');
+  static const String bindFile = 'bind.dat';
+  static const String hashFile = 'bind.hash';
+  static const String folder = 'sigma';
 
 
 
-}
+  static Future<String> getDeviceId() async {
+    const platform = MethodChannel('com.example.sigma_new/device_info');
+    try {
+      final String androidId = await platform.invokeMethod('getAndroidId');
+      return androidId;
+    } on PlatformException catch (e) {
+      return "UNKNOWN";
+    }
+  }
+
+  static Future<void> createBindingFiles() async {
+    final path = await getBasePath();
+    final deviceId = await getDeviceId();
+
+    // Encrypt device ID
+    final encrypted = CryptoUtils.encrypt1(deviceId);
+    final bindFilePath = File('$path/$bindFile');
+    await bindFilePath.writeAsBytes(encrypted);
+
+    // Generate SHA256 hash
+    final hash = sha256.convert(encrypted).toString();
+    final hashFilePath = File('$path/$hashFile');
+    await hashFilePath.writeAsString(hash);
+  }
+
+  static Future<void> validateBinding() async {
+    final path = await getBasePath();
+    final bindFilePath = File('$path/$bindFile');
+    final hashFilePath = File('$path/$hashFile');
+
+    if (!bindFilePath.existsSync() || !hashFilePath.existsSync()) {
+      throw CryptoException('Binding files missing. SD card may be tampered.');
+    }
+
+    final encryptedBytes = await bindFilePath.readAsBytes();
+    final expectedHash = await hashFilePath.readAsString();
+
+    final actualHash = sha256.convert(encryptedBytes).toString();
+    if (expectedHash != actualHash) {
+      throw CryptoException('Bind file integrity check failed.');
+    }
+
+    final decryptedId = CryptoUtils.decrypt(encryptedBytes);
+    final currentId = await getDeviceId();
+
+    if (decryptedId != currentId) {
+      throw CryptoException('Device ID mismatch. SD card bound to a different device.');
+    }
+  }
+
+  static Future<void> initializeBindingIfNeeded() async {
+    final path = await getBasePath();
+    final bindFile = File('$path/bind.dat');
+    final hashFile = File('$path/bind.hash');
+
+    if (!bindFile.existsSync() || !hashFile.existsSync()) {
+      // First-time setup: create binding files
+      print("Binding files not found. Creating new binding...");
+      await createBindingFiles();
+    }
+  }
+
+  static Future<String?> pickSdCardFolder() async {
+    try {
+      final uri = await platform.invokeMethod<String>('pickSdCardFolder');
+      return uri;
+    } on PlatformException catch (e) {
+      print("Failed to pick folder: \${e.message}");
+      return null;
+    }
+  }
+
+  static final _key = encrypt.Key.fromUtf8('1234567890123456'); // 16-char key
+  static final _iv = encrypt.IV.fromLength(16);
+
+  static String encryptDeviceId(String deviceId) {
+    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
+    final encrypted = encrypter.encrypt(deviceId, iv: _iv);
+    return base64Encode(encrypted.bytes);
+  }
+
+  static String generateHash(String content) {
+    return sha256.convert(utf8.encode(content)).toString();
+  }
+
+  static Future<void> bindDeviceToSdCard(String deviceId, String folderPath) async {
+    final encrypted = encryptDeviceId(deviceId);
+    final hash = generateHash(encrypted);
+
+    final bindFile = File('$folderPath/bind.dat');
+    final hashFile = File('$folderPath/bind.hash');
+
+    await bindFile.writeAsString(encrypted);
+    await hashFile.writeAsString(hash);
+  }
+
+  }
 
 
 
