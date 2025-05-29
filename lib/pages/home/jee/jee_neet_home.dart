@@ -36,7 +36,7 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
           color: 0xFFC9E4DF,
           imagePath: 'assets/svg/subject_wise_test.svg',
           navigation: () {},
-          title: 'Subject Wise Test'),
+          title: 'Subject Wise Exam'),
       Menu(
           color: 0xFFDBCDF0,
           imagePath: 'assets/svg/mock_test.svg',

@@ -33,15 +33,8 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
   }
 
 
-
-
-
-
-
-
   Future<void> _initVideoPlayer() async {
     try {
-
       print("filePath ${widget.filePath}");
       final basePath = await SdCardUtility.getBasePath();
       debugPrint("BasePath from SdCardUtility: $basePath");
@@ -66,12 +59,11 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
         final file = File(path);
 
         if (!await file.exists()) {
-
           debugPrint("❌ File does not exist: $path");
 
           _initializationFailed = true;
           return;
-        }else{
+        } else {
           final isEncrypted = await _isEncrypted(path, "sigmapassword");
 
           if (isEncrypted) {
@@ -83,14 +75,16 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
               return;
             }
 
-            flickManager = FlickManager(videoPlayerController: VideoPlayerController.file(File(_tempFilePath!)));
-          //  _controller = VideoPlayerController.file(File(_tempFilePath!));
+            flickManager = FlickManager(
+                videoPlayerController: VideoPlayerController.file(
+                    File(_tempFilePath!)));
+            //  _controller = VideoPlayerController.file(File(_tempFilePath!));
           } else {
-
-            flickManager = FlickManager(videoPlayerController: VideoPlayerController.file(File(path)));
-           // _controller = VideoPlayerController.file(File(path));
+            flickManager = FlickManager(
+                videoPlayerController: VideoPlayerController.file(File(path)));
+            // _controller = VideoPlayerController.file(File(path));
           }
-
+          break;
         }
       }
 
@@ -106,9 +100,9 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
       // Check if file is encrypted
 
 
-    //  await _controller!.initialize();
-   //   await _controller!.setLooping(true);
-    //  await _controller!.play();
+      //  await _controller!.initialize();
+      //   await _controller!.setLooping(true);
+      //  await _controller!.play();
 
       setState(() {
         _isLoading = false;
@@ -174,42 +168,38 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
     ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), duration: Duration(seconds: 3))
     );
-    Future.delayed(Duration(seconds: 3), () {
+    /*Future.delayed(Duration(seconds: 3), () {
       if (mounted) Navigator.of(context).pop();
-    });
+    });*/
   }
 
   @override
   void dispose() {
     flickManager.dispose(); // Safe call with null check
     // Clean up temporary file if it exists
-    if (_tempFilePath != null) {
-      File(_tempFilePath!).delete();
-    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_initializationFailed) {
-      return Scaffold(
-        appBar: AppBar(title: Text("Video Player")),
-        body: Center(child: Text("Failed to initialize video player")),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Center(
-        child: AspectRatio(
-          aspectRatio:  16 / 9,
-         child: FlickVideoPlayer(flickManager: flickManager),
-         // child: VideoPlayer(_controller!),
+    return WillPopScope(
+      onWillPop: () async {
+        flickManager.flickControlManager?.pause(); // Pause video if playing
+        return true; // Allow back navigation
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : AspectRatio(
+          aspectRatio: 16 / 9,
+          child: Center(
+            child: FlickVideoPlayer(flickManager: flickManager),
+          ),
         ),
       ),
-
     );
   }
 }

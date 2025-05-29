@@ -255,6 +255,7 @@ class UsageReportPage extends StatefulWidget {
 
 class _UsageReportPageState extends State<UsageReportPage> {
   Map<String, List<Map<String, dynamic>>> subjectAttempts = {};
+  Map<String, List<Map<String, dynamic>>> subjectAttemptsMock = {};
   Duration today = Duration.zero;
   Duration yesterday = Duration.zero;
   Duration total = Duration.zero;
@@ -264,35 +265,116 @@ class _UsageReportPageState extends State<UsageReportPage> {
     super.initState();
     loadUsageData();
     loadMockAttempts();
+    loadMockAttemptsMock();
   }
 
   Future<void> loadMockAttempts() async {
     final prefs = await SharedPreferences.getInstance();
     Map<String, List<Map<String, dynamic>>> temp = {};
+    final now = DateTime.now();
+
+    /*final attemptsJson = prefs.getString('total_mock_exam_attempts') ?? '[]';
+    final List<dynamic> attempts = jsonDecode(attemptsJson);
+    print("ATtemptss $attempts");*/
 
     for (var key in prefs.getKeys()) {
       if (key.startsWith('offline_quiz_')) {
         final jsonStr = prefs.getString(key);
         if (jsonStr != null) {
-          final decoded = jsonDecode(jsonStr);
+          try {
+            final decoded = jsonDecode(jsonStr);
 
-          // Check if it's a List (old format) or Map (new format)
-          if (decoded is Map<String, dynamic>) {
-            final subject = decoded['subject'] ?? 'Unknown';
-            temp.putIfAbsent(subject, () => []);
-            temp[subject]!.add(decoded);
-          } else {
-            debugPrint("Invalid format in key: $key");
+            // Handle both single attempt and list of attempts
+            if (decoded is Map<String, dynamic>) {
+              print("Decoded $decoded");
+              final subject = decoded['subjectId'] ?? decoded['subject'] ?? 'Unknown';
+              temp.putIfAbsent(subject, () => []);
+              temp[subject]!.add(decoded);
+            } else if (decoded is List) {
+
+              for (var attempt in decoded) {
+                if (attempt is Map<String, dynamic>) {
+                  print("Attempt $attempt");
+                  final subject = attempt['subjectId'] ?? attempt['subject'] ?? 'Unknown';
+                  temp.putIfAbsent(subject, () => []);
+                  temp[subject]!.add(attempt);
+                }
+              }
+            }
+          } catch (e) {
+            debugPrint("Error parsing $key: $e");
           }
         }
       }
     }
+
+    // Sort attempts by date (newest first)
+    temp.forEach((subject, attempts) {
+      attempts.sort((a, b) {
+        final dateA = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+        final dateB = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+        return dateB.compareTo(dateA);
+      });
+    });
 
     setState(() {
       subjectAttempts = temp;
     });
   }
 
+  Future<void> loadMockAttemptsMock() async {
+    final prefs = await SharedPreferences.getInstance();
+    Map<String, List<Map<String, dynamic>>> temp = {};
+    final now = DateTime.now();
+
+    /*final attemptsJson = prefs.getString('total_mock_exam_attempts') ?? '[]';
+    final List<dynamic> attempts = jsonDecode(attemptsJson);
+    print("ATtemptss $attempts");*/
+
+    for (var key in prefs.getKeys()) {
+      if (key.startsWith('mock_exam_attempts')) {
+        final jsonStr = prefs.getString(key);
+        if (jsonStr != null) {
+          try {
+            final decoded = jsonDecode(jsonStr);
+
+            // Handle both single attempt and list of attempts
+            if (decoded is Map<String, dynamic>) {
+              print("Decoded $decoded");
+              final subject = decoded['subjectId'] ?? decoded['subject'] ?? 'Unknown';
+              temp.putIfAbsent(subject, () => []);
+              temp[subject]!.add(decoded);
+            } else if (decoded is List) {
+
+              for (var attempt in decoded) {
+                if (attempt is Map<String, dynamic>) {
+                  print("Attempt $attempt");
+                  final subject = attempt['subjectId'] ?? attempt['subject'] ?? 'Unknown';
+                  temp.putIfAbsent(subject, () => []);
+                  temp[subject]!.add(attempt);
+                }
+              }
+            }
+          } catch (e) {
+            debugPrint("Error parsing $key: $e");
+          }
+        }
+      }
+    }
+
+    // Sort attempts by date (newest first)
+    temp.forEach((subject, attempts) {
+      attempts.sort((a, b) {
+        final dateA = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+        final dateB = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+        return dateB.compareTo(dateA);
+      });
+    });
+
+    setState(() {
+      subjectAttemptsMock = temp;
+    });
+  }
 
   Future<void> loadUsageData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -331,7 +413,7 @@ class _UsageReportPageState extends State<UsageReportPage> {
     final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Usage Report")),
+      appBar: AppBar(title: const Text("Real Time Monitoring Report")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -341,19 +423,38 @@ class _UsageReportPageState extends State<UsageReportPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                infoCard(title: "Yesterday", number: formatTime(yesterday), color: Colors.orange, context: context),
-                infoCard(title: "Today", number: formatTime(today), color: Colors.green, context: context),
-                infoCard(title: "To Date", number: formatTime(total), color: Colors.blue, context: context),
+                infoCard(
+                    title: "Yesterday",
+                    number: formatTime(yesterday),
+                    color: Colors.orange,
+                    context: context
+                ),
+                infoCard(
+                    title: "Today",
+                    number: formatTime(today),
+                    color: Colors.green,
+                    context: context
+                ),
+                infoCard(
+                    title: "To Date",
+                    number: formatTime(total),
+                    color: Colors.blue,
+                    context: context
+                ),
               ],
             ),
             const SizedBox(height: 20),
-            Text("Mock Exam Summary", style: black14BoldTextStyle),
+            Text("Subject Wise Exam Summary", style: black14BoldTextStyle),
             DataTable(
               columns: const [
                 DataColumn(label: Text("Subject")),
                 DataColumn(label: Text("Attempts")),
+               // DataColumn(label: Text("Best Score")),
               ],
               rows: subjectAttempts.entries.map((entry) {
+                // Find best score for this subject
+
+
                 return DataRow(
                   cells: [
                     DataCell(
@@ -362,16 +463,74 @@ class _UsageReportPageState extends State<UsageReportPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => MockExamDetailPageReport(subject: entry.key, attempts: entry.value),
+                            builder: (_) => MockExamDetailPageReport(
+                                subject: entry.key,
+                                attempts: entry.value
+                            ),
                           ),
                         );
                       },
                     ),
                     DataCell(Text("${entry.value.length}")),
+                    //DataCell(Text("$bestScore/$totalQuestions")),
                   ],
                 );
               }).toList(),
             ),
+            const SizedBox(height: 20),
+            Text("Mock Exam Results", style: black14BoldTextStyle),
+            if (subjectAttemptsMock.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: Text("No exam attempts found", style: TextStyle(color: Colors.grey)),
+                ),
+              )
+            else
+              ...subjectAttemptsMock.entries.expand((subjectEntry) {
+                return [
+                  const SizedBox(height: 8),
+                  Text(
+                    subjectEntry.value.first["title"],
+                    style: black14BoldTextStyle.copyWith(color: Colors.blue),
+                  ),
+                  ...subjectEntry.value.map((attempt) {
+                    final date = DateTime.tryParse(attempt['date'] ?? '')?.toLocal() ?? DateTime.now();
+                    final score = attempt['correct'] ?? 0;
+                    final total = attempt['total'] ?? 1;
+                    final wrong = attempt['wrong'] ?? 0;
+                    final percentage = (score / total * 100).toStringAsFixed(1);
+                    final duration = attempt['duration'] ?? 'N/A';
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      child: ListTile(
+                        title: Text("Score: $score/$total ($percentage%)"),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Date: ${date.toString().substring(0, 16)}"),
+                            Text("Wrong: $wrong | Time: $duration"),
+                          ],
+                        ),
+                       // trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MockExamDetailPageReport(
+                                subject: subjectEntry.key,
+                                attempts: subjectEntry.value,
+                              //  selectedAttempt: attempt,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ];
+              }).toList(),
           ],
         ),
       ),

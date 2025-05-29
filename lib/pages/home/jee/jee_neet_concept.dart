@@ -314,8 +314,9 @@ import 'package:sigma_new/utility/sd_card_utility.dart';
 class JeeNeetConcept extends StatefulWidget {
   final String subjectId;
   final String? complexity;
+  final String? title;
 
-  JeeNeetConcept({required this.subjectId, this.complexity, super.key});
+  JeeNeetConcept({required this.subjectId, this.complexity,this.title, super.key});
 
   @override
   State<JeeNeetConcept> createState() => _JeeNeetConceptState();
@@ -417,17 +418,20 @@ class _JeeNeetConceptState extends State<JeeNeetConcept> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+    print("title ${widget.title}");
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Row(
+        title:  Row(
           children: [
             Icon(Icons.chevron_right, size: 24),
             SizedBox(width: 8),
-            Text(
-              "MCQ",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Expanded(
+              child: Text(
+                "${widget.title}",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
