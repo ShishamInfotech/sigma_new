@@ -1,17 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sigma_new/pages/usage_report/usage_report_page.dart';
 import 'package:sigma_new/pages/welcomePage/welcomePage.dart';
 import 'package:sigma_new/supports/fetchDeviceDetails.dart';
+import 'package:sigma_new/utility/sd_card_utility.dart';  // ✅ Required
+import 'package:sigma_new/utility/crypto_exception.dart'; // ✅ If you're catching CryptoException
 
-
-
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
-  AppUsageTracker.startTracking();
-  AppUsageTracker.startAutoSave();
+  try {
+
+    await requestStoragePermission();
+
+    // 🔹 Create bind files if first time
+    await SdCardUtility.initializeBindingIfNeeded();
+
+    // Validate SD card binding
+    await SdCardUtility.validateBinding();
+
+    // Start app if validation succeeds
+    runApp(const MyApp());
+
+    // Initialize app tracking only after successful binding
+    AppUsageTracker.startTracking();
+    AppUsageTracker.startAutoSave();
+  } catch (e) {
+    // If validation fails, show error screen
+    runApp(ErrorScreen(errorMessage: e.toString()));
+  }
+}
+
+Future<void> requestStoragePermission() async {
+  final status = await Permission.storage.request();
+  if (!status.isGranted) {
+    throw Exception("Storage permission denied.");
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -32,6 +57,32 @@ class MyApp extends StatelessWidget {
 
         FlutterQuillLocalizations.delegate,
       ],
+    );
+  }
+}
+
+class ErrorScreen extends StatelessWidget {
+  final String errorMessage;
+
+  const ErrorScreen({super.key, required this.errorMessage});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Text(
+              errorMessage,
+              style: const TextStyle(color: Colors.red, fontSize: 18),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
