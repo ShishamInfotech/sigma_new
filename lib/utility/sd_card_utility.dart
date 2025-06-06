@@ -360,22 +360,44 @@ import 'crypto_exception.dart';
   static Future<void> createBindingFiles() async {
     final path = await getBasePath();
     final deviceId = await getDeviceId();
-
+    final bindFile = File('$path/bind.dat');
+    final hashFilePath = await getHashFilePath(); //File('$path/$hashFile');
     // Encrypt device ID
     final encrypted = CryptoUtils.encrypt1(deviceId);
-    final bindFilePath = File('$path/$bindFile');
-    await bindFilePath.writeAsBytes(encrypted);
-
+    if (!bindFile.existsSync()) {
+      if(hashFilePath.existsSync()){
+        throw CryptoException('Bind file integrity check failed.');
+      }
+      //final bindFilePath = File('$path/$bindFile');
+      await bindFile.writeAsBytes(encrypted);
+    }else{
+      final encryptedBytes = await bindFile.readAsBytes();
+      validateDeviceId(encryptedBytes);
+      final hash = sha256.convert(encryptedBytes).toString();
+      await hashFilePath.writeAsString(hash);
+      return;
+    }
     // Generate SHA256 hash
-    final hash = sha256.convert(encrypted).toString();
-    final hashFilePath = File('$path/$hashFile');
-    await hashFilePath.writeAsString(hash);
+
+    if (!hashFilePath.existsSync()) {
+      final hash = sha256.convert(encrypted).toString();
+      await hashFilePath.writeAsString(hash);
+    }
+  }
+
+  static Future<void> validateDeviceId(final encryptedBytes) async{
+    final decryptedId = CryptoUtils.decrypt(encryptedBytes);
+    final currentId = await getDeviceId();
+
+    if (decryptedId != currentId) {
+      throw CryptoException('Device ID mismatch. SD card bound to a different device.');
+    }
   }
 
   static Future<void> validateBinding() async {
     final path = await getBasePath();
     final bindFilePath = File('$path/$bindFile');
-    final hashFilePath = File('$path/$hashFile');
+    final hashFilePath = await getHashFilePath();//File('$path/$hashFile');
 
     if (!bindFilePath.existsSync() || !hashFilePath.existsSync()) {
       throw CryptoException('Binding files missing. SD card may be tampered.');
@@ -389,18 +411,14 @@ import 'crypto_exception.dart';
       throw CryptoException('Bind file integrity check failed.');
     }
 
-    final decryptedId = CryptoUtils.decrypt(encryptedBytes);
-    final currentId = await getDeviceId();
+    validateDeviceId(encryptedBytes);
 
-    if (decryptedId != currentId) {
-      throw CryptoException('Device ID mismatch. SD card bound to a different device.');
-    }
   }
 
   static Future<void> initializeBindingIfNeeded() async {
     final path = await getBasePath();
     final bindFile = File('$path/bind.dat');
-    final hashFile = File('$path/bind.hash');
+    final hashFile = await getHashFilePath();//File('$path/bind.hash');
 
     if (!bindFile.existsSync() || !hashFile.existsSync()) {
       // First-time setup: create binding files
@@ -437,11 +455,20 @@ import 'crypto_exception.dart';
     final hash = generateHash(encrypted);
 
     final bindFile = File('$folderPath/bind.dat');
-    final hashFile = File('$folderPath/bind.hash');
+    final hashFile = await getHashFilePath();//File('$folderPath/bind.hash');
 
     await bindFile.writeAsString(encrypted);
     await hashFile.writeAsString(hash);
   }
+
+    static Future<File> getHashFilePath() async {
+      final dir = await getApplicationSupportDirectory();
+      final path = dir.path;
+      print("Hash File Path: $path");
+      final file = File('$path/bind.hash');
+      return file;
+    }
+
 
   }
 
