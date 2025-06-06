@@ -6,19 +6,19 @@ import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
 
-class TextAnswer extends StatefulWidget {
+class TextAnswerJee extends StatefulWidget {
   dynamic imagePath; // Can be String or List
   String? basePath;
   String title;
   String? stream;
 
-  TextAnswer({required this.imagePath, this.basePath,required this.title, this.stream, super.key});
+  TextAnswerJee({required this.imagePath, this.basePath,required this.title, this.stream, super.key});
 
   @override
-  State<TextAnswer> createState() => _TextAnswerState();
+  State<TextAnswerJee> createState() => _TextAnswerJeeState();
 }
 
-class _TextAnswerState extends State<TextAnswer> {
+class _TextAnswerJeeState extends State<TextAnswerJee> {
   List<File> imageFiles = [];
 
   @override
@@ -65,11 +65,11 @@ class _TextAnswerState extends State<TextAnswer> {
     // Ensure imagePath is a List
     List<dynamic> imagePaths = widget.imagePath is String
         ? widget.imagePath
-            .split(",")
-            .map((e) => e.trim())
-            .toList() // Trim spaces
+        .split(",")
+        .map((e) => e.trim())
+        .toList() // Trim spaces
         : List<String>.from(widget.imagePath
-            .map((e) => e.trim())); // Convert List<dynamic> to List<String>
+        .map((e) => e.trim())); // Convert List<dynamic> to List<String>
 
     List<File> loadedFiles = [];
 
@@ -96,38 +96,38 @@ class _TextAnswerState extends State<TextAnswer> {
       appBar: AppBar(title: Text(widget.title)),
       body: widget.basePath == "nr"
           ? SingleChildScrollView(
-            child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 15),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  
-                    color: blackColor.withOpacity(0.1),
-                    borderRadius: const BorderRadius.all(Radius.circular(10))),
-                child: MathText(
-                   expression: widget.imagePath,
-                 height: estimateHeight(widget.imagePath),
-                 // style: black16MediumTextStyle,
-                ),
-              ),
-          )
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 15),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+
+              color: blackColor.withOpacity(0.1),
+              borderRadius: const BorderRadius.all(Radius.circular(10))),
+          child: MathText(
+            expression: widget.imagePath,
+            height: estimateHeight(widget.imagePath),
+            // style: black16MediumTextStyle,
+          ),
+        ),
+      )
           : imageFiles.isEmpty
-              ? const Center(child: Text("No images found"))
-              : ListView.builder(
-                  itemCount: imageFiles.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.file(imageFiles[index],
-                          width: double.infinity, fit: BoxFit.cover),
-                    );
-                  },
-                ),
+          ? const Center(child: Text("No images found"))
+          : ListView.builder(
+        itemCount: imageFiles.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.file(imageFiles[index],
+                width: double.infinity, fit: BoxFit.cover),
+          );
+        },
+      ),
     );
   }
 
   double estimateHeight(String text) {
-    final lines = (text.length / 30).ceil(); // assume 30 chars per line
-    //return lines * 12.0; // assume each line is about 40 pixels tall
-    return lines * 40.0; // assume each line is about 40 pixels tall
+    final lines = (text.length / 50).ceil(); // assume 30 chars per line
+    return lines * 12.0; // assume each line is about 40 pixels tall
+    // return lines * 40.0; // assume each line is about 40 pixels tall
   }
 }

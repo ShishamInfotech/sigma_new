@@ -481,6 +481,8 @@ import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/pages/text_answer/text_answer.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
+import '../../../../ui_helper/constant.dart';
+
 class OfflineQuestions extends StatefulWidget {
   final String chapterId;
   final String title;
@@ -797,14 +799,25 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
                 }).toList(),
               ),
               const SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: submitAnswer,
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.blue,
+              InkWell(
+                onTap: (){
+                  submitAnswer();
+                  // Get.to(LastMinuteRevision(path: widget.path,));
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                  decoration: BoxDecoration(
+                      color: primaryColor,
+                      boxShadow:const [
+                        BoxShadow(
+                          color: whiteColor,
+                        )
+                      ],
+                      borderRadius: BorderRadius.circular(10)
                   ),
-                  child: const Text("Submit"),
+                  height: 60,
+                  alignment: Alignment.center,
+                  child: const Text('Submit', style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),),
                 ),
               ),
             ],

@@ -81,8 +81,10 @@ class MockExamDetailPage extends StatelessWidget {
                              // onPressed: () => showInfoDialog(context, "Answer", answer),
 
                                 onPressed: () {
-                                  final isNR = q['answer'].toString().toLowerCase() == "nr";
+                                  final isNR = q['test_answer_string'].toString().toLowerCase() == "nr";
 
+                                  print("VALUEEE ${isNR && (q['description_image_id'].toString().toLowerCase() != "nr"
+                                      || q['description_image_id'].toString().toLowerCase() != "na")}");
                                   if (isNR && (q['description_image_id'].toString().toLowerCase() != "nr"
                                                 || q['description_image_id'].toString().toLowerCase() != "na")) {
                                     // Show image answer

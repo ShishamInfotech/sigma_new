@@ -9,6 +9,7 @@ import 'package:sigma_new/pages/video_explanation/VideoEncrypted.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import '../../math_view/math_text.dart';
 import '../notepad/noteswrite.dart';
+import '../text_answer/text_answer_jee.dart';
 
 class TopicWiseSyllabus extends StatefulWidget {
   //final List<Map<String, dynamic>> pathQuestionList;
@@ -160,7 +161,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                       TextButton(
                         onPressed: () {
                           final isNR = question["description_image_id"].toString().toLowerCase() == "nr";
-                          Get.to(() => TextAnswer(
+                          Get.to(() => TextAnswerJee(
                             title: widget.pathQuestionList[0]["chapter"] ?? "",
                             imagePath: isNR ? question["test_answer_string"] : question["description_image_id"],
                             basePath: isNR ? "nr" : "/${question["subjectid"]}/images/",
@@ -174,7 +175,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                       TextButton(
                         onPressed: () {
                           Get.to(() => EncryptedVideoPlayer(
-                            title: widget.pathQuestionList[0]["chapter"] ?? "",
+                            title: widget.pathQuestionList[0]["subchapter"] ?? "",
                             filePath: question["explaination_video_id"],
                             basePath: "${question["subjectid"]}/videos/",
                           ));

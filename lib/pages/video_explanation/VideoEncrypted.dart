@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,11 +26,15 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
   bool _initializationFailed = false;
 
   late FlickManager flickManager;
+  bool _isFullScreen = false;
 
   @override
   void initState() {
     super.initState();
     _initVideoPlayer();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
   }
 
 
@@ -104,6 +109,14 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
       //   await _controller!.setLooping(true);
       //  await _controller!.play();
 
+      flickManager.flickControlManager?.addListener(() {
+        if (flickManager.flickControlManager?.isFullscreen == true && !_isFullScreen) {
+          _enterFullScreen();
+        } else if (flickManager.flickControlManager?.isFullscreen == false && _isFullScreen) {
+          _exitFullScreen();
+        }
+      });
+
       setState(() {
         _isLoading = false;
       });
@@ -111,6 +124,45 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
       _initializationFailed = true;
       _showError("Error playing video: ${e.toString()}");
     }
+  }
+
+  void _enterFullScreen() {
+    setState(() {
+      _isFullScreen = true;
+    });
+    // Allow landscape orientations when in fullscreen
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.portraitUp,
+    ]);
+  }
+
+  void _exitFullScreen() {
+    setState(() {
+      _isFullScreen = false;
+    });
+    // Lock to portrait when exiting fullscreen
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    // Reset orientation when widget is disposed
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    flickManager.dispose();
+    // Clean up temporary file if it exists
+    if (_tempFilePath != null) {
+      File(_tempFilePath!).delete();
+    }
+    super.dispose();
   }
 
   Future<bool> _isEncrypted(String filePath, String key) async {
@@ -173,30 +225,37 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
     });*/
   }
 
-  @override
-  void dispose() {
-    flickManager.dispose(); // Safe call with null check
-    // Clean up temporary file if it exists
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        flickManager.flickControlManager?.pause(); // Pause video if playing
-        return true; // Allow back navigation
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) async {
+        if (_isFullScreen) {
+          // Exit fullscreen first if currently in fullscreen
+          flickManager.flickControlManager?.toggleFullscreen();
+          return; // Don't pop the route
+        }
+       // return true; // Allow pop
       },
       child: Scaffold(
-        appBar: AppBar(
+        appBar: _isFullScreen ? null : AppBar(
           title: Text(widget.title),
         ),
         body: _isLoading
             ? Center(child: CircularProgressIndicator())
             : AspectRatio(
-          aspectRatio: 16 / 9,
+          aspectRatio: _isFullScreen ?
+          MediaQuery.of(context).size.width / MediaQuery.of(context).size.height : 16 / 9,
           child: Center(
-            child: FlickVideoPlayer(flickManager: flickManager),
+            child: FlickVideoPlayer(flickManager: flickManager,
+              flickVideoWithControls: FlickVideoWithControls(
+                controls: FlickPortraitControls(),
+              ),
+              flickVideoWithControlsFullscreen: FlickVideoWithControls(
+                controls: FlickLandscapeControls(),
+              ),),
           ),
         ),
       ),

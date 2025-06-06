@@ -11,6 +11,8 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
     init {
         mathView.settings.javaScriptEnabled = true
         mathView.text = expression
+       // mathView.textSize = 20
+
     }
 
     override fun getView(): View = mathView

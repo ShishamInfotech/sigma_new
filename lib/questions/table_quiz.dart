@@ -118,7 +118,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  Future<void> getQuestionList() async {
+  /*Future<void> getQuestionList() async {
     try {
       String? board;
       final prefs = await SharedPreferences.getInstance();
@@ -180,6 +180,69 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to load questions")),
+      );
+    }
+  }*/
+
+
+  Future<void> getQuestionList() async {
+    try {
+      String? board;
+      final prefs = await SharedPreferences.getInstance();
+      board = prefs.getString('board') == "Maharashtra"
+          ? "MH/"
+          : prefs.getString('board');
+
+      String newPath = widget.pathQuestion.contains("10")
+          ? "10/"
+          : widget.pathQuestion.contains("12")
+          ? "12/"
+          : "";
+
+      var inputFile = await SdCardUtility.getSubjectEncJsonData(
+          '${newPath}${board}testseries/${widget.pathQuestion}.json');
+
+      if (inputFile == null) {
+        throw Exception("Failed to load question file");
+      }
+
+      final decodedJson = jsonDecode(inputFile);
+      if (decodedJson is! Map<String, dynamic>) {
+        throw Exception("Invalid JSON format");
+      }
+
+      parsedJson = decodedJson;
+      sigmaData = List.from(parsedJson["sigma_data"] ?? []);
+
+      // Clear and categorize questions
+      simple.clear();
+      medium.clear();
+      complex.clear();
+      difficult.clear();
+      advanced.clear();
+
+      for (var data in sigmaData) {
+        if (data is! Map<String, dynamic>) continue;
+
+        switch (data["complexity"]?.toString().toLowerCase()) {
+          case "s": simple.add(data); break;
+          case "m": medium.add(data); break;
+          case "c": complex.add(data); break;
+          case "d": difficult.add(data); break;
+          case "a": advanced.add(data); break;
+          default: simple.add(data);
+        }
+      }
+
+      // Shuffle all categories
+      [simple, medium, complex, difficult, advanced].forEach((list) => list.shuffle());
+
+      setState(() => isLoading = false);
+    } catch (e) {
+      debugPrint("Error loading questions: $e");
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load questions: ${e.toString()}")),
       );
     }
   }
@@ -360,7 +423,12 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
       ];
     }
 
-    selectedQuestions = questions.asMap().entries.map((entry) {
+    selectedQuestions = questions
+        .where((q) => (q["test_answer_string"]?.toString().trim().isNotEmpty ?? false))
+        .toList()
+        .asMap()
+        .entries
+        .map((entry) {
       final index = entry.key;
       final question = Map<String, dynamic>.from(entry.value);
       question['serial'] = index + 1;

@@ -296,6 +296,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                                               Get.to(JeeNeetConcept(
                                                 subjectId: subjectsId[index],
                                                 complexity: "a",
+                                                title: subjects[index],
                                               ));
                                               // Navigator.of(context).pop();
                                             },

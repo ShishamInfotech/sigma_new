@@ -13,22 +13,7 @@ class MathText extends StatefulWidget {
 
 class _MathTextState extends State<MathText> {
 
-  double _height =10;
-
-  @override
-  void initState() {
-    super.initState();
-    // Set up a method channel to receive height updates from native
-    const MethodChannel('mathview_height_channel').setMethodCallHandler((call) async {
-      if (call.method == 'updateHeight' && call.arguments is double) {
-        setState(() {
-          _height = call.arguments;
-        });
-      }
-      return null;
-    });
-  }
-
+  //double _height =10;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +22,7 @@ class _MathTextState extends State<MathText> {
       child: AndroidView(
         viewType: 'mathview-native',
         layoutDirection: TextDirection.ltr,
-        creationParams: {'expression': widget.expression},
+        creationParams: {'expression': widget.expression, 'textSize': 24.0,},
         creationParamsCodec: const StandardMessageCodec(),
       ),
     );

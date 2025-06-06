@@ -18,8 +18,8 @@ class _EasyQuestionsState extends State<EasyQuestions> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: /*Text(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: /*Text(
             widget.easyQuestion["question"] ?? "Question not available",
             style: const TextStyle(
               fontSize: 18,
@@ -27,7 +27,14 @@ class _EasyQuestionsState extends State<EasyQuestions> {
               color: primaryColor,
             ),
           ),*/
-          MathText(expression: widget.easyQuestion["question"], height: estimateHeight(widget.easyQuestion["question"]),)
+                Wrap(
+                  children: [
+                    MathText(
+                                  expression: widget.easyQuestion["question"],
+                                  height: estimateHeight(widget.easyQuestion["question"]),
+                                ),
+                  ],
+                ),
         ),
         if (widget.easyQuestion["options"] != null)
           ...List.generate(widget.easyQuestion["options"].length, (i) {

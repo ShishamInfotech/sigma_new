@@ -7,6 +7,7 @@ import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
 import '../library/LibraryHome.dart';
+import '../report/real_time_usage_reports.dart';
 
 @override
 Widget DrawerWidget(BuildContext context) {
@@ -49,7 +50,8 @@ Widget DrawerWidget(BuildContext context) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const UsageReportPage(),
+              //  builder: (context) => const UsageReportPage(),
+                builder: (context) => const StudyTrackerHomePage(),
               ),
             );
           },
