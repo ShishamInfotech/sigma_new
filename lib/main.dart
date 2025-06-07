@@ -14,6 +14,9 @@ void main() async {
 
     //await requestStoragePermission();
 
+    await requestAllFileAccessPermission();
+
+
     // 🔹 Create bind files if first time
    // await SdCardUtility.initializeBindingIfNeeded();
 
@@ -28,6 +31,7 @@ void main() async {
     AppUsageTracker.startAutoSave();
   } catch (e) {
     // If validation fails, show error screen
+    print("Failed to pick folder: ${e}");
     runApp(ErrorScreen(errorMessage: e.toString()));
   }
 }
@@ -36,6 +40,13 @@ Future<void> requestStoragePermission() async {
   final status = await Permission.storage.request();
   if (!status.isGranted) {
     throw Exception("Storage permission denied.");
+  }
+}
+
+Future<void> requestAllFileAccessPermission() async {
+  final status = await Permission.manageExternalStorage.request();
+  if (!status.isGranted) {
+    throw Exception("All file access permission denied");
   }
 }
 
