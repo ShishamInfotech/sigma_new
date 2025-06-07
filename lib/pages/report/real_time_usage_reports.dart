@@ -1,12 +1,161 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 
-class StudyTrackerHomePage extends StatelessWidget {
+class StudyTrackerHomePage extends StatefulWidget {
   const StudyTrackerHomePage({super.key});
 
   @override
+  State<StudyTrackerHomePage> createState() => _StudyTrackerHomePageState();
+}
+
+class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
+
+
+  Duration today = Duration.zero;
+  Duration yesterday = Duration.zero;
+  Duration total = Duration.zero;
+
+  Duration average = Duration.zero;
+  Duration lowest = Duration.zero;
+  Duration highest = Duration.zero;
+
+  var totalpercentageValue;
+  var subjectName;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadUsageData();
+    printTotalPercentage();
+  }
+
+
+  printTotalPercentage() async{
+    double totalPercentage = await getTotalPercentage();
+
+    print('Total/Average Percentage: ${totalPercentage.toStringAsFixed(2)}%');
+
+    totalpercentageValue = totalPercentage.toStringAsFixed(2);
+
+   // await _storeChapterPercentage();
+
+// Get specific chapter progress
+//    double chapter1Progress = await getChapterPercentage('1');
+
+// Get all progress
+
+
+    Map<String, double> allSubjects = await getAllSubjectPercentages();
+    allSubjects.forEach((subject, percentage) {
+
+      subjectName =subject;
+      print('$subject: $percentage%');
+    });
+  }
+
+  Future<Map<String, double>> getAllSubjectPercentages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys().where((key) => key.startsWith('subject_')).toList();
+
+    Map<String, double> subjectPercentages = {};
+
+    for (String key in keys) {
+      final subjectName = key.replaceFirst('subject_', '');
+      subjectPercentages[subjectName] = prefs.getDouble(key) ?? 0.0;
+    }
+
+    return subjectPercentages;
+  }
+
+
+  Future<Map<String, double>> getAllChapterProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedChapters = prefs.getStringList('completed_chapters') ?? [];
+
+    Map<String, double> progress = {};
+
+    for (String key in storedChapters) {
+      progress[key.replaceFirst('chapter_', '')] =
+          prefs.getDouble(key) ?? 0.0;
+    }
+
+    return progress;
+  }
+
+  Future<double> getTotalPercentage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final completedChapters = prefs.getStringList('completed_chapters') ?? [];
+
+    if (completedChapters.isEmpty) return 0.0;
+
+    double total = 0.0;
+
+    for (String chapter in completedChapters) {
+      double? percentage = prefs.getDouble('chapter_${chapter}_percentage');
+      if (percentage != null) {
+        total += percentage;
+      }
+    }
+
+    // Return average percentage
+    return total;
+
+  }
+
+  String formatTime(Duration d) {
+    return "${d.inHours}h ${d.inMinutes.remainder(60)}m";
+  }
+
+  Future<void> loadUsageData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+
+    String todayKey = "${now.year}-${now.month}-${now.day}";
+    String yesterdayKey = "${now.year}-${now.month}-${now.day - 1}";
+
+    int todayDuration = prefs.getInt(todayKey) ?? 0;
+    int yesterdayDuration = prefs.getInt(yesterdayKey) ?? 0;
+
+    Duration todayDurationObj = Duration(seconds: todayDuration);
+    Duration yesterdayDurationObj = Duration(seconds: yesterdayDuration);
+    Duration totalDuration = Duration.zero;
+
+    List<int> durations = [];
+
+    for (var key in prefs.getKeys()) {
+      final value = prefs.get(key);
+      if (value is int) {
+        durations.add(value);
+        totalDuration += Duration(seconds: value);
+      }
+    }
+
+    durations.sort(); // To find lowest and highest easily
+
+    Duration avg = durations.isNotEmpty
+        ? Duration(seconds: durations.reduce((a, b) => a + b) ~/ durations.length)
+        : Duration.zero;
+    Duration min = durations.isNotEmpty ? Duration(seconds: durations.first) : Duration.zero;
+    Duration max = durations.isNotEmpty ? Duration(seconds: durations.last) : Duration.zero;
+
+    setState(() {
+      today = todayDurationObj;
+      yesterday = yesterdayDurationObj;
+      total = totalDuration;
+      average = avg;
+      lowest = min;
+      highest = max;
+    });
+  }
+
+
+  @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Real Time Monitoring Report'),
@@ -19,7 +168,7 @@ class StudyTrackerHomePage extends StatelessWidget {
           children: [
             _buildStudyTimeSection(),
             const SizedBox(height: 24),
-            _buildCourseProgressSection(),
+            totalpercentageValue=="" ? CircularProgressIndicator():_buildCourseProgressSection(),
             const SizedBox(height: 24),
             _buildTargetDatesSection(),
             const SizedBox(height: 24),
@@ -48,9 +197,9 @@ class StudyTrackerHomePage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetricCard('Yesterday', '1 hour'),
-                _buildMetricCard('Today', '2 hours'),
-                _buildMetricCard('To Date', '3 hours'),
+                _buildMetricCard('Yesterday', formatTime(yesterday)),
+                _buildMetricCard('Today', formatTime(today)),
+                _buildMetricCard('To Date', formatTime(total)),
               ],
             ),
             const SizedBox(height: 16),
@@ -64,9 +213,9 @@ class StudyTrackerHomePage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetricCard('Average', '1 hour/day'),
-                _buildMetricCard('Lowest', '0 hours'),
-                _buildMetricCard('Highest', '2 hours'),
+                _buildMetricCard('Average', formatTime(average)),
+                _buildMetricCard('Lowest', formatTime(lowest)),
+                _buildMetricCard('Highest', formatTime(highest)),
               ],
             ),
           ],
@@ -89,29 +238,38 @@ class StudyTrackerHomePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             LinearProgressIndicator(
-              value: 0.67,
+              value: (double.tryParse(totalpercentageValue))!/100,
               minHeight: 20,
               backgroundColor: Colors.grey[300],
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
             ),
             const SizedBox(height: 8),
-            const Text('Overall: 67% completed (33% remaining)'),
+            Text('Overall: ${totalpercentageValue.toString()}% (Pending ${100-double.parse(totalpercentageValue)}%)', style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 16
+            ),),
             const SizedBox(height: 16),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Mathematics: 30%'),
-                Text('Physics: 60%'),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Chemistry: 70%'),
-                Text('Biology: 40%'),
-              ],
-            ),
+            Container(
+              height: 100,
+              child: FutureBuilder<Map<String, double>>(
+                future: getAllSubjectPercentages(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return CircularProgressIndicator();
+
+                  return ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      final subject = snapshot.data!.keys.elementAt(index);
+                      final percentage = snapshot.data![subject]!;
+
+                      return ListTile(
+                        title: Text(subject),
+                        trailing: Text('${percentage.toStringAsFixed(1)}%'),
+                      );
+                    },
+                  );
+                },
+              ),
+            )
           ],
         ),
       ),

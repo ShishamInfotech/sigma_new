@@ -12,13 +12,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
 
-    await requestStoragePermission();
+    //await requestStoragePermission();
 
     // 🔹 Create bind files if first time
-    await SdCardUtility.initializeBindingIfNeeded();
+   // await SdCardUtility.initializeBindingIfNeeded();
 
     // Validate SD card binding
-    await SdCardUtility.validateBinding();
+  //  await SdCardUtility.validateBinding();
 
     // Start app if validation succeeds
     runApp(const MyApp());

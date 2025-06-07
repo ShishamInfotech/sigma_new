@@ -42,6 +42,46 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
 
 
     getQuestionList();
+    _storeChapterPercentage();
+    _subjectPercentage();
+  }
+
+
+  Future<void> _storeChapterPercentage() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Check if the chapter percentage is already stored
+    final storedChapters = prefs.getStringList('completed_chapters') ?? [];
+    final subjectName = widget.pathQuestionList[0]["subject"] ?? 'Unknown Subject';
+    final chapterNumber = widget.pathQuestionList[0]["chapter_number"].toString();
+
+    // If this chapter hasn't been stored yet
+    if (!storedChapters.contains(chapterNumber)) {
+      // Get the percentage (assuming it's the same for all questions in the chapter)
+      final percentage = widget.pathQuestionList[0]["percentage"]?.toString() ?? "0";
+
+      // Store the chapter percentage
+      await prefs.setDouble('chapter_${chapterNumber}_percentage', double.parse(percentage));
+
+      // Mark this chapter as stored
+      storedChapters.add(chapterNumber);
+      await prefs.setStringList('completed_chapters', storedChapters);
+
+      print('Stored percentage $percentage for chapter $chapterNumber');
+    }
+  }
+
+  Future<void> _subjectPercentage() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Extract subject name and percentage
+    final subjectName = widget.pathQuestionList[0]["subject"] ?? "Unknown Subject";
+    final percentage = widget.pathQuestionList[0]["percentage"]?.toString() ?? "0";
+
+    // Store the percentage with subject name as key
+    await prefs.setDouble('subject_$subjectName', double.parse(percentage));
+
+    print('Stored $percentage% for $subjectName');
   }
 
   void getQuestionList() {
