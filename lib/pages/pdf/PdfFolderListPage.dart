@@ -16,7 +16,7 @@ class PdfFolderListPage extends StatefulWidget {
     super.key,
     required this.title,
     required this.folderName,
-    this.useCoursePrefix = true,
+    this.useCoursePrefix = false,
   });
 
   @override
@@ -33,7 +33,8 @@ class _PdfFolderListPageState extends State<PdfFolderListPage> {
   @override
   void initState() {
     super.initState();
-    widget.useCoursePrefix ? loadCourses() : loadFlatFolder(widget.folderName);
+    //widget.useCoursePrefix ? loadCourses() : loadFlatFolder(widget.folderName);
+    searchCoursesForPdfs();
   }
 
   Future<void> loadCourses() async {
@@ -42,8 +43,8 @@ class _PdfFolderListPageState extends State<PdfFolderListPage> {
     final courseDirs = directory
         .listSync()
         .where((d) =>
-            d is Directory &&
-            (d.path.contains("10") || d.path.contains("12") || d.path.toLowerCase().contains("jee")))
+    d is Directory &&
+        (d.path.contains("10") || d.path.contains("12") || d.path.toLowerCase().contains("jee")))
         .toList();
 
     setState(() {
@@ -52,26 +53,68 @@ class _PdfFolderListPageState extends State<PdfFolderListPage> {
     });
   }
 
+  Future<void> searchCoursesForPdfs() async {
+    final baseDir = Directory(await SdCardUtility.getBasePath());
+    if (!baseDir.existsSync()) return;
+
+    final courseDirs = baseDir.listSync().whereType<Directory>();
+    for (final courseDir in courseDirs) {
+      final targetDir = Directory("${courseDir.path}/${widget.folderName}");
+      if (targetDir.existsSync()) {
+        final pdfs = targetDir
+            .listSync(recursive: true, followLinks: false)
+            .where((file) => file.path.toLowerCase().endsWith(".pdf") && FileSystemEntity.isFileSync(file.path))
+            .toList();
+        if (pdfs.length == 1) {
+          final singleFile = pdfs.first;
+          Future.microtask(() {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PDFViewerPage(title: '', filePath: singleFile.path,),
+              ),
+            );
+          });
+          return;
+        } else if (pdfs.length > 1) {
+          pdfFiles = pdfs;
+          break; // Stop after finding the first folder with multiple PDFs
+        }
+      }
+    }
+    setState(() {});
+  }
+
+
   Future<void> loadFlatFolder(String folder) async {
     final sigmaPath = await SdCardUtility.getBasePath();
-    final pdfDir = Directory("${sigmaPath}/${folder}");
+    //final pdfDir = Directory("${sigmaPath}/${folder}");
+    final baseDir = Directory(sigmaPath);
+    final courseDirs = baseDir.listSync().whereType<Directory>();
+    for (final courseDir in courseDirs) {
+      final pdfDir = Directory("${courseDir.path}/${folder}");
+      print("PDF Directory:=" + pdfDir.toString());
+      if (await pdfDir.exists()) {
+        print("Inside:-");
+        final files = pdfDir
+            .listSync()
+            .where((f) => f.path.toLowerCase().endsWith(".pdf"))
+            .toList();
+        print("Inside:-"+ files.toString());
 
-    if (await pdfDir.exists()) {
-      final files = pdfDir
-          .listSync()
-          .where((f) => f.path.toLowerCase().endsWith(".pdf"))
-          .toList();
-
-      setState(() {
-        pdfFiles = files;
-        loading = false;
-      });
-    } else {
-      setState(() {
-        pdfFiles = [];
-        loading = false;
-      });
+        setState(() {
+          pdfFiles = files;
+          loading = false;
+        });
+      } else {
+        setState(() {
+          pdfFiles = [];
+          loading = false;
+        });
+      }
     }
+    print("Outside:-"+ pdfFiles.toString());
+
   }
 
   Future<void> loadExamPrepPDFs(String course) async {
@@ -116,75 +159,46 @@ class _PdfFolderListPageState extends State<PdfFolderListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: InkWell(
-          onTap: () => _scaffoldKey.currentState?.openDrawer(),
-          child: const Icon(Icons.menu),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [backgroundColor, backgroundColor, backgroundColor, whiteColor],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+    if (pdfFiles.length == 1) {
+      final file = pdfFiles.first;
+      Future.microtask(() {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PDFViewerPage(title: file.path.split(Platform.pathSeparator).last,
+            filePath: file.path,),
           ),
+        );
+      });
+      return const Scaffold(body: SizedBox());
+    }
+
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title, style: TextStyle(color: Colors.white)),
+          backgroundColor: primaryColor,
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
-        title: Text(widget.title, style: black20w400MediumTextStyle),
-      ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : widget.useCoursePrefix && selectedCourse.isEmpty
-              ? GridView.count(
-                  padding: const EdgeInsets.all(16),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  children: availableCourses.map((course) {
-                    return InkWell(
-                      onTap: () => loadExamPrepPDFs(course),
-                      child: Card(
-                        color: Colors.amber[100],
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 3,
-                        child: Center(
-                          child: Text(
-                            course,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                )
-              : pdfFiles.isEmpty
-                  ? const Center(child: Text("No PDFs found in selected folder."))
-                  : ListView.builder(
-                      itemCount: pdfFiles.length,
-                      itemBuilder: (context, index) {
-                        final file = pdfFiles[index];
-                        return ListTile(
-                          leading: const Icon(Icons.picture_as_pdf),
-                          title: Text(file.path.split("/").last),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PDFViewerPage(
-                                  title: file.path.split("/").last,
-                                  filePath: file.path,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-      drawer: DrawerWidget(context),
-    );
+        body: pdfFiles.isEmpty
+            ? const Center(child: Text("No PDF files found."))
+            : ListView.builder(
+          itemCount: pdfFiles.length,
+          itemBuilder: (context, index) {
+            final file = pdfFiles[index];
+            return ListTile(
+              title: Text(file.path.split(Platform.pathSeparator).last),
+              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PDFViewerPage(title: file.path.split(Platform.pathSeparator).last,
+                        filePath: file.path),
+                  ),
+                );
+              },
+            );
+          },
+        ));
   }
 }

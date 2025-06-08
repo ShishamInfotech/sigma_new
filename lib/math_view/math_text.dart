@@ -15,19 +15,13 @@ class _MathTextState extends State<MathText> {
   String sanitizeMathExpression(String input) {
 
     return input
-        .replaceAll(r'\left[\begin{matrix}', r'$$ \begin{bmatrix}')
-        .replaceAll(r'\end{matrix}\right]', r'\end{bmatrix} $$')
-        .replaceAll(r'\end{matrix} \right]', r'\end{bmatrix} $$')
-        .replaceAll(r'\end{matrix}  \right]', r'\end{bmatrix} $$')
-        .replaceAll(r'\end{matrix} \begin{matrix}', r'\end{matrix}, \quad \begin{matrix}')
-        .replaceAll(r'\(', r'$')                      // Replace \( with $
-        .replaceAll(r'\)', r'$')
-        .replaceAll(r'}$,', r'},')      // Replace \) with $
-        .replaceAll(r' $\ ', r' \quad ')
-        .replaceAll(r'=$\begin{bmatrix}', r'= \begin{bmatrix}')
-        .replaceAll(r'$A', r'$$ A')
-        .replaceAll(r'$B', r'$$ B')
-        .replaceAll(r'\\\', r'\\');
+        .replaceAll(r'\\begin', r'\begin')
+        .replaceAll(r'\\end', r'\end')
+        .replaceAll(r'\\\\', r'\\')
+        .replaceAll(r'$', r'')
+        .replaceAll(r'\left[\begin', r'\(\left[\begin')
+        .replaceAll(r'\right]', r'\right]\)')
+        .replaceAll(r'z-[1', r'z_{1');
   }
 
   @override
