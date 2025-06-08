@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:sigma_new/models/menu_models.dart';
 import 'package:sigma_new/pages/exam_preparation/exam_preparation.dart';
 import 'package:sigma_new/pages/home/quick_guide/quick_guide.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
 
 import '../pdf/PdfFolderListPage.dart';
 
@@ -15,6 +20,87 @@ class OtherPage extends StatefulWidget {
 }
 
 class _Appbar2State extends State<OtherPage> {
+
+
+  Future<void> _openCalculator() async {
+    try {
+      if (Platform.isAndroid) {
+        // Try common calculator package names for Android
+        const calculatorPackages = [
+          'com.android.calculator2',          // Stock Android
+          'com.google.android.calculator',    // Google Calculator
+          'com.sec.android.app.popupcalculator',  // Samsung
+          'com.coloros.calculator',          // Oppo
+          'com.miui.calculator',             // Xiaomi
+          'com.huawei.calculator',           // Huawei
+        ];
+
+        // Try each package until one works
+        for (final package in calculatorPackages) {
+          try {
+            final intent = AndroidIntent(
+              action: 'action_view',
+              package: package,
+              flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+            );
+            await intent.launch();
+            return; // If successful, exit the function
+          } catch (e) {
+            continue; // Try next package
+          }
+        }
+
+        // If none of the specific packages worked, try the generic intent
+        try {
+          final intent = AndroidIntent(
+            action: 'android.intent.action.MAIN',
+            category: 'android.intent.category.APP_CALCULATOR',
+          );
+          await intent.launch();
+          return;
+        } catch (e) {
+          // Fall through to URL launch
+        }
+      }
+
+      // Fallback for iOS or if Android methods failed
+      const url = 'calculator://';
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(Uri.parse(url));
+        return;
+      }
+
+      // Ultimate fallback - open app store to download a calculator
+      if (Platform.isAndroid) {
+        await launchUrl(
+          Uri.parse('market://details?id=com.google.android.calculator'),
+          mode: LaunchMode.externalApplication,
+        );
+      } else if (Platform.isIOS) {
+        await launchUrl(
+          Uri.parse('https://apps.apple.com/us/app/calculator/id1069511488'),
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (e) {
+      // If everything fails, show a dialog with instructions
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Calculator Not Found'),
+          content: const Text('Please open your device\'s calculator app manually.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     List<Menu> studyMenu = [
@@ -22,12 +108,7 @@ class _Appbar2State extends State<OtherPage> {
           color: 0xFFF2C6DF,
           imagePath: 'assets/svg/calculator.svg',
           navigation: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("UI not defined in WireFrame"),
-                duration: Duration(seconds: 2),
-              ),
-            );
+            _openCalculator();
           },
           title: 'Calculator'),
       Menu(

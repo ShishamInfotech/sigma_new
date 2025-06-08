@@ -58,10 +58,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
         key: _evolutionscaffoldKey,
         backgroundColor: Colors.white,
         appBar: AppBar(
-          leading: InkWell(
-            onTap: () => _evolutionscaffoldKey.currentState?.openDrawer(),
-            child: const Icon(Icons.menu),
-          ),
+
           title: const Text("Evaluation Bucket",
               style: black20w400MediumTextStyle),
           backgroundColor: backgroundColor,
@@ -76,7 +73,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
             ],
           ),
         ),
-        drawer: DrawerWidget(context),
+
         body: TabBarView(
           children: [
             // Tab 1: Mock Exam

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/config/config.dart';
 import 'package:sigma_new/pages/register/register_page.dart';
@@ -10,8 +9,6 @@ import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:sigma_new/config/config_loader.dart';
-import 'package:chewie/chewie.dart';
-import 'package:video_player/video_player.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -22,6 +19,7 @@ class WelcomePage extends StatefulWidget {
 
 class _WelcomePageState extends State<WelcomePage> {
   List<String>? introImages;
+  int _currentImageIndex = 0;
 
   @override
   void initState() {
@@ -32,10 +30,9 @@ class _WelcomePageState extends State<WelcomePage> {
 
   void _initPermissions() async {
     bool manageStorageGranted =
-        await SdCardUtility.requestManageStoragePermission();
+    await SdCardUtility.requestManageStoragePermission();
     if (!manageStorageGranted) {
       print("MANAGE_EXTERNAL_STORAGE permission not granted!");
-      // Handle permission denial, e.g. show a dialog.
     }
   }
 
@@ -44,13 +41,29 @@ class _WelcomePageState extends State<WelcomePage> {
     setState(() {});
   }
 
+  void _nextImage() {
+    if (introImages == null || introImages!.isEmpty) return;
+
+    setState(() {
+      _currentImageIndex = (_currentImageIndex + 1) % introImages!.length;
+    });
+  }
+
+  void _previousImage() {
+    if (introImages == null || introImages!.isEmpty) return;
+
+    setState(() {
+      _currentImageIndex = (_currentImageIndex - 1) % introImages!.length;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: Column(
         children: [
-          const SizedBox(height: 180),
+          const SizedBox(height: 100),
           Center(
             child: Container(
               padding: const EdgeInsets.all(15),
@@ -70,131 +83,156 @@ class _WelcomePageState extends State<WelcomePage> {
             "Mini school in your pocket in the form of offline tablet",
             style: black12MediumTextStyle,
           ),
-          // Display intro images (or videos) from sigma/intro
-          introImages != null && introImages!.isNotEmpty
-              ? SizedBox(
-                  height: 300,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: introImages!.length,
-                    itemBuilder: (context, index) {
-                      /*String filePath = introImages![index];
-                if (_isVideo(filePath)) {
-                  return Container(
-                    margin: const EdgeInsets.all(8),
-                    width: 200,
-                    height: 300,
-                    child: Chewie(
-                      controller: ChewieController(
-                        videoPlayerController: VideoPlayerController.file(File(filePath)),
-                        autoPlay: true,
-                        looping: true,
-                        showControls: true,
-                      ),
-                    )
-                  );
-                } else {*/
-                      return Container(
-                        margin: const EdgeInsets.all(8),
-                        child: Image.file(File(introImages![index])),
-                      );
-                    },
-                  ),
-                )
-              : Container(
-                  height: 300,
-                  child: Center(
+          const SizedBox(height: 20),
+
+          // Image display area with navigation controls
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (introImages != null && introImages!.isNotEmpty)
+                  Expanded(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Center(
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 20),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.file(
+                                File(introImages![_currentImageIndex]),
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Previous button
+                        if (introImages!.length > 1)
+                          Positioned(
+                            left: 10,
+                            child: IconButton(
+                              icon: const Icon(Icons.chevron_left, size: 40),
+                              onPressed: _previousImage,
+                            ),
+                          ),
+
+                        // Next button
+                        if (introImages!.length > 1)
+                          Positioned(
+                            right: 10,
+                            child: IconButton(
+                              icon: const Icon(Icons.chevron_right, size: 40),
+                              onPressed: _nextImage,
+                            ),
+                          ),
+                      ],
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
                       child: AlertDialog(
-                    title: const Text('Alert'),
-                    content: Text(
-                        'This device is not authorized, Please contact administrator \n Device Id - ${deviceId()}',
-                        style: black16w400MediumTextStyle),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context); // Close the dialog
-                        },
-                        child: const Text('OK'),
-                      ),
-                    ],
-                  )),
-                ),
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.6,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff7F0081),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              onPressed: () async {
-                // Load global config to check registration status.
-                Config? config = await ConfigLoader.getGlobalConfig();
-                print(deviceId());
-                print('Config ${config!.deviceID}');
-                // config.deviceID="d6f9ffb0990d2843";
-                /*if (config.deviceID != deviceId()) {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text('Alert'),
+                        title: const Text('Alert'),
                         content: Text(
-                            'This device is not authorized, Please contact administrator \n Device Id - ${deviceId()}'),
+                          'This device is not authorized, Please contact administrator \n Device Id - ${deviceId()}',
+                          style: black16w400MediumTextStyle,
+                        ),
                         actions: [
                           TextButton(
-                            onPressed: () {
-                              Navigator.pop(context); // Close the dialog
-                            },
-                            child: Text('OK'),
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('OK'),
                           ),
                         ],
-                      );
-                    },
-                  );
-                } else {*/
+                      ),
+                    ),
+                  ),
 
-                final prefs = await SharedPreferences.getInstance();
+                // Page indicator
+                if (introImages != null && introImages!.length > 1)
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        introImages!.length,
+                            (index) => Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _currentImageIndex == index
+                                ? const Color(0xff7F0081)
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
 
-                print(prefs.containsKey('firstName'));
-                // For this example, we assume the device is registered if deviceID is non-empty.
-                if (!prefs.containsKey('firstName')) {
-                  Navigator.push(
+          // Let's Start button
+          Padding(
+            padding: const EdgeInsets.only(bottom: 40, top: 20),
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.6,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xff7F0081),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                onPressed: () async {
+                  Config? config = await ConfigLoader.getGlobalConfig();
+                  final prefs = await SharedPreferences.getInstance();
+
+                  if (!prefs.containsKey('firstName')) {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const RegisterPage(),
-                      ));
-                } else {
-                  // print("Data ${await SdCardUtility.getSubjectEncJsonData("sigma_data.json")}");
-                  Navigator.push(
+                      ),
+                    );
+                  } else {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const HomePage(),
-                      ));
-                }
-                // }
-              },
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SizedBox(width: 10),
-                  Text("Let's Start", style: white18MediumTextStyle),
-                  Icon(Icons.arrow_forward_ios_outlined,
-                      color: Colors.white, size: 24),
-                ],
+                      ),
+                    );
+                  }
+                },
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(width: 10),
+                    Text("Let's Start", style: white18MediumTextStyle),
+                    Icon(Icons.arrow_forward_ios_outlined,
+                        color: Colors.white, size: 24),
+                  ],
+                ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );
-  }
-
-  bool _isVideo(String path) {
-    return path.toLowerCase().endsWith('.mp4') ||
-        path.toLowerCase().endsWith('.mov') ||
-        path.toLowerCase().endsWith('.avi');
   }
 }

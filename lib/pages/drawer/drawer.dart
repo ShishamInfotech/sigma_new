@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sigma_new/config/config.dart';
+import 'package:sigma_new/config/config_loader.dart';
 import 'package:sigma_new/pages/evolution/evolution_page.dart';
 import 'package:sigma_new/pages/exam_preparation/exam_preparation.dart';
 import 'package:sigma_new/pages/home/home.dart';
@@ -9,90 +11,115 @@ import 'package:sigma_new/ui_helper/constant.dart';
 import '../library/LibraryHome.dart';
 import '../report/real_time_usage_reports.dart';
 
-@override
 Widget DrawerWidget(BuildContext context) {
-  return Drawer(
-    child: ListView(
-      // Important: Remove any padding from the ListView.
-      padding: EdgeInsets.zero,
-      children: [
-        const DrawerHeader(
-          decoration: BoxDecoration(
-            color: primaryColor,
-          ),
-          child: Text(
-            'Device Details\n',
-            style: white18MediumTextStyle,
-          ),
-        ),
-        ListTile(
-          title: const Text('Home'),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const HomePage(),
+  return FutureBuilder<Config?>(
+    future: ConfigLoader.getGlobalConfig(),
+    builder: (context, snapshot) {
+      String startDate = 'Loading...';
+      String endDate = 'Loading...';
+
+      if (snapshot.hasData) {
+        startDate = snapshot.data!.startDate ?? 'Not available';
+        endDate = snapshot.data!.expiryDate ?? 'Not available';
+      } else if (snapshot.hasError) {
+        startDate = 'Error loading';
+        endDate = 'Error loading';
+      }
+
+      return Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                color: primaryColor,
               ),
-            );
-          },
-        ),
-        ListTile(
-          title: const Text('Library'),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(context, MaterialPageRoute(builder: (_) => LibraryHome()));
-          },
-        ),
-        ListTile(
-          title: const Text('Real Time Monitoring Report'),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-              //  builder: (context) => const UsageReportPage(),
-                builder: (context) => const StudyTrackerHomePage(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Device Details',
+                    style: white16w400MediumTextStyle,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Start Date: $startDate',
+                    style: white16w400MediumTextStyle,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'End Date: $endDate',
+                    style: white16w400MediumTextStyle,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Device ID: ${deviceId()}',
+                    style: white16w400MediumTextStyle,
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+            ListTile(
+              title: const Text('Home'),
+              leading: const Icon(Icons.home),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HomePage(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Library'),
+              leading: const Icon(Icons.library_books),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => LibraryHome()),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Real Time Monitoring Report'),
+              leading: const Icon(Icons.monitor_heart),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StudyTrackerHomePage(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Exam Preparation'),
+              leading: const Icon(Icons.assignment),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ExamPreparation(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Exam Evaluation Bucket'),
+              leading: const Icon(Icons.assessment),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EvaluationPage(),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
-        ListTile(
-          title: const Text('Exam Preperation'),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ExamPreparation(),
-              ),
-            );
-          },
-        ),
-        ListTile(
-          title: const Text('Exam Evaluation Bucket'),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const EvaluationPage(),
-              ),
-            );
-          },
-        ),
-        ListTile(
-          title: Text("Device Id: ${deviceId()}"),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const EvaluationPage(),
-              ),
-            );
-          },
-        ),
-      ],
-    ),
+      );
+    },
   );
 }

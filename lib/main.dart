@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sigma_new/pages/splashscreen/splash_screen.dart';
 import 'package:sigma_new/pages/usage_report/usage_report_page.dart';
 import 'package:sigma_new/pages/welcomePage/welcomePage.dart';
 import 'package:sigma_new/supports/fetchDeviceDetails.dart';
@@ -63,7 +64,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const WelcomePage(),
+      home: const SplashScreen(),
       localizationsDelegates: [
 
         FlutterQuillLocalizations.delegate,

@@ -1,13 +1,9 @@
-
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:sigma_new/pages/pdf/pdf_viewer.dart';
-import '../../models/menu_models.dart';
 import '../../ui_helper/constant.dart';
-import '../drawer/drawer.dart';
+
 
 class ExamPreparation extends StatefulWidget {
   const ExamPreparation({super.key});
@@ -37,14 +33,15 @@ class _ExamPreparationState extends State<ExamPreparation> {
         .listSync()
         .where((d) =>
             d is Directory &&
-            (d.path.contains("10") || d.path.contains("12") || d.path.toLowerCase().contains("jee")))
+            (d.path.contains("10") ||
+                d.path.contains("12") ||
+                d.path.toLowerCase().contains("jee")))
         .toList();
-    print("CourseDirs:-"+ courseDirs.toString());
+    print("CourseDirs:-" + courseDirs.toString());
     setState(() {
       availableCourses = courseDirs.map((e) => e.path.split('/').last).toList();
       loading = false;
     });
-
   }
 
   Future<void> loadExamPrepPDFs(String course) async {
@@ -53,11 +50,11 @@ class _ExamPreparationState extends State<ExamPreparation> {
       selectedCourse = course;
       pdfFiles = [];
     });
-    print("Course Selected:-"+ course);
+    print("Course Selected:-" + course);
     final sigmaPath = await SdCardUtility.getBasePath();
     final examPrepDir = Directory("${sigmaPath}/${course}/examprep");
 
-    print("examPrepDir:-"+ examPrepDir.toString());
+    print("examPrepDir:-" + examPrepDir.toString());
 
     if (await examPrepDir.exists()) {
       final files = examPrepDir
@@ -86,22 +83,22 @@ class _ExamPreparationState extends State<ExamPreparation> {
       key: _examscaffoldKey,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: InkWell(
-          onTap: () {
-            _examscaffoldKey.currentState?.openDrawer();
-          },
-          child: const Icon(Icons.menu),
-        ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [backgroundColor, backgroundColor, backgroundColor, whiteColor],
+              colors: [
+                backgroundColor,
+                backgroundColor,
+                backgroundColor,
+                whiteColor
+              ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
           ),
         ),
-        title: const Text("Exam Preparation", style: black20w400MediumTextStyle),
+        title:
+            const Text("Exam Preparation", style: black20w400MediumTextStyle),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
@@ -116,13 +113,15 @@ class _ExamPreparationState extends State<ExamPreparation> {
                       onTap: () => loadExamPrepPDFs(course),
                       child: Card(
                         color: Colors.amber[100],
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         elevation: 3,
                         child: Center(
                           child: Text(
                             course,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -130,7 +129,8 @@ class _ExamPreparationState extends State<ExamPreparation> {
                   }).toList(),
                 )
               : pdfFiles.isEmpty
-                  ? const Center(child: Text("No PDFs found in selected course."))
+                  ? const Center(
+                      child: Text("No PDFs found in selected course."))
                   : ListView.builder(
                       itemCount: pdfFiles.length,
                       itemBuilder: (context, index) {
@@ -152,7 +152,6 @@ class _ExamPreparationState extends State<ExamPreparation> {
                         );
                       },
                     ),
-      drawer: DrawerWidget(context),
     );
   }
 }
