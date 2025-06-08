@@ -25,12 +25,33 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   var totalpercentageValue;
   var subjectName;
 
+  int videoCount = 0;
+  int answerCount = 0;
+  List<String> courseList=[];
+  bool showJEE=false;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     loadUsageData();
     printTotalPercentage();
+    sharePreferenceData();
+  }
+
+
+  sharePreferenceData() async{
+    final prefs = await SharedPreferences.getInstance();
+    String? course = prefs.getString('course');
+    print("Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
+    if (course != null && course.isNotEmpty) {
+      courseList = course.split(","); // Convert String to List
+    }
+    setState(() {
+      showJEE = courseList.any((exam) => exam.contains("JEE"));
+    });
+
+    print(showJEE);
   }
 
 
@@ -142,6 +163,9 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     Duration min = durations.isNotEmpty ? Duration(seconds: durations.first) : Duration.zero;
     Duration max = durations.isNotEmpty ? Duration(seconds: durations.last) : Duration.zero;
 
+    int videos = prefs.getInt('video_count') ?? 0;
+    int answers = prefs.getInt('answer_count') ?? 0;
+
     setState(() {
       today = todayDurationObj;
       yesterday = yesterdayDurationObj;
@@ -149,6 +173,8 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       average = avg;
       lowest = min;
       highest = max;
+      videoCount = videos;
+      answerCount = answers;
     });
   }
 
@@ -174,7 +200,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
             const SizedBox(height: 24),
             _buildMockExamsSection(),
             const SizedBox(height: 24),
-            _buildCompetitiveExamsSection(),
+            if(showJEE)_buildCompetitiveExamsSection(),
           ],
         ),
       ),
@@ -216,6 +242,14 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                 _buildMetricCard('Average', formatTime(average)),
                 _buildMetricCard('Lowest', formatTime(lowest)),
                 _buildMetricCard('Highest', formatTime(highest)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildMetricCard('Videos Watched', '$videoCount'),
+                _buildMetricCard('Text Answer Visited', '$answerCount'),
               ],
             ),
           ],
@@ -289,17 +323,38 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _buildSubjectTarget('Mathematics', 'Oct 31, 2025', 30),
-            _buildSubjectTarget('Physics', 'Oct 31, 2025', 60),
-            _buildSubjectTarget('Chemistry', 'Oct 31, 2025', 70),
-            _buildSubjectTarget('Biology', 'Oct 31, 2025', 40),
+
+            Container(
+              height: 150,
+              child: FutureBuilder<Map<String, double>>(
+                future: getAllSubjectPercentages(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return CircularProgressIndicator();
+
+                  return ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      final subject = snapshot.data!.keys.elementAt(index);
+                      final percentage = snapshot.data![subject]!;
+
+                      return _buildSubjectTarget(subject, 'Oct 31, 2025', percentage );
+
+                    },
+                  );
+                },
+              ),
+            ),
+           // _buildSubjectTarget('Mathematics', 'Oct 31, 2025', 30),
+          //  _buildSubjectTarget('Physics', 'Oct 31, 2025', 60),
+          //  _buildSubjectTarget('Chemistry', 'Oct 31, 2025', 70),
+          //  _buildSubjectTarget('Biology', 'Oct 31, 2025', 40),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSubjectTarget(String subject, String date, int progress) {
+  Widget _buildSubjectTarget(String subject, String date, double progress) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -344,14 +399,14 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Mock Exam Performance',
+              'Board Mock Exam Performance',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _buildExamPerformance('Mathematics', 13, 'Simple'),
-            _buildExamPerformance('Physics', 11, 'Simple'),
-            _buildExamPerformance('Chemistry', 8, 'Simple'),
-            _buildExamPerformance('Biology', 15, 'Simple'),
+            _buildExamPerformance('Mathematics', 0, 'Simple'),
+            _buildExamPerformance('Physics', 0, 'Simple'),
+            _buildExamPerformance('Chemistry', 0, 'Simple'),
+            _buildExamPerformance('Biology', 0, 'Simple'),
             const SizedBox(height: 8),
             const Text(
               'Performance Levels:',
@@ -458,6 +513,60 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
           Text(
             'Subjects: $subjects',
             style: TextStyle(color: Colors.grey[600]),
+          ),
+          Container(
+            child: Row(
+              children: [
+                Expanded(flex: 2,child: Text('Present Level', style: TextStyle(fontWeight: FontWeight.bold))),
+                Expanded(flex:2,child: Text('Attempted', style: TextStyle(fontWeight: FontWeight.bold))),
+                Expanded(flex:2,child: Text('Average Score', style: TextStyle(fontWeight: FontWeight.bold))),
+                Expanded(flex:2,child: Text('Lowest Score', style: TextStyle(fontWeight: FontWeight.bold))),
+                Expanded(flex:2,child: Text('Highest Score', style: TextStyle(fontWeight: FontWeight.bold))),
+               // Expanded(flex:2,child: Text('Performance', style: TextStyle(fontWeight: FontWeight.bold)))
+              ],
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(4),
+            ),
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(
+                    flex: 2,
+                    child: Text('Simple', style: TextStyle(fontWeight: FontWeight.bold,))),
+                Expanded(
+                    flex: 2,
+                    child: Text('0', style: TextStyle(fontWeight: FontWeight.bold))), // Example data
+                Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Avg: 0%', style: TextStyle( // Example data
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        )), // Example data
+                        // Example data
+                      ],
+                    )),
+                Expanded(
+                    flex: 2,
+                    child: Text('Low: 0%', style: TextStyle( // Example data
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ))),
+                Expanded(
+                    flex: 2,
+                    child: Text('High: 0%', style: TextStyle( // Example data
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ))),
+
+              ],
+            ),
           ),
           const SizedBox(height: 8),
           for (var i = 1; i <= 5; i++)

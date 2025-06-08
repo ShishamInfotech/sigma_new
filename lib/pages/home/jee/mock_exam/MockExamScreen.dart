@@ -352,6 +352,41 @@ class _MockExamScreenState extends State<MockExamScreen> {
   Future<void> _initialize() async {
     prefs = await SharedPreferences.getInstance();
     await _loadQuestions();
+
+    final hasSavedState = await _loadExamState();
+
+    // If no saved state, shuffle questions normally
+    if (!hasSavedState && questions.isNotEmpty) {
+      setState(() {
+        questions.shuffle();
+        selectedAnswers = List.filled(questions.length, '');
+      });
+    }
+
+    // Start timer if needed
+    if (!timerStarted && questions.isNotEmpty) {
+      examStartTime = DateTime.now();
+      _startTimer();
+      timerStarted = true;
+    }
+  }
+
+
+  Future<void> _saveExamState() async {
+    final questionsJson = questions.map((q) => q.toJson()).toList();
+
+    await prefs.setInt('mock_exam_current_index', currentIndex);
+    await prefs.setInt('mock_exam_correct', correct);
+    await prefs.setInt('mock_exam_wrong', wrong);
+    await prefs.setStringList('mock_exam_selected_answers', selectedAnswers);
+    await prefs.setString('mock_exam_subject_id', widget.subjectId);
+    await prefs.setString('mock_exam_title', widget.title);
+    await prefs.setString('mock_exam_path', widget.path);
+    await prefs.setInt('mock_exam_remaining_time', duration.inSeconds);
+    await prefs.setString('mock_exam_start_time', examStartTime?.toIso8601String() ?? '');
+
+    // Save the shuffled questions list as JSON
+    await prefs.setString('mock_exam_questions', jsonEncode(questionsJson));
   }
 
   Future<void> _loadQuestions() async {
@@ -390,7 +425,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
         final sigmaList = decoded['sigma_data'] as List<dynamic>;
         final questionList = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
-        questionList.shuffle();
+        questionList;
 
         int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
         final selected = questionList.take(takeCount).toList();
@@ -414,7 +449,8 @@ class _MockExamScreenState extends State<MockExamScreen> {
     ]);
 
     setState(() {
-      questions.shuffle();
+      questions;
+      //questions.shuffle();
     });
 
     print("Total questions loaded: ${questions.length}");
@@ -503,6 +539,66 @@ class _MockExamScreenState extends State<MockExamScreen> {
   }
 
   @override
+  void dispose() {
+    countdownTimer?.cancel();
+    _clearSavedExamState(); // Add this line
+    super.dispose();
+  }
+
+  Future<void> _clearSavedExamState() async {
+    await prefs.remove('mock_exam_current_index');
+    await prefs.remove('mock_exam_correct');
+    await prefs.remove('mock_exam_wrong');
+    await prefs.remove('mock_exam_selected_answers');
+    await prefs.remove('mock_exam_subject_id');
+    await prefs.remove('mock_exam_title');
+    await prefs.remove('mock_exam_path');
+    await prefs.remove('mock_exam_remaining_time');
+    await prefs.remove('mock_exam_start_time');
+    await prefs.remove('mock_exam_questions'); // Clear saved questions
+  }
+
+  //Pause Test
+  Future<bool> _loadExamState() async {
+    final savedSubjectId = prefs.getString('mock_exam_subject_id');
+    if (savedSubjectId == null || savedSubjectId != widget.subjectId) {
+      return false; // No saved state for this subject
+    }
+
+    // Restore the shuffled questions list
+    final questionsJson = prefs.getString('mock_exam_questions');
+    if (questionsJson != null) {
+      final decoded = jsonDecode(questionsJson) as List<dynamic>;
+      setState(() {
+        questions = decoded.map((e) => SubCahpDatum.fromJson(e)).toList();
+      });
+    }
+
+    setState(() {
+      currentIndex = prefs.getInt('mock_exam_current_index') ?? 0;
+      correct = prefs.getInt('mock_exam_correct') ?? 0;
+      wrong = prefs.getInt('mock_exam_wrong') ?? 0;
+      selectedAnswers = prefs.getStringList('mock_exam_selected_answers') ?? List.filled(questions.length, '');
+
+      final remainingTime = prefs.getInt('mock_exam_remaining_time') ?? 7200;
+      duration = Duration(seconds: remainingTime);
+
+      final startTimeStr = prefs.getString('mock_exam_start_time');
+      if (startTimeStr != null && startTimeStr.isNotEmpty) {
+        examStartTime = DateTime.parse(startTimeStr);
+      }
+
+      timerStarted = true;
+    });
+
+    // Clear the saved state (optional, can keep until exam is completed)
+    await _clearSavedExamState(); // Or remove only after exam completion
+    return true;
+  }
+
+
+
+  @override
   Widget build(BuildContext context) {
     if (questions.isEmpty) {
       return const Scaffold(
@@ -515,8 +611,14 @@ class _MockExamScreenState extends State<MockExamScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
         bottomNavigationBar:InkWell(
-          onTap: (){
+          onTap: () async {
+            countdownTimer?.cancel();
+            await _saveExamState();
             Get.back();
+            // Optionally show a confirmation message
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Test paused. You can resume where you left off.'))
+            );
            // Get.to(LastMinuteRevision(path: widget.path,));
           },
           child: Container(
@@ -640,11 +742,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    countdownTimer?.cancel();
-    super.dispose();
-  }
+
 
   double estimateHeight(String text) {
     final lines = (text.length / 30).ceil();

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
@@ -24,7 +25,15 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
   @override
   void initState() {
     super.initState();
+    incrementAnswerCount();
     if(widget.basePath?.toLowerCase().toString() != "nr")loadImage();
+
+  }
+
+  void incrementAnswerCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    int current = prefs.getInt('answer_count') ?? 0;
+    await prefs.setInt('answer_count', current + 1);
   }
 
   loadImage() async {

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
@@ -32,9 +33,16 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
   void initState() {
     super.initState();
     _initVideoPlayer();
+    incrementVideoCount();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
+  }
+
+  void incrementVideoCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    int current = prefs.getInt('video_count') ?? 0;
+    await prefs.setInt('video_count', current + 1);
   }
 
 

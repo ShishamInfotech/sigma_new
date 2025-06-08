@@ -82,7 +82,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
             // Tab 1: Mock Exam
             Column(
               children: [
-                _buildStatsCard(context),
+                //_buildStatsCard(context),
                 Expanded(
                   child: submissions.isEmpty
                       ? const Center(child: Text("No submitted mocks found."))
