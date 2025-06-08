@@ -12,17 +12,30 @@ class MathText extends StatefulWidget {
 }
 
 class _MathTextState extends State<MathText> {
+  String sanitizeMathExpression(String input) {
 
-  //double _height =10;
+    return input
+        .replaceAll(r'\\begin', r'\begin')
+        .replaceAll(r'\\end', r'\end')
+        .replaceAll(r'\\\\', r'\\')
+        .replaceAll(r'$', r'')
+        .replaceAll(r'\left[\begin', r'\(\left[\begin')
+        .replaceAll(r'\right]', r'\right]\)')
+        .replaceAll(r'z-[1', r'z_{1');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final sanitizedExpression = sanitizeMathExpression(widget.expression);
     return Container(
       height: widget.height,
       child: AndroidView(
         viewType: 'mathview-native',
         layoutDirection: TextDirection.ltr,
-        creationParams: {'expression': widget.expression, 'textSize': 24.0,},
+        creationParams: {
+          'expression': sanitizedExpression,
+          'textSize': 24.0,
+        },
         creationParamsCodec: const StandardMessageCodec(),
       ),
     );
