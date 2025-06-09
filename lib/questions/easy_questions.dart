@@ -36,6 +36,7 @@ class _EasyQuestionsState extends State<EasyQuestions> {
                 child: MathText(
                   key: ValueKey("q_${widget.indexValue}"),
                   expression: widget.easyQuestion["question"] ?? '',
+                  height:  estimateHeight(widget.easyQuestion["question"]),
                 ),
               ),
             ],
@@ -63,6 +64,7 @@ class _EasyQuestionsState extends State<EasyQuestions> {
                     child: MathText(
                       key: ValueKey("opt_${widget.indexValue}_$i"),
                       expression: opt,
+                      height: estimateOptionsHeight(opt),
                     ),
                   ),
                 ],
@@ -78,5 +80,53 @@ class _EasyQuestionsState extends State<EasyQuestions> {
         ),
       ],
     );
+  }
+
+  double estimateHeight(String text) {
+    if (text.isEmpty) return 0;
+
+    // Count lines considering:
+    // 1. Actual newlines
+    // 2. Long lines that will wrap
+    // 3. Math expressions that take more vertical space
+    final lines = text.split('\n').length;
+    final longLines = text.split('\n').where((line) => line.length > 50).length;
+    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
+
+    print("Lines="+ lines.toString() + "LongLines=" + longLines.toString());
+    // Base height calculation
+    double height = (lines + longLines) * 20.0;
+    height = height * 2.5;
+    // Add extra space for complex math expressions
+    if (hasComplexMath) {
+      height += 30.0;
+    }
+
+    // Minimum and maximum height constraints
+    return height.clamp(50.0, 300.0); // Adjust max height as needed
+  }
+
+  double estimateOptionsHeight(String text) {
+    if (text.isEmpty) return 0;
+
+    // Count lines considering:
+    // 1. Actual newlines
+    // 2. Long lines that will wrap
+    // 3. Math expressions that take more vertical space
+    final lines = text.split('\n').length;
+    final longLines = text.split('\n').where((line) => line.length > 50).length;
+    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt');
+
+    print("Lines="+ lines.toString() + "LongLines=" + longLines.toString());
+    // Base height calculation
+    double height = (lines + longLines) * 10.0;
+    //height = height * 2.5;
+    // Add extra space for complex math expressions
+    if (hasComplexMath) {
+      height += 30.0;
+    }
+
+    // Minimum and maximum height constraints
+    return height.clamp(50.0, 300.0); // Adjust max height as needed
   }
 }

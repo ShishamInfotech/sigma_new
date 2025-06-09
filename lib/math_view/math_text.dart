@@ -1,4 +1,4 @@
-/*import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class MathText extends StatefulWidget {
@@ -40,9 +40,10 @@ class _MathTextState extends State<MathText> {
       ),
     );
   }
-}*/
+}
 
 
+/*
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -93,3 +94,4 @@ class _MathTextState extends State<MathText> {
     );
   }
 }
+*/
