@@ -156,7 +156,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
       length: tabs.length,
       child: Scaffold(
         key: _scaffoldKey,
-        drawer: DrawerWidget(context),
+        drawer: DrawerWidget(),
         appBar: AppBar(
           title: Text("${widget.pathQuestionList[0]["chapter"]} : ${widget.pathQuestionList[0]["subchapter"]} " ?? ""),
         ),
@@ -185,62 +185,73 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
         final question = questionList[index];
         final questionId = question["question_serial_number"] ?? "q_$index";
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            MathText(expression: question["description"] ?? "", height: estimateHeight(question["description"])),
-            FutureBuilder<bool>(
-              future: isBookmarked(questionId),
-              builder: (context, snapshot) {
-                final bookmarked = snapshot.data ?? false;
-                return Row(
-                  children: [
-                    if ((question["test_answer_string"] != null &&
-                        question["test_answer_string"].toString().toLowerCase() != "nr" && question["test_answer_string"].toString().toLowerCase() != "na") ||
-                (question["description_image_id"].toString().toLowerCase() != "nr" && question["description_image_id"].toString().toLowerCase() != "na"))
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("${index+1}:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
+                  Expanded(child: MathText(expression: question["description"] ?? "", height: estimateHeight(question["description"]))),
+                ],
+              ),
+              
+              FutureBuilder<bool>(
+                future: isBookmarked(questionId),
+                builder: (context, snapshot) {
+                  final bookmarked = snapshot.data ?? false;
+                  return Row(
+                    children: [
+                      if ((question["test_answer_string"] != null &&
+                          question["test_answer_string"].toString().toLowerCase() != "nr" && question["test_answer_string"].toString().toLowerCase() != "na") ||
+                  (question["description_image_id"].toString().toLowerCase() != "nr" && question["description_image_id"].toString().toLowerCase() != "na"))
+                        TextButton(
+                          onPressed: () {
+                            final isNR = question["description_image_id"].toString().toLowerCase() == "nr";
+                            Get.to(() => TextAnswerJee(
+                              title: widget.pathQuestionList[0]["chapter"] ?? "",
+                              imagePath: isNR ? question["test_answer_string"] : question["description_image_id"],
+                              basePath: isNR ? "nr" : "/${question["subjectid"]}/images/",
+                              stream: question["stream"],
+                            ));
+                          },
+                          child: const Text("Text Answer"),
+                        ),
+                      if ((question["explaination_video_id"]?.toString().toLowerCase() ?? "") != "na" &&
+                          (question["explaination_video_id"]?.toString().toLowerCase() ?? "") != "nr")
+                        TextButton(
+                          onPressed: () {
+                            Get.to(() => EncryptedVideoPlayer(
+                              title: widget.pathQuestionList[0]["subchapter"] ?? "",
+                              filePath: question["explaination_video_id"],
+                              basePath: "${question["subjectid"]}/videos/",
+                            ));
+                          },
+                          child: const Text("Explanation"),
+                        ),
                       TextButton(
                         onPressed: () {
-                          final isNR = question["description_image_id"].toString().toLowerCase() == "nr";
-                          Get.to(() => TextAnswerJee(
-                            title: widget.pathQuestionList[0]["chapter"] ?? "",
-                            imagePath: isNR ? question["test_answer_string"] : question["description_image_id"],
-                            basePath: isNR ? "nr" : "/${question["subjectid"]}/images/",
-                            stream: question["stream"],
+                          Get.to(() => NotepadPage(
+                            subjectId: widget.subjectId ?? "unknown",
+                            chapter: question["chapter"] ?? "chapter",
                           ));
                         },
-                        child: const Text("Text Answer"),
+                        child: const Text("Notepad"),
                       ),
-                    if ((question["explaination_video_id"]?.toString().toLowerCase() ?? "") != "na" &&
-                        (question["explaination_video_id"]?.toString().toLowerCase() ?? "") != "nr")
                       TextButton(
-                        onPressed: () {
-                          Get.to(() => EncryptedVideoPlayer(
-                            title: widget.pathQuestionList[0]["subchapter"] ?? "",
-                            filePath: question["explaination_video_id"],
-                            basePath: "${question["subjectid"]}/videos/",
-                          ));
-                        },
-                        child: const Text("Explanation"),
+                        onPressed: () => toggleBookmark(questionId),
+                        child: Text(bookmarked ? "Unbookmark" : "Bookmark"),
                       ),
-                    TextButton(
-                      onPressed: () {
-                        Get.to(() => NotepadPage(
-                          subjectId: widget.subjectId ?? "unknown",
-                          chapter: question["chapter"] ?? "chapter",
-                        ));
-                      },
-                      child: const Text("Notepad"),
-                    ),
-                    TextButton(
-                      onPressed: () => toggleBookmark(questionId),
-                      child: Text(bookmarked ? "Unbookmark" : "Bookmark"),
-                    ),
-                  ],
-                );
-              },
-            ),
-            const Divider()
-          ],
+                    ],
+                  );
+                },
+              ),
+              const Divider()
+            ],
+          ),
         );
       },
     );

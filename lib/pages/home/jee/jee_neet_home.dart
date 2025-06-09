@@ -143,7 +143,7 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
           ),
         ],
       ),
-      drawer: DrawerWidget(context),
+      drawer: DrawerWidget(),
     );
   }
 }

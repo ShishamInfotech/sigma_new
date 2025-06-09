@@ -145,7 +145,7 @@ class _ViewQuestionsState extends State<ViewQuestions>
     return DefaultTabController(
       length: 5,
       child: Scaffold(
-        drawer: DrawerWidget(context),
+        drawer: DrawerWidget(),
         key: _tablequizscaffoldKey,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(

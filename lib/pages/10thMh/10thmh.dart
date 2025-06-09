@@ -152,7 +152,7 @@ class _StandardMenuState extends State<StandardMenu> {
           ),
         ],
       ),
-      drawer: DrawerWidget(context),
+      drawer: DrawerWidget(),
     );
   }
 }

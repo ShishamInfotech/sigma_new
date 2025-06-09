@@ -298,6 +298,7 @@ import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:sigma_new/models/sub_cahp_datum.dart';
 
+import '../../../../math_view/math_text_test.dart' show MathTextTest;
 import '../../../../ui_helper/constant.dart';
 
 class MockExamScreen extends StatefulWidget {
@@ -668,16 +669,25 @@ class _MockExamScreenState extends State<MockExamScreen> {
               ...List.generate(4, (index) {
                 final opt = question.toJson()['option_${index + 1}'];
                 if (opt == null || opt.toString().trim().isEmpty) return const SizedBox();
-                return ListTile(
-                  title: MathText(expression: opt, height: estimateHeight(opt)),
-                  leading: Radio<String>(
-                    value: opt,
-                    groupValue: selectedOption,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedOption = value;
-                      });
-                    },
+                return Container(
+
+                  margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.black),
+                  ),
+                  child: ListTile(
+                    title: MathText(expression: opt, height: estimateHeight(opt),),
+                    leading: Radio<String>(
+                      value: opt,
+                      groupValue: selectedOption,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedOption = value;
+                        });
+                      },
+                    ),
                   ),
                 );
               }),

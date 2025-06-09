@@ -115,7 +115,7 @@ class _TopicWiseSyllabusMcqState extends State<TopicWiseSyllabusMcq> {
       length: tabs.length,
       child: Scaffold(
         key: _scaffoldKey,
-        drawer: DrawerWidget(context),
+        drawer: DrawerWidget(),
         appBar: AppBar(
           title: Text(widget.pathQuestionList[0]["chapter"] ?? ""),
         ),

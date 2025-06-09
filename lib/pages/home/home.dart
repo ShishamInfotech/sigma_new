@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        drawer: DrawerWidget(context),
+        drawer: DrawerWidget(),
       ),
     );
   }

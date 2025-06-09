@@ -249,6 +249,34 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
 
   void _startQuiz() {
     if (!quizStarted && !isLoading) {
+      List<dynamic> rawQuestions = [];
+
+      if (title.contains("Level-1")) {
+        rawQuestions = simple.take(30).toList();
+      } else if (title.contains("Level-2")) {
+        rawQuestions = [...simple.take(10), ...medium.take(20)];
+      } else if (title.contains("Level-3")) {
+        rawQuestions = [...simple.take(10), ...medium.take(10), ...complex.take(10)];
+      } else if (title.contains("Level-4")) {
+        rawQuestions = [...medium.take(10), ...complex.take(10), ...difficult.take(10)];
+      } else if (title.contains("Level-5")) {
+        rawQuestions = [...complex.take(10), ...difficult.take(10), ...advanced.take(10)];
+      }
+
+      selectedQuestions = rawQuestions
+          .where((q) => (q["test_answer_string"]?.toString().trim().isNotEmpty ?? false))
+          .toList()
+          .asMap()
+          .entries
+          .map((entry) {
+        final index = entry.key;
+        final question = Map<String, dynamic>.from(entry.value);
+        question['serial'] = index + 1;
+        return question;
+      }).toList();
+
+      debugPrint("selectedQuestions length: ${selectedQuestions.length}");
+
       setState(() {
         quizStarted = true;
         _secondsRemaining = 9000;
@@ -258,28 +286,31 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
       _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (_secondsRemaining == 0) {
           timer.cancel();
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              title: const Text('Time is Up!'),
-              content: const Text('The quiz has ended.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  },
-                  child: const Text('OK'),
-                )
-              ],
-            ),
-          );
+          _showTimeUpDialog();
         } else {
           setState(() => _secondsRemaining--);
         }
       });
     }
+  }
+
+  void _showTimeUpDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Time Up'),
+        content: const Text('The exam has ended.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            child: const Text('OK'),
+          )
+        ],
+      ),
+    );
   }
 
   @override
@@ -290,7 +321,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: DrawerWidget(context),
+      drawer: DrawerWidget(),
       bottomNavigationBar: quizStarted
           ? InkWell(
               onTap: () {
@@ -400,7 +431,21 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
     );
   }
 
+
   Widget _buildQuestionList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: selectedQuestions.length,
+      itemBuilder: (context, index) {
+        return EasyQuestions(
+          key: ValueKey("question_${index + 1}"),
+          easyQuestion: selectedQuestions[index],
+          indexValue: index + 1,
+        );
+      },
+    );
+  }
+  /*Widget _buildQuestionList() {
     List<dynamic> questions = [];
 
     if (title.contains("Level-1")) {
@@ -435,17 +480,19 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
       return question;
     }).toList();
     print("selectedQuestions==="+ questions.toString());
+
+
     return ListView.builder(
       padding: const EdgeInsets.all(12),
       itemCount: questions.length,
       itemBuilder: (context, index) {
-       /* var questionWithSerial = Map<String, dynamic>.from(questions[index]);
+       *//* var questionWithSerial = Map<String, dynamic>.from(questions[index]);
         questionWithSerial['serial'] = index + 1; // Add serial number
-  */   //   return EasyQuestions(easyQuestion: questionWithSerial);
-        return EasyQuestions(easyQuestion: selectedQuestions[index]);
+  *//*   //   return EasyQuestions(easyQuestion: questionWithSerial);
+        return EasyQuestions(key: ValueKey("question_${index + 1}"),easyQuestion: selectedQuestions[index], indexValue: index+1,);
       },
     );
-  }
+  }*/
 
   submitMockExam() {
     showDialog(
