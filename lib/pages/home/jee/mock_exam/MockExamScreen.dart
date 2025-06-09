@@ -351,12 +351,13 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   Future<void> _initialize() async {
     prefs = await SharedPreferences.getInstance();
-    await _loadQuestions();
+    //await _loadQuestions();
 
     final hasSavedState = await _loadExamState();
 
-    // If no saved state, shuffle questions normally
-    if (!hasSavedState && questions.isNotEmpty) {
+    // Only load new questions if no saved state exists
+    if (!hasSavedState) {
+      await _loadQuestions();
       setState(() {
         questions.shuffle();
         selectedAnswers = List.filled(questions.length, '');
@@ -541,7 +542,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
   @override
   void dispose() {
     countdownTimer?.cancel();
-    _clearSavedExamState(); // Add this line
+    //_clearSavedExamState(); // Add this line
     super.dispose();
   }
 
@@ -574,28 +575,44 @@ class _MockExamScreenState extends State<MockExamScreen> {
       });
     }
 
+    // Calculate elapsed time since pause
+    final startTimeStr = prefs.getString('mock_exam_start_time');
+    final remainingTime = prefs.getInt('mock_exam_remaining_time') ?? 7200;
+    if (startTimeStr != null && startTimeStr.isNotEmpty) {
+      final savedStartTime = DateTime.parse(startTimeStr);
+      final now = DateTime.now();
+      final elapsedSeconds = now.difference(savedStartTime).inSeconds;
+      final updatedRemainingTime = remainingTime - elapsedSeconds;
+      duration = Duration(seconds: updatedRemainingTime > 0 ? updatedRemainingTime : 0);
+    } else {
+      duration = Duration(seconds: remainingTime);
+    }
+
     setState(() {
       currentIndex = prefs.getInt('mock_exam_current_index') ?? 0;
       correct = prefs.getInt('mock_exam_correct') ?? 0;
       wrong = prefs.getInt('mock_exam_wrong') ?? 0;
       selectedAnswers = prefs.getStringList('mock_exam_selected_answers') ?? List.filled(questions.length, '');
 
-      final remainingTime = prefs.getInt('mock_exam_remaining_time') ?? 7200;
-      duration = Duration(seconds: remainingTime);
+      selectedOption = selectedAnswers[currentIndex].isNotEmpty ? selectedAnswers[currentIndex] : null;
 
-      final startTimeStr = prefs.getString('mock_exam_start_time');
-      if (startTimeStr != null && startTimeStr.isNotEmpty) {
-        examStartTime = DateTime.parse(startTimeStr);
-      }
-
+      examStartTime = DateTime.now(); // Reset start time for timer
       timerStarted = true;
     });
 
     // Clear the saved state (optional, can keep until exam is completed)
-    await _clearSavedExamState(); // Or remove only after exam completion
+    //await _clearSavedExamState(); // Or remove only after exam completion
     return true;
   }
 
+
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      //saveTestState();
+    }
+  }
 
 
   @override
@@ -612,9 +629,18 @@ class _MockExamScreenState extends State<MockExamScreen> {
       appBar: AppBar(title: Text(widget.title)),
         bottomNavigationBar:InkWell(
           onTap: () async {
+            // Save the selected answer if any
+            if (selectedOption != null) {
+              selectedAnswers[currentIndex] = selectedOption!;
+            }
+
             countdownTimer?.cancel();
             await _saveExamState();
-            Get.back();
+
+            // Navigate back
+            Navigator.pop(context);
+
+            //Get.back();
             // Optionally show a confirmation message
             ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Test paused. You can resume where you left off.'))
@@ -660,16 +686,25 @@ class _MockExamScreenState extends State<MockExamScreen> {
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: MathText(
-                  expression: question.question ?? '',
-                  height: estimateHeight(question.question ?? ''),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: 50,
+                    maxHeight: MediaQuery.of(context).size.height * 0.5, // Use 50% of screen height
+                  ),
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: MathText(
+                      expression: question.question ?? '',
+                      height: estimateHeight(question.question ?? ''),
+                    ),
+                  ),
                 ),
               ),
               ...List.generate(4, (index) {
                 final opt = question.toJson()['option_${index + 1}'];
                 if (opt == null || opt.toString().trim().isEmpty) return const SizedBox();
                 return ListTile(
-                  title: MathText(expression: opt, height: estimateHeight(opt)),
+                  title: MathText(expression: opt, height: estimateOptionsHeight(opt)),
                   leading: Radio<String>(
                     value: opt,
                     groupValue: selectedOption,
@@ -713,6 +748,9 @@ class _MockExamScreenState extends State<MockExamScreen> {
     // Save the exam result first
     await _saveExamResult();
 
+    // Clear the saved state since exam is completed
+    await _clearSavedExamState();
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -745,8 +783,51 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
 
   double estimateHeight(String text) {
-    final lines = (text.length / 30).ceil();
-    return lines * 35.0;
+    if (text.isEmpty) return 0;
+
+    // Count lines considering:
+    // 1. Actual newlines
+    // 2. Long lines that will wrap
+    // 3. Math expressions that take more vertical space
+    final lines = text.split('\n').length;
+    final longLines = text.split('\n').where((line) => line.length > 50).length;
+    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
+
+    print("Lines="+ lines.toString() + "LongLines=" + longLines.toString());
+    // Base height calculation
+    double height = (lines + longLines) * 20.0;
+    height = height * 2.5;
+    // Add extra space for complex math expressions
+    if (hasComplexMath) {
+      height += 30.0;
+    }
+
+    // Minimum and maximum height constraints
+    return height.clamp(50.0, 300.0); // Adjust max height as needed
+  }
+
+  double estimateOptionsHeight(String text) {
+    if (text.isEmpty) return 0;
+
+    // Count lines considering:
+    // 1. Actual newlines
+    // 2. Long lines that will wrap
+    // 3. Math expressions that take more vertical space
+    final lines = text.split('\n').length;
+    final longLines = text.split('\n').where((line) => line.length > 50).length;
+    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt');
+
+    print("Lines="+ lines.toString() + "LongLines=" + longLines.toString());
+    // Base height calculation
+    double height = (lines + longLines) * 10.0;
+    //height = height * 2.5;
+    // Add extra space for complex math expressions
+    if (hasComplexMath) {
+      height += 30.0;
+    }
+
+    // Minimum and maximum height constraints
+    return height.clamp(50.0, 300.0); // Adjust max height as needed
   }
 }
 
