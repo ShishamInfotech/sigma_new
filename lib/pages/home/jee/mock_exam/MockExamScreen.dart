@@ -64,6 +64,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
   void initState() {
     super.initState();
     _initialize();
+    _setExamDuration();
   }
 
   Future<void> _initialize() async {
@@ -173,6 +174,10 @@ class _MockExamScreenState extends State<MockExamScreen> {
     }
   }
 
+  // Add this property to track the current level
+  String currentLevel = 's'; // Default to simple level
+
+  // Modify the _processFiles method to filter by complexity
   Future<void> _processFiles(FileUri uriGroup, List<SubCahpDatum> targetList, String subject) async {
     for (int i = 0; i < uriGroup.files.length; i++) {
       final file = uriGroup.files[i];
@@ -183,12 +188,62 @@ class _MockExamScreenState extends State<MockExamScreen> {
       if (decoded == null || decoded['sigma_data'] == null) continue;
 
       final sigmaList = decoded['sigma_data'] as List<dynamic>;
-      final questionList = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
+      final allQuestions = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
+
+      // Filter questions based on current level
+      List<SubCahpDatum> filteredQuestions = _filterQuestionsByComplexity(allQuestions);
 
       int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
-      targetList.addAll(questionList.take(takeCount));
+      targetList.addAll(filteredQuestions.take(takeCount));
 
       targetList.shuffle();
+    }
+  }
+
+  // New method to filter questions by complexity
+  List<SubCahpDatum> _filterQuestionsByComplexity(List<SubCahpDatum> allQuestions) {
+    switch (currentLevel) {
+      case 's': // Simple - 100% simple
+        return allQuestions.where((q) => q.complexity == QuestionComplexity.simple).toList();
+      case 'm': // Medium - 40% simple, 60% medium
+        final simple = allQuestions.where((q) => q.complexity == QuestionComplexity.simple).toList();
+        final medium = allQuestions.where((q) => q.complexity == QuestionComplexity.medium).toList();
+        return [...simple.take((simple.length * 0.4).round()), ...medium];
+      case 'c': // Complex - 40% medium, 60% complex
+        final medium = allQuestions.where((q) => q.complexity == QuestionComplexity.medium).toList();
+        final complex = allQuestions.where((q) => q.complexity == QuestionComplexity.complex).toList();
+        return [...medium.take((medium.length * 0.4).round()), ...complex];
+      case 'd': // Difficult - 50% complex, 50% difficult
+        final complex = allQuestions.where((q) => q.complexity == QuestionComplexity.complex).toList();
+        final difficult = allQuestions.where((q) => q.complexity == QuestionComplexity.difficult).toList();
+        return [...complex.take((complex.length * 0.5).round()), ...difficult];
+      case 'a': // Advanced - 30% complex, 30% difficult, 40% advanced
+        final complex = allQuestions.where((q) => q.complexity == QuestionComplexity.complex).toList();
+        final difficult = allQuestions.where((q) => q.complexity == QuestionComplexity.difficult).toList();
+        final advanced = allQuestions.where((q) => q.complexity == QuestionComplexity.advanced).toList();
+        return [
+          ...complex.take((complex.length * 0.3).round()),
+          ...difficult.take((difficult.length * 0.3).round()),
+          ...advanced
+        ];
+      default:
+        return allQuestions;
+    }
+  }
+
+  void _setExamDuration() {
+    switch (currentLevel) {
+      case 's':
+      case 'm':
+        duration = const Duration(minutes: 120);
+        break;
+      case 'c':
+      case 'd':
+      case 'a':
+        duration = const Duration(minutes: 150);
+        break;
+      default:
+        duration = const Duration(minutes: 120);
     }
   }
 
@@ -574,4 +629,13 @@ class FileUri {
     required this.perChapterCount,
     required this.remainCount,
   });
+}
+
+// Add this enum at the top of the file
+enum QuestionComplexity {
+  simple,
+  medium,
+  complex,
+  difficult,
+  advanced
 }
