@@ -247,7 +247,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
     }
   }
 
-  void _startQuiz() {
+  /*void _startQuiz() {
     if (!quizStarted && !isLoading) {
       List<dynamic> rawQuestions = [];
 
@@ -292,7 +292,65 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
         }
       });
     }
+  }*/
+
+  void _startQuiz() {
+    if (!quizStarted && !isLoading) {
+      List<dynamic> rawQuestions = [];
+
+      List<List<dynamic>> levelPools = [];
+
+      if (title.contains("Level-1")) {
+        levelPools = [simple];
+      } else if (title.contains("Level-2")) {
+        levelPools = [simple, medium];
+      } else if (title.contains("Level-3")) {
+        levelPools = [simple, medium, complex];
+      } else if (title.contains("Level-4")) {
+        levelPools = [medium, complex, difficult];
+      } else if (title.contains("Level-5")) {
+        levelPools = [complex, difficult, advanced];
+      }
+
+      for (var pool in levelPools) {
+        for (var q in pool) {
+          if (rawQuestions.length >= 30) break;
+          if (!(q["test_answer_string"]?.toString().trim().isNotEmpty ?? false)) continue;
+          if (rawQuestions.contains(q)) continue;
+          rawQuestions.add(q);
+        }
+      }
+
+      selectedQuestions = rawQuestions
+          .asMap()
+          .entries
+          .map((entry) {
+        final index = entry.key;
+        final question = Map<String, dynamic>.from(entry.value);
+        question['serial'] = index + 1;
+        return question;
+      })
+          .toList();
+
+      debugPrint("Selected valid questions: ${selectedQuestions.length}");
+
+      setState(() {
+        quizStarted = true;
+        _secondsRemaining = 9000;
+      });
+
+      _timer?.cancel();
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_secondsRemaining == 0) {
+          timer.cancel();
+          _showTimeUpDialog();
+        } else {
+          setState(() => _secondsRemaining--);
+        }
+      });
+    }
   }
+
 
   void _showTimeUpDialog() {
     showDialog(

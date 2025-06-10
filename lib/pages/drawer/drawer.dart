@@ -108,7 +108,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       builder: (context) => const StudyTrackerHomePage()),
                 ),
               ),
-              ListTile(
+              /*ListTile(
                 title: const Text('Exam Preparation'),
                 leading: const Icon(Icons.assignment),
                 onTap: () => Navigator.push(
@@ -116,7 +116,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   MaterialPageRoute(
                       builder: (context) => const ExamPreparation()),
                 ),
-              ),
+              ),*/
               ListTile(
                 title: const Text('Exam Evaluation Bucket'),
                 leading: const Icon(Icons.assessment),
@@ -127,11 +127,14 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 ),
               ),
               Spacer(),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  "$company",
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+              Container(
+                height: 150,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    "$company",
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
                 ),
               )
             ],

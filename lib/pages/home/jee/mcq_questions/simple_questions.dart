@@ -83,17 +83,25 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: RadioListTile<String>(
-                    title: MathText(expression: option, height: 35),
-                    value: option,
-                    groupValue: selectedAnswers[index],
-                    onChanged: isSubmitted
-                        ? null
-                        : (value) {
-                      setState(() {
-                        selectedAnswers[index] = value;
-                      });
-                    },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.black),
+                    ),
+                    child: RadioListTile<String>(
+                      title: MathText(expression: option, height: 35),
+                      value: option,
+                      groupValue: selectedAnswers[index],
+                      onChanged: isSubmitted
+                          ? null
+                          : (value) {
+                        setState(() {
+                          selectedAnswers[index] = value;
+                        });
+                      },
+                    ),
                   ),
                 );
               }).toList(),

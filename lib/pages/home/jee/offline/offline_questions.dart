@@ -520,11 +520,15 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
     var inputFile = await SdCardUtility.getSubjectEncJsonData('jee/mcq/${widget.chapterId}.json');
     if (inputFile != null) {
       var parsedJson = jsonDecode(inputFile);
+      List<dynamic> questions = parsedJson["sigma_data"];
+      questions.shuffle(); // 🔀 Shuffle questions randomly
+
       setState(() {
-        sigmaData = parsedJson["sigma_data"].take(20).toList();
+        sigmaData = questions.take(20).toList(); // 📉 Limit to first 20 after shuffle
       });
     }
   }
+
 
   Future<void> saveUserAnswersToPrefs() async {
     final prefs = await SharedPreferences.getInstance();

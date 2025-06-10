@@ -390,7 +390,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     await prefs.setString('mock_exam_questions', jsonEncode(questionsJson));
   }
 
-  Future<void> _loadQuestions() async {
+  /*Future<void> _loadQuestions() async {
     totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
 
     List<Uri> mathsFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
@@ -455,6 +455,166 @@ class _MockExamScreenState extends State<MockExamScreen> {
     });
 
     print("Total questions loaded: ${questions.length}");
+  }*/
+
+  /*Future<void> _loadQuestions() async {
+    totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
+
+    List<Uri> mathsFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
+    List<Uri> phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
+    List<Uri> cheFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
+
+    // Load Math questions first (98 questions)
+    final mathUri = FileUri(
+      files: mathsFiles,
+      perChapterCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT ~/ mathsFiles.length : 0,
+      remainCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT % mathsFiles.length : 0,
+    );
+
+    // Then load Physics questions (50 questions)
+    final phyUri = FileUri(
+      files: phyFiles,
+      perChapterCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT ~/ phyFiles.length : 0,
+      remainCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT % phyFiles.length : 0,
+    );
+
+    // Finally load Chemistry questions (50 questions)
+    final cheUri = FileUri(
+      files: cheFiles,
+      perChapterCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT ~/ cheFiles.length : 0,
+      remainCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT % cheFiles.length : 0,
+    );
+
+    Future<void> processFiles(FileUri uriGroup, String subject) async {
+      for (int i = 0; i < uriGroup.files.length; i++) {
+        final file = uriGroup.files[i];
+        final jsonStr = await SdCardUtility.getSubjectEncJsonDataForMock(file.path);
+        if (jsonStr == null) continue;
+
+        final decoded = jsonDecode(jsonStr);
+        if (decoded == null || decoded['sigma_data'] == null) continue;
+
+        final sigmaList = decoded['sigma_data'] as List<dynamic>;
+        final questionList = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
+
+        int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
+        final selected = questionList.take(takeCount).toList();
+
+        setState(() {
+          questions.addAll(selected);
+          selectedAnswers.addAll(List.filled(selected.length, ''));
+          if (!timerStarted && questions.isNotEmpty) {
+            examStartTime = DateTime.now();
+            _startTimer();
+            timerStarted = true;
+          }
+        });
+      }
+    }
+
+    // Process files in order: Math -> Physics -> Chemistry
+    await processFiles(mathUri, "Math");
+    await processFiles(phyUri, "Physics");
+    await processFiles(cheUri, "Chemistry");
+
+    setState(() {
+      questions;
+    });
+
+    print("Total questions loaded: ${questions.length}");
+    //print("Math questions: ${questions.where((q) => q.subject == "Math").length}");
+    //print("Physics questions: ${questions.where((q) => q.subject == "Physics").length}");
+    //print("Chemistry questions: ${questions.where((q) => q.subject == "Chemistry").length}");
+  }*/
+
+  Future<void> _loadQuestions() async {
+    totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
+
+    List<Uri> mathsFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
+    List<Uri> phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
+    List<Uri> cheFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
+
+    // Create separate lists for each subject
+    List<SubCahpDatum> mathQuestions = [];
+    List<SubCahpDatum> physicsQuestions = [];
+    List<SubCahpDatum> chemistryQuestions = [];
+
+    Future<void> processFiles(FileUri uriGroup, List<SubCahpDatum> targetList, String subject) async {
+      for (int i = 0; i < uriGroup.files.length; i++) {
+        final file = uriGroup.files[i];
+        final jsonStr = await SdCardUtility.getSubjectEncJsonDataForMock(file.path);
+        if (jsonStr == null) continue;
+
+        final decoded = jsonDecode(jsonStr);
+        if (decoded == null || decoded['sigma_data'] == null) continue;
+
+        final sigmaList = decoded['sigma_data'] as List<dynamic>;
+        final questionList = sigmaList.map((e) {
+          final question = SubCahpDatum.fromJson(e);
+          question.subject = subject; // Ensure subject is set
+          return question;
+        }).toList();
+
+        int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
+        targetList.addAll(questionList.take(takeCount));
+      }
+    }
+
+    // Process files in order and store in separate lists
+    await processFiles(
+      FileUri(
+        files: mathsFiles,
+        perChapterCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT ~/ mathsFiles.length : 0,
+        remainCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT % mathsFiles.length : 0,
+      ),
+      mathQuestions,
+      "Math",
+    );
+
+    await processFiles(
+      FileUri(
+        files: phyFiles,
+        perChapterCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT ~/ phyFiles.length : 0,
+        remainCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT % phyFiles.length : 0,
+      ),
+      physicsQuestions,
+      "Physics",
+    );
+
+    await processFiles(
+      FileUri(
+        files: cheFiles,
+        perChapterCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT ~/ cheFiles.length : 0,
+        remainCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT % cheFiles.length : 0,
+      ),
+      chemistryQuestions,
+      "Chemistry",
+    );
+
+    // Combine all questions in order first
+    List<SubCahpDatum> allQuestions = [];
+    allQuestions.addAll(mathQuestions);
+    allQuestions.addAll(physicsQuestions);
+    allQuestions.addAll(chemistryQuestions);
+
+    // Now shuffle the combined list
+    allQuestions.shuffle();
+
+    setState(() {
+      questions = allQuestions;
+      selectedAnswers = List.filled(questions.length, '');
+
+      if (!timerStarted && questions.isNotEmpty) {
+        examStartTime = DateTime.now();
+        _startTimer();
+        timerStarted = true;
+      }
+    });
+
+    print("Total questions loaded: ${questions.length}");
+  //  print("Math questions: ${questions.where((q) => q.subject == "Math").length}");
+  //  print("Physics questions: ${questions.where((q) => q.subject == "Physics").length}");
+   // print("Chemistry questions: ${questions.where((q) => q.subject == "Chemistry").length}");
   }
 
   void _startTimer() {
