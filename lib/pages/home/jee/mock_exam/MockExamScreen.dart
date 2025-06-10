@@ -1,292 +1,3 @@
-/*
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sigma_new/math_view/math_text.dart';
-import 'package:sigma_new/utility/sd_card_utility.dart';
-import 'package:sigma_new/models/sub_cahp_datum.dart';
-
-class MockExamScreen extends StatefulWidget {
-  final String subjectId;
-  final String title;
-  final String path;
-
-  const MockExamScreen({
-    super.key,
-    required this.subjectId,
-    required this.title,
-    required this.path,
-  });
-
-  @override
-  State<MockExamScreen> createState() => _MockExamScreenState();
-}
-
-class _MockExamScreenState extends State<MockExamScreen> {
-  late SharedPreferences prefs;
-
-  int currentIndex = 0;
-  List<SubCahpDatum> questions = [];
-  List<String> selectedAnswers = [];
-
-  final int SUB1_Q_COUNT = 98;
-  final int SUB2_Q_COUNT = 52;
-  final int SUB3_Q_COUNT = 50;
-
-  final String MAT_FILE_PREFIX = "jeemcqmathch";
-  final String PHY_FILE_PREFIX = "jeemcqphych";
-  final String CHE_FILE_PREFIX = "jeemcqchech";
-
-  int totalQueCount = 0;
-
-  int correct = 0;
-  int wrong = 0;
-
-  Timer? countdownTimer;
-  Duration duration = const Duration(minutes: 120);
-  bool timerStarted = false;
-
-  String? selectedOption;
-
-  @override
-  void initState() {
-    super.initState();
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    prefs = await SharedPreferences.getInstance();
-    await _loadQuestions();
-  }
-
-  Future<void> _loadQuestions() async {
-    totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
-
-    List<Uri> mathsFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
-    List<Uri> phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
-    List<Uri> cheFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
-
-    final mathUri = FileUri(
-      files: mathsFiles,
-      perChapterCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT ~/ mathsFiles.length : 0,
-      remainCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT % mathsFiles.length : 0,
-    );
-
-    final phyUri = FileUri(
-      files: phyFiles,
-      perChapterCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT ~/ phyFiles.length : 0,
-      remainCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT % phyFiles.length : 0,
-    );
-
-    final cheUri = FileUri(
-      files: cheFiles,
-      perChapterCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT ~/ cheFiles.length : 0,
-      remainCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT % cheFiles.length : 0,
-    );
-
-    Future<void> processFiles(FileUri uriGroup) async {
-      for (int i = 0; i < uriGroup.files.length; i++) {
-        final file = uriGroup.files[i];
-        final jsonStr = await SdCardUtility.getSubjectEncJsonDataForMock(file.path);
-        if (jsonStr == null) continue;
-
-        final decoded = jsonDecode(jsonStr);
-        if (decoded == null || decoded['sigma_data'] == null) continue;
-
-        final sigmaList = decoded['sigma_data'] as List<dynamic>;
-        final questionList = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
-        questionList.shuffle();
-
-        int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
-        final selected = questionList.take(takeCount).toList();
-
-        setState(() {
-          questions.addAll(selected);
-          selectedAnswers.addAll(List.filled(selected.length, ''));
-          if (!timerStarted && questions.isNotEmpty) {
-            _startTimer();
-            timerStarted = true;
-          }
-        });
-      }
-    }
-
-    await Future.wait([
-      processFiles(mathUri),
-      processFiles(phyUri),
-      processFiles(cheUri),
-    ]);
-
-    setState(() {
-      questions.shuffle();
-    });
-
-    print("Total questions loaded: ${questions.length}");
-  }
-
-  void _startTimer() {
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (duration.inSeconds == 0) {
-        timer.cancel();
-        _showResultPopup();
-      } else {
-        setState(() {
-          duration -= const Duration(seconds: 1);
-        });
-      }
-    });
-  }
-
-  void _submitAnswer(String answer) {
-    if (questions.isEmpty) return;
-
-    final current = questions[currentIndex];
-    selectedAnswers[currentIndex] = answer;
-
-    if (answer.trim() == current.answer?.trim()) {
-      correct++;
-    } else {
-      wrong++;
-    }
-
-    if (currentIndex + 1 < questions.length) {
-      setState(() {
-        currentIndex++;
-        selectedOption = null;
-      });
-    } else {
-      countdownTimer?.cancel();
-      _showResultPopup();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (questions.isEmpty) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final question = questions[currentIndex];
-
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: SingleChildScrollView(
-        child: KeyedSubtree(
-          key: ValueKey(currentIndex),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  'Time Left: ${duration.inMinutes.toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}',
-                  style: const TextStyle(fontSize: 18),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text(
-                  'Question ${currentIndex + 1} of ${questions.length}',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: MathText(
-                  expression: question.question ?? '',
-                  height: estimateHeight(question.question ?? ''),
-                ),
-              ),
-              ...List.generate(4, (index) {
-                final opt = question.toJson()['option_${index + 1}'];
-                if (opt == null || opt.toString().trim().isEmpty) return const SizedBox();
-                return ListTile(
-                  title: MathText(expression: opt, height: estimateHeight(opt)),
-                  leading: Radio<String>(
-                    value: opt,
-                    groupValue: selectedOption,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedOption = value;
-                      });
-                    },
-                  ),
-                );
-              }),
-              Center(
-                child: ElevatedButton(
-                  onPressed: selectedOption != null ? () => _submitAnswer(selectedOption!) : null,
-                  child: const Text("Submit Answer"),
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showResultPopup() async {
-    final total = prefs.getInt('test_complete') ?? 0;
-    final high = prefs.getInt('test_high_score') ?? 0;
-    final totalScore = prefs.getInt('test_total_score') ?? 0;
-
-    prefs.setInt('test_complete', total + 1);
-    prefs.setInt('test_total_score', totalScore + correct);
-    if (correct > high) prefs.setInt('test_high_score', correct);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Test Completed"),
-        content: Text("Correct: $correct\nWrong: $wrong"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-            },
-            child: const Text("OK"),
-          )
-        ],
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    countdownTimer?.cancel();
-    super.dispose();
-  }
-
-  double estimateHeight(String text) {
-    final lines = (text.length / 30).ceil(); // assume 30 chars per line
-    return lines * 35.0; // assume each line is about 35 pixels tall
-  }
-}
-
-class FileUri {
-  final List<Uri> files;
-  final int perChapterCount;
-  final int remainCount;
-
-  FileUri({
-    required this.files,
-    required this.perChapterCount,
-    required this.remainCount,
-  });
-}
-*/
-
-
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -304,12 +15,14 @@ class MockExamScreen extends StatefulWidget {
   final String subjectId;
   final String title;
   final String path;
+  final bool isPCB; // Add this to distinguish between PCM and PCB
 
   const MockExamScreen({
     super.key,
     required this.subjectId,
     required this.title,
     required this.path,
+    required this.isPCB,
   });
 
   @override
@@ -323,13 +36,16 @@ class _MockExamScreenState extends State<MockExamScreen> {
   List<SubCahpDatum> questions = [];
   List<String> selectedAnswers = [];
 
-  final int SUB1_Q_COUNT = 98;
-  final int SUB2_Q_COUNT = 52;
-  final int SUB3_Q_COUNT = 50;
+  // Updated question counts based on instructions
+  final int PHYSICS_Q_COUNT = 52;
+  final int CHEMISTRY_Q_COUNT = 50;
+  final int MATH_Q_COUNT = 98;
+  final int BIOLOGY_Q_COUNT = 98;
 
   final String MAT_FILE_PREFIX = "jeemcqmathch";
   final String PHY_FILE_PREFIX = "jeemcqphych";
   final String CHE_FILE_PREFIX = "jeemcqchech";
+  final String BIO_FILE_PREFIX = "jeemcqbioch"; // Add biology file prefix
 
   int totalQueCount = 0;
 
@@ -342,6 +58,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   String? selectedOption;
   DateTime? examStartTime;
+  bool isLoadingFirstQuestion = true;
 
   @override
   void initState() {
@@ -351,27 +68,129 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   Future<void> _initialize() async {
     prefs = await SharedPreferences.getInstance();
-    //await _loadQuestions();
-
     final hasSavedState = await _loadExamState();
 
-    // Only load new questions if no saved state exists
     if (!hasSavedState) {
-      await _loadQuestions();
+      // Start loading first subject immediately
+      _loadFirstSubjectQuestions().then((firstQuestions) {
+        if (firstQuestions.isNotEmpty) {
+          setState(() {
+            questions.addAll(firstQuestions);
+            selectedAnswers = List.filled(questions.length, '');
+            isLoadingFirstQuestion = false;
+          });
+
+          // Start timer when first questions are loaded
+          if (!timerStarted && questions.isNotEmpty) {
+            examStartTime = DateTime.now();
+            _startTimer();
+            timerStarted = true;
+          }
+        }
+      });
+
+      // Load remaining subjects in background
+      _loadRemainingQuestions();
+    }
+  }
+
+  Future<List<SubCahpDatum>> _loadFirstSubjectQuestions() async {
+    // Load Physics first (common for both PCM and PCB)
+    final phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
+
+    if (phyFiles.isEmpty) return [];
+
+    final phyUri = FileUri(
+      files: phyFiles,
+      perChapterCount: phyFiles.isNotEmpty ? PHYSICS_Q_COUNT ~/ phyFiles.length : 0,
+      remainCount: phyFiles.isNotEmpty ? PHYSICS_Q_COUNT % phyFiles.length : 0,
+    );
+
+    List<SubCahpDatum> physicsQuestions = [];
+    await _processFiles(phyUri, physicsQuestions, "Physics");
+
+    return physicsQuestions;
+  }
+
+  Future<void> _loadRemainingQuestions() async {
+    // Load Chemistry
+    final cheFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
+    final cheUri = FileUri(
+      files: cheFiles,
+      perChapterCount: cheFiles.isNotEmpty ? CHEMISTRY_Q_COUNT ~/ cheFiles.length : 0,
+      remainCount: cheFiles.isNotEmpty ? CHEMISTRY_Q_COUNT % cheFiles.length : 0,
+    );
+
+    List<SubCahpDatum> chemistryQuestions = [];
+    await _processFiles(cheUri, chemistryQuestions, "Chemistry");
+    print("Chemistry="+ chemistryQuestions.length.toString());
+    // Load Math or Biology based on PCB flag
+    if (widget.isPCB) {
+      final bioFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", BIO_FILE_PREFIX) ?? [];
+      final bioUri = FileUri(
+        files: bioFiles,
+        perChapterCount: bioFiles.isNotEmpty ? BIOLOGY_Q_COUNT ~/ bioFiles.length : 0,
+        remainCount: bioFiles.isNotEmpty ? BIOLOGY_Q_COUNT % bioFiles.length : 0,
+      );
+
+      List<SubCahpDatum> biologyQuestions = [];
+      await _processFiles(bioUri, biologyQuestions, "Biology");
+
       setState(() {
-        questions.shuffle();
+        questions.addAll(chemistryQuestions);
+        print("Chemistry=================="+ chemistryQuestions.length.toString());
+        questions.addAll(biologyQuestions);
+        print("Biology==================="+ biologyQuestions.length.toString());
+        selectedAnswers = List.filled(questions.length, '');
+      });
+    } else {
+      final mathFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
+      final mathUri = FileUri(
+        files: mathFiles,
+        perChapterCount: mathFiles.isNotEmpty ? MATH_Q_COUNT ~/ mathFiles.length : 0,
+        remainCount: mathFiles.isNotEmpty ? MATH_Q_COUNT % mathFiles.length : 0,
+      );
+
+      List<SubCahpDatum> mathQuestions = [];
+      await _processFiles(mathUri, mathQuestions, "Math");
+
+      setState(() {
+        questions.addAll(chemistryQuestions);
+        questions.addAll(mathQuestions);
         selectedAnswers = List.filled(questions.length, '');
       });
     }
 
-    // Start timer if needed
-    if (!timerStarted && questions.isNotEmpty) {
-      examStartTime = DateTime.now();
-      _startTimer();
-      timerStarted = true;
+    // Shuffle all questions except the first few that are already being displayed
+    if (questions.length > 10) {
+      final firstQuestions = questions.sublist(0, 10);
+      final remainingQuestions = questions.sublist(10);
+      remainingQuestions.shuffle();
+
+      setState(() {
+        questions = firstQuestions + remainingQuestions;
+      });
     }
   }
 
+  Future<void> _processFiles(FileUri uriGroup, List<SubCahpDatum> targetList, String subject) async {
+    for (int i = 0; i < uriGroup.files.length; i++) {
+      final file = uriGroup.files[i];
+      final jsonStr = await SdCardUtility.getSubjectEncJsonDataForMock(file.path);
+      if (jsonStr == null) continue;
+
+      final decoded = jsonDecode(jsonStr);
+      if (decoded == null || decoded['sigma_data'] == null) continue;
+
+      final sigmaList = decoded['sigma_data'] as List<dynamic>;
+      final questionList = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
+
+      int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
+      targetList.addAll(questionList.take(takeCount));
+
+      targetList.shuffle();
+    }
+  }
 
   Future<void> _saveExamState() async {
     final questionsJson = questions.map((q) => q.toJson()).toList();
@@ -385,295 +204,27 @@ class _MockExamScreenState extends State<MockExamScreen> {
     await prefs.setString('mock_exam_path', widget.path);
     await prefs.setInt('mock_exam_remaining_time', duration.inSeconds);
     await prefs.setString('mock_exam_start_time', examStartTime?.toIso8601String() ?? '');
-
-    // Save the shuffled questions list as JSON
+    await prefs.setBool('mock_exam_is_pcb', widget.isPCB); // Save PCB flag
     await prefs.setString('mock_exam_questions', jsonEncode(questionsJson));
   }
 
-  /*Future<void> _loadQuestions() async {
-    totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
-
-    List<Uri> mathsFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
-    List<Uri> phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
-    List<Uri> cheFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
-
-    final mathUri = FileUri(
-      files: mathsFiles,
-      perChapterCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT ~/ mathsFiles.length : 0,
-      remainCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT % mathsFiles.length : 0,
-    );
-
-    final phyUri = FileUri(
-      files: phyFiles,
-      perChapterCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT ~/ phyFiles.length : 0,
-      remainCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT % phyFiles.length : 0,
-    );
-
-    final cheUri = FileUri(
-      files: cheFiles,
-      perChapterCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT ~/ cheFiles.length : 0,
-      remainCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT % cheFiles.length : 0,
-    );
-
-    Future<void> processFiles(FileUri uriGroup) async {
-      for (int i = 0; i < uriGroup.files.length; i++) {
-        final file = uriGroup.files[i];
-        final jsonStr = await SdCardUtility.getSubjectEncJsonDataForMock(file.path);
-        if (jsonStr == null) continue;
-
-        final decoded = jsonDecode(jsonStr);
-        if (decoded == null || decoded['sigma_data'] == null) continue;
-
-        final sigmaList = decoded['sigma_data'] as List<dynamic>;
-        final questionList = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
-        questionList;
-
-        int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
-        final selected = questionList.take(takeCount).toList();
-
-        setState(() {
-          questions.addAll(selected);
-          selectedAnswers.addAll(List.filled(selected.length, ''));
-          if (!timerStarted && questions.isNotEmpty) {
-            examStartTime = DateTime.now();
-            _startTimer();
-            timerStarted = true;
-          }
-        });
-      }
-    }
-
-    await Future.wait([
-      processFiles(mathUri),
-      processFiles(phyUri),
-      processFiles(cheUri),
-    ]);
-
-    setState(() {
-      questions;
-      //questions.shuffle();
-    });
-
-    print("Total questions loaded: ${questions.length}");
-  }*/
-
-  /*Future<void> _loadQuestions() async {
-    totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
-
-    List<Uri> mathsFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
-    List<Uri> phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
-    List<Uri> cheFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
-
-    // Load Math questions first (98 questions)
-    final mathUri = FileUri(
-      files: mathsFiles,
-      perChapterCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT ~/ mathsFiles.length : 0,
-      remainCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT % mathsFiles.length : 0,
-    );
-
-    // Then load Physics questions (50 questions)
-    final phyUri = FileUri(
-      files: phyFiles,
-      perChapterCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT ~/ phyFiles.length : 0,
-      remainCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT % phyFiles.length : 0,
-    );
-
-    // Finally load Chemistry questions (50 questions)
-    final cheUri = FileUri(
-      files: cheFiles,
-      perChapterCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT ~/ cheFiles.length : 0,
-      remainCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT % cheFiles.length : 0,
-    );
-
-    Future<void> processFiles(FileUri uriGroup, String subject) async {
-      for (int i = 0; i < uriGroup.files.length; i++) {
-        final file = uriGroup.files[i];
-        final jsonStr = await SdCardUtility.getSubjectEncJsonDataForMock(file.path);
-        if (jsonStr == null) continue;
-
-        final decoded = jsonDecode(jsonStr);
-        if (decoded == null || decoded['sigma_data'] == null) continue;
-
-        final sigmaList = decoded['sigma_data'] as List<dynamic>;
-        final questionList = sigmaList.map((e) => SubCahpDatum.fromJson(e)).toList();
-
-        int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
-        final selected = questionList.take(takeCount).toList();
-
-        setState(() {
-          questions.addAll(selected);
-          selectedAnswers.addAll(List.filled(selected.length, ''));
-          if (!timerStarted && questions.isNotEmpty) {
-            examStartTime = DateTime.now();
-            _startTimer();
-            timerStarted = true;
-          }
-        });
-      }
-    }
-
-    // Process files in order: Math -> Physics -> Chemistry
-    await processFiles(mathUri, "Math");
-    await processFiles(phyUri, "Physics");
-    await processFiles(cheUri, "Chemistry");
-
-    setState(() {
-      questions;
-    });
-
-    print("Total questions loaded: ${questions.length}");
-    //print("Math questions: ${questions.where((q) => q.subject == "Math").length}");
-    //print("Physics questions: ${questions.where((q) => q.subject == "Physics").length}");
-    //print("Chemistry questions: ${questions.where((q) => q.subject == "Chemistry").length}");
-  }*/
-
-  Future<void> _loadQuestions() async {
-    totalQueCount = SUB1_Q_COUNT + SUB2_Q_COUNT + SUB3_Q_COUNT;
-
-    List<Uri> mathsFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", MAT_FILE_PREFIX) ?? [];
-    List<Uri> phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
-    List<Uri> cheFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", CHE_FILE_PREFIX) ?? [];
-
-    // Create separate lists for each subject
-    List<SubCahpDatum> mathQuestions = [];
-    List<SubCahpDatum> physicsQuestions = [];
-    List<SubCahpDatum> chemistryQuestions = [];
-
-    Future<void> processFiles(FileUri uriGroup, List<SubCahpDatum> targetList, String subject) async {
-      for (int i = 0; i < uriGroup.files.length; i++) {
-        final file = uriGroup.files[i];
-        final jsonStr = await SdCardUtility.getSubjectEncJsonDataForMock(file.path);
-        if (jsonStr == null) continue;
-
-        final decoded = jsonDecode(jsonStr);
-        if (decoded == null || decoded['sigma_data'] == null) continue;
-
-        final sigmaList = decoded['sigma_data'] as List<dynamic>;
-        final questionList = sigmaList.map((e) {
-          final question = SubCahpDatum.fromJson(e);
-          question.subject = subject; // Ensure subject is set
-          return question;
-        }).toList();
-
-        int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
-        targetList.addAll(questionList.take(takeCount));
-      }
-    }
-
-    // Process files in order and store in separate lists
-    await processFiles(
-      FileUri(
-        files: mathsFiles,
-        perChapterCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT ~/ mathsFiles.length : 0,
-        remainCount: mathsFiles.isNotEmpty ? SUB1_Q_COUNT % mathsFiles.length : 0,
-      ),
-      mathQuestions,
-      "Math",
-    );
-
-    await processFiles(
-      FileUri(
-        files: phyFiles,
-        perChapterCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT ~/ phyFiles.length : 0,
-        remainCount: phyFiles.isNotEmpty ? SUB2_Q_COUNT % phyFiles.length : 0,
-      ),
-      physicsQuestions,
-      "Physics",
-    );
-
-    await processFiles(
-      FileUri(
-        files: cheFiles,
-        perChapterCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT ~/ cheFiles.length : 0,
-        remainCount: cheFiles.isNotEmpty ? SUB3_Q_COUNT % cheFiles.length : 0,
-      ),
-      chemistryQuestions,
-      "Chemistry",
-    );
-
-    // Combine all questions in order first
-    List<SubCahpDatum> allQuestions = [];
-    allQuestions.addAll(mathQuestions);
-    allQuestions.addAll(physicsQuestions);
-    allQuestions.addAll(chemistryQuestions);
-
-    // Now shuffle the combined list
-    allQuestions.shuffle();
-
-    setState(() {
-      questions = allQuestions;
-      selectedAnswers = List.filled(questions.length, '');
-
-      if (!timerStarted && questions.isNotEmpty) {
-        examStartTime = DateTime.now();
-        _startTimer();
-        timerStarted = true;
-      }
-    });
-
-    print("Total questions loaded: ${questions.length}");
-  //  print("Math questions: ${questions.where((q) => q.subject == "Math").length}");
-  //  print("Physics questions: ${questions.where((q) => q.subject == "Physics").length}");
-   // print("Chemistry questions: ${questions.where((q) => q.subject == "Chemistry").length}");
-  }
-
-  void _startTimer() {
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (duration.inSeconds == 0) {
-        timer.cancel();
-        _showResultPopup();
-      } else {
-        setState(() {
-          duration -= const Duration(seconds: 1);
-        });
-      }
-    });
-  }
-
-  void _submitAnswer(String answer) {
-    if (questions.isEmpty) return;
-
-    final current = questions[currentIndex];
-    selectedAnswers[currentIndex] = answer;
-
-    if (answer.trim() == current.answer?.trim()) {
-      correct++;
-    } else {
-      wrong++;
-    }
-
-    if (currentIndex + 1 < questions.length) {
-      setState(() {
-        currentIndex++;
-        selectedOption = null;
-      });
-    } else {
-      countdownTimer?.cancel();
-      _showResultPopup();
-    }
-  }
-
   Future<void> _saveExamResult() async {
-    // Get or initialize exam attempts list
     final examAttemptsJson = prefs.getString('mock_exam_attempts') ?? '[]';
     final List<dynamic> examAttempts = jsonDecode(examAttemptsJson);
 
-    // Create new exam result
     final examResult = {
       'title': widget.title,
       'date': examStartTime?.toIso8601String() ?? DateTime.now().toIso8601String(),
-      'duration': (120 - duration.inMinutes).toString(),
+      'duration': (duration.inMinutes).toString(),
       'correct': correct,
       'wrong': wrong,
       'total': questions.length,
       'subjectId': widget.subjectId,
+      'isPCB': widget.isPCB, // Save whether this was PCB or PCM
+      'score': (correct / questions.length * 100).toStringAsFixed(1),
     };
 
-    // Add new attempt to the list
     examAttempts.add(examResult);
-
-    print("EXAMATTEPSTT $examAttempts");
-    // Save updated list
     await prefs.setString('mock_exam_attempts', jsonEncode(examAttempts));
 
     // Update general stats
@@ -686,56 +237,34 @@ class _MockExamScreenState extends State<MockExamScreen> {
       await prefs.setInt('mock_exam_high_score', correct);
     }
 
-    // Update subject-specific stats
-    final subjectKey = 'mock_exam_stats_${widget.subjectId}';
+    // Update subject-specific stats with PCB/PCM distinction
+    final subjectKey = 'mock_exam_stats_${widget.subjectId}_${widget.isPCB ? "PCB" : "PCM"}';
     final subjectStatsJson = prefs.getString(subjectKey) ?? '{"attempts": 0, "high_score": 0}';
     final subjectStats = jsonDecode(subjectStatsJson);
     subjectStats['attempts'] = (subjectStats['attempts'] as int) + 1;
     if (correct > (subjectStats['high_score'] as int)) {
       subjectStats['high_score'] = correct;
     }
-
-    print("SubjectKeyy"+subjectKey);
     await prefs.setString(subjectKey, jsonEncode(subjectStats));
   }
 
-  @override
-  void dispose() {
-    countdownTimer?.cancel();
-    //_clearSavedExamState(); // Add this line
-    super.dispose();
-  }
-
-  Future<void> _clearSavedExamState() async {
-    await prefs.remove('mock_exam_current_index');
-    await prefs.remove('mock_exam_correct');
-    await prefs.remove('mock_exam_wrong');
-    await prefs.remove('mock_exam_selected_answers');
-    await prefs.remove('mock_exam_subject_id');
-    await prefs.remove('mock_exam_title');
-    await prefs.remove('mock_exam_path');
-    await prefs.remove('mock_exam_remaining_time');
-    await prefs.remove('mock_exam_start_time');
-    await prefs.remove('mock_exam_questions'); // Clear saved questions
-  }
-
-  //Pause Test
   Future<bool> _loadExamState() async {
     final savedSubjectId = prefs.getString('mock_exam_subject_id');
-    if (savedSubjectId == null || savedSubjectId != widget.subjectId) {
-      return false; // No saved state for this subject
+    final savedIsPCB = prefs.getBool('mock_exam_is_pcb') ?? false;
+
+    if (savedSubjectId == null || savedSubjectId != widget.subjectId || savedIsPCB != widget.isPCB) {
+      return false;
     }
 
-    // Restore the shuffled questions list
     final questionsJson = prefs.getString('mock_exam_questions');
     if (questionsJson != null) {
       final decoded = jsonDecode(questionsJson) as List<dynamic>;
       setState(() {
         questions = decoded.map((e) => SubCahpDatum.fromJson(e)).toList();
+        isLoadingFirstQuestion = false;
       });
     }
 
-    // Calculate elapsed time since pause
     final startTimeStr = prefs.getString('mock_exam_start_time');
     final remainingTime = prefs.getInt('mock_exam_remaining_time') ?? 7200;
     if (startTimeStr != null && startTimeStr.isNotEmpty) {
@@ -753,76 +282,62 @@ class _MockExamScreenState extends State<MockExamScreen> {
       correct = prefs.getInt('mock_exam_correct') ?? 0;
       wrong = prefs.getInt('mock_exam_wrong') ?? 0;
       selectedAnswers = prefs.getStringList('mock_exam_selected_answers') ?? List.filled(questions.length, '');
-
       selectedOption = selectedAnswers[currentIndex].isNotEmpty ? selectedAnswers[currentIndex] : null;
-
-      examStartTime = DateTime.now(); // Reset start time for timer
+      examStartTime = DateTime.now();
       timerStarted = true;
     });
 
-    // Clear the saved state (optional, can keep until exam is completed)
-    //await _clearSavedExamState(); // Or remove only after exam completion
     return true;
   }
 
-
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      //saveTestState();
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
-    if (questions.isEmpty) {
+    if (isLoadingFirstQuestion && questions.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    final question = questions[currentIndex];
+    final question = questions.isNotEmpty ? questions[currentIndex] : null;
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
-        bottomNavigationBar:InkWell(
-          onTap: () async {
-            // Save the selected answer if any
-            if (selectedOption != null) {
-              selectedAnswers[currentIndex] = selectedOption!;
-            }
+      bottomNavigationBar:InkWell(
+        onTap: () async {
+          // Save the selected answer if any
+          if (selectedOption != null) {
+            selectedAnswers[currentIndex] = selectedOption!;
+          }
 
-            countdownTimer?.cancel();
-            await _saveExamState();
+          countdownTimer?.cancel();
+          await _saveExamState();
 
-            // Navigate back
-            Navigator.pop(context);
+          // Navigate back
+          Navigator.pop(context);
 
-            //Get.back();
-            // Optionally show a confirmation message
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Test paused. You can resume where you left off.'))
-            );
-           // Get.to(LastMinuteRevision(path: widget.path,));
-          },
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 15),
-            decoration: BoxDecoration(
-                color: redColor,
-                boxShadow:const [
-                  BoxShadow(
-                    color: whiteColor,
-                  )
-                ],
-                borderRadius: BorderRadius.circular(10)
-            ),
-            height: 60,
-            alignment: Alignment.center,
-            child: const Text('Pause Test', style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),),
+          //Get.back();
+          // Optionally show a confirmation message
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Test paused. You can resume where you left off.'))
+          );
+          // Get.to(LastMinuteRevision(path: widget.path,));
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 15),
+          decoration: BoxDecoration(
+              color: redColor,
+              boxShadow:const [
+                BoxShadow(
+                  color: whiteColor,
+                )
+              ],
+              borderRadius: BorderRadius.circular(10)
           ),
+          height: 60,
+          alignment: Alignment.center,
+          child: const Text('Pause Test', style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),),
         ),
+      ),
       body: SingleChildScrollView(
         child: KeyedSubtree(
           key: ValueKey(currentIndex),
@@ -854,14 +369,14 @@ class _MockExamScreenState extends State<MockExamScreen> {
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: MathText(
-                      expression: question.question ?? '',
-                      height: estimateHeight(question.question ?? ''),
+                      expression: question?.question ?? '',
+                      height: estimateHeight(question?.question ?? ''),
                     ),
                   ),
                 ),
               ),
               ...List.generate(4, (index) {
-                final opt = question.toJson()['option_${index + 1}'];
+                final opt = question?.toJson()['option_${index + 1}'];
                 if (opt == null || opt.toString().trim().isEmpty) return const SizedBox();
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
@@ -912,6 +427,56 @@ class _MockExamScreenState extends State<MockExamScreen> {
     );
   }
 
+// ... (keep existing methods like _startTimer, _submitAnswer, _showResultPopup,
+// estimateHeight, estimateOptionsHeight, etc. unchanged)
+
+  void _startTimer() {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (duration.inSeconds == 0) {
+        timer.cancel();
+        _showResultPopup();
+      } else {
+        setState(() {
+          duration -= const Duration(seconds: 1);
+        });
+      }
+    });
+  }
+
+  void _submitAnswer(String answer) {
+    if (questions.isEmpty) return;
+
+    final current = questions[currentIndex];
+    selectedAnswers[currentIndex] = answer;
+
+    if (answer.trim() == current.answer?.trim()) {
+      correct++;
+    } else {
+      wrong++;
+    }
+
+    if (currentIndex + 1 < questions.length) {
+      setState(() {
+        currentIndex++;
+        selectedOption = null;
+      });
+    } else {
+      countdownTimer?.cancel();
+      _showResultPopup();
+    }
+  }
+  Future<void> _clearSavedExamState() async {
+    await prefs.remove('mock_exam_current_index');
+    await prefs.remove('mock_exam_correct');
+    await prefs.remove('mock_exam_wrong');
+    await prefs.remove('mock_exam_selected_answers');
+    await prefs.remove('mock_exam_subject_id');
+    await prefs.remove('mock_exam_title');
+    await prefs.remove('mock_exam_path');
+    await prefs.remove('mock_exam_remaining_time');
+    await prefs.remove('mock_exam_start_time');
+    await prefs.remove('mock_exam_questions'); // Clear saved questions
+  }
   Future<void> _showResultPopup() async {
     // Save the exam result first
     await _saveExamResult();
@@ -961,7 +526,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     final longLines = text.split('\n').where((line) => line.length > 50).length;
     final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
 
-    print("Lines="+ lines.toString() + "LongLines=" + longLines.toString());
+    //print("Lines="+ lines.toString() + "LongLines=" + longLines.toString());
     // Base height calculation
     double height = (lines + longLines) * 20.0;
     height = height * 2.5;
@@ -985,7 +550,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     final longLines = text.split('\n').where((line) => line.length > 50).length;
     final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt');
 
-    print("Lines="+ lines.toString() + "LongLines=" + longLines.toString());
+    //print("Lines="+ lines.toString() + "LongLines=" + longLines.toString());
     // Base height calculation
     double height = (lines + longLines) * 10.0;
     //height = height * 2.5;

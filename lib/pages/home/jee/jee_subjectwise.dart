@@ -12,7 +12,9 @@ import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
 import '../../last_minute_revision/last_minute_revision.dart';
+import 'mock_exam/MockExamInstructions.dart';
 import 'mock_exam/MockExamScreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class JeeSubjectwise extends StatefulWidget {
   String path;
@@ -406,7 +408,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
     );
   }
 
-  instructionMockExam(String subjectId, String title) {
+  /*instructionMockExam(String subjectId, String title) {
     return showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -441,5 +443,67 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
             ],
           );
         });
+  }*/
+  Future<void> instructionMockExam(String subjectId, String title) async {
+    // Determine if this is PCB (Biology) or PCM (Mathematics)
+    bool isPCB = title.toLowerCase().contains('pcb');
+
+
+    // Call the new function with all required parameters
+    showMockExamInstructions(context, subjectId, title, isPCB);
+
+  }
+
+  Future<String> _getCurrentLevel() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('currentLevel') ?? 's'; // Default to 's' if not set
+  }
+
+  final levelNames = {
+    's': 'Simple',
+    'm': 'Medium',
+    'c': 'Complex',
+    'd': 'Difficult',
+    'a': 'Advanced',
+  };
+
+  void showMockExamInstructions(BuildContext context, String subjectId, String title, bool isPCB) async {
+    final currentLevel = await _getCurrentLevel();
+    final instructions = MockExamInstructions.instructions[currentLevel]?[isPCB] ?? 'No instructions available.';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Level ${levelNames[currentLevel] ?? currentLevel.toUpperCase()} Instructions',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(child: Text(instructions)),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge),
+            child: const Text('Yes'),
+            onPressed: () {
+              Navigator.of(context).pop();
+              Get.to(() => MockExamScreen(
+                subjectId: subjectId,
+                title: title,
+                path: 'JEE/MCQ/sigma_data.json',
+                  isPCB: isPCB
+              ));
+            },
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge),
+            child: const Text('No'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

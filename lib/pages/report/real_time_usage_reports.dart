@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -178,6 +180,64 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     });
   }
 
+  // Method to load mock exam results
+  Future<List<Map<String, dynamic>>> _loadMockExamResults(bool isPCB) async {
+    final prefs = await SharedPreferences.getInstance();
+    final examAttemptsJson = prefs.getString('mock_exam_attempts') ?? '[]';
+    final List<dynamic> examAttempts = jsonDecode(examAttemptsJson);
+
+    // Filter results by PCB/PCM and sort by date
+    return examAttempts
+        .where((exam) => exam['isPCB'] == isPCB)
+        .map((exam) => exam as Map<String, dynamic>)
+        .toList()
+        .reversed
+        .toList();
+  }
+
+// Method to calculate stats for competitive exams
+  Future<Map<String, dynamic>> _calculateExamStats(bool isPCB) async {
+    final results = await _loadMockExamResults(isPCB);
+    if (results.isEmpty) {
+      return {
+        'attempts': 0,
+        'averageScore': 0.0,
+        'highestScore': 0.0,
+        'lowestScore': 0.0,
+        'currentLevel': 'Not started',
+      };
+    }
+
+    final scores = results.map((r) => double.parse(r['score'].toString())).toList();
+    final average = scores.reduce((a, b) => a + b) / scores.length;
+    final highest = scores.reduce((a, b) => a > b ? a : b);
+    final lowest = scores.reduce((a, b) => a < b ? a : b);
+
+    // Determine current level based on average score
+    String currentLevel;
+    if (average >= 95) {
+      currentLevel = 'Advance';
+    } else if (average >= 90) {
+      currentLevel = 'Difficult';
+    } else if (average >= 80) {
+      currentLevel = 'Complex';
+    } else if (average >= 70) {
+      currentLevel = 'Medium';
+    } else if (average >= 60) {
+      currentLevel = 'Simple';
+    } else {
+      currentLevel = 'Simple';
+    }
+
+    return {
+      'attempts': results.length,
+      'averageScore': average,
+      'highestScore': highest,
+      'lowestScore': lowest,
+      'currentLevel': currentLevel,
+    };
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -259,6 +319,10 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   }
 
   Widget _buildCourseProgressSection() {
+    // Parse the percentage value safely
+    final percentageValue = double.tryParse(totalpercentageValue ?? '0') ?? 0;
+    final progressValue = percentageValue / 100;
+
     return Card(
       elevation: 4,
       child: Padding(
@@ -272,15 +336,19 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
             ),
             const SizedBox(height: 16),
             LinearProgressIndicator(
-              value: (double.tryParse(totalpercentageValue))!/100,
+              value: progressValue, // This is now properly typed as double
               minHeight: 20,
               backgroundColor: Colors.grey[300],
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
             ),
             const SizedBox(height: 8),
-            Text('Overall: ${totalpercentageValue.toString()}% (Pending ${100-double.parse(totalpercentageValue)}%)', style: TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 16
-            ),),
+            Text(
+              'Overall: ${percentageValue.toStringAsFixed(1)}% (Pending ${(100 - percentageValue).toStringAsFixed(1)}%)',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16
+              ),
+            ),
             const SizedBox(height: 16),
             Container(
               height: 100,
@@ -325,7 +393,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
             const SizedBox(height: 16),
 
             Container(
-              height: 150,
+              height: 180,
               child: FutureBuilder<Map<String, double>>(
                 future: getAllSubjectPercentages(),
                 builder: (context, snapshot) {
@@ -473,6 +541,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     );
   }
 
+  // Update the _buildCompetitiveExamsSection widget
   Widget _buildCompetitiveExamsSection() {
     return Card(
       elevation: 4,
@@ -486,9 +555,50 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _buildCompetitiveExam('JEE', 'PCM'),
-            _buildCompetitiveExam('CET', 'PCM/PCB'),
-            _buildCompetitiveExam('NEET', 'PCB'),
+
+            // PCM Section
+            FutureBuilder<Map<String, dynamic>>(
+              future: _calculateExamStats(false),
+              builder: (context, snapshot) {
+                final data = snapshot.data ?? {
+                  'attempts': 0,
+                  'averageScore': 0,
+                  'highestScore': 0,
+                  'lowestScore': 0,
+                  'currentLevel': 'Not started',
+                };
+
+                return _buildExamPerformanceTable(
+                  'JEE (PCM)',
+                  'Physics, Chemistry, Mathematics',
+                  data,
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // PCB Section (only show if PCB is enabled)
+            if (showJEE)
+              FutureBuilder<Map<String, dynamic>>(
+                future: _calculateExamStats(true),
+                builder: (context, snapshot) {
+                  final data = snapshot.data ?? {
+                    'attempts': 0,
+                    'averageScore': 0,
+                    'highestScore': 0,
+                    'lowestScore': 0,
+                    'currentLevel': 'Not started',
+                  };
+
+                  return _buildExamPerformanceTable(
+                    'NEET (PCB)',
+                    'Physics, Chemistry, Biology',
+                    data,
+                  );
+                },
+              ),
+
             const SizedBox(height: 8),
             const Text(
               'There will be five level Mock Examinations',
@@ -500,85 +610,186 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     );
   }
 
-  Widget _buildCompetitiveExam(String exam, String subjects) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            exam,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Text(
-            'Subjects: $subjects',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-          Container(
-            child: Row(
-              children: [
-                Expanded(flex: 2,child: Text('Present Level', style: TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(flex:2,child: Text('Attempted', style: TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(flex:2,child: Text('Average Score', style: TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(flex:2,child: Text('Lowest Score', style: TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(flex:2,child: Text('Highest Score', style: TextStyle(fontWeight: FontWeight.bold))),
-               // Expanded(flex:2,child: Text('Performance', style: TextStyle(fontWeight: FontWeight.bold)))
-              ],
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                Expanded(
-                    flex: 2,
-                    child: Text('Simple', style: TextStyle(fontWeight: FontWeight.bold,))),
-                Expanded(
-                    flex: 2,
-                    child: Text('0', style: TextStyle(fontWeight: FontWeight.bold))), // Example data
-                Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Avg: 0%', style: TextStyle( // Example data
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        )), // Example data
-                        // Example data
-                      ],
-                    )),
-                Expanded(
-                    flex: 2,
-                    child: Text('Low: 0%', style: TextStyle( // Example data
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ))),
-                Expanded(
-                    flex: 2,
-                    child: Text('High: 0%', style: TextStyle( // Example data
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ))),
+// Helper widget to build exam performance table
+  Widget _buildExamPerformanceTable(String exam, String subjects, Map<String, dynamic> data) {
+    // Convert all numeric values to double
+    final attempts = (data['attempts'] as int).toDouble();
+    final averageScore = (data['averageScore'] as num).toDouble();
+    final highestScore = (data['highestScore'] as num).toDouble();
+    final lowestScore = (data['lowestScore'] as num).toDouble();
+    final currentLevel = data['currentLevel'] as String;
 
-              ],
+    // Load mock exam results to count attempts per level
+    final isPCB = exam.contains('PCB');
+
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _loadMockExamResults(isPCB),
+      builder: (context, snapshot) {
+        // Initialize level counters
+        Map<String, int> levelCounts = {
+          'Simple': 0,
+          'Medium': 0,
+          'Complex': 0,
+          'Difficult': 0,
+          'Advance': 0,
+        };
+
+        // Count attempts per level if we have data
+        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          for (var attempt in snapshot.data!) {
+            final score = double.parse(attempt['score'].toString());
+            String level;
+            if (score >= 95) {
+              level = 'Advance';
+            } else if (score >= 90) {
+              level = 'Difficult';
+            } else if (score >= 80) {
+              level = 'Complex';
+            } else if (score >= 70) {
+              level = 'Medium';
+            } else {
+              level = 'Simple';
+            }
+            levelCounts[level] = (levelCounts[level] ?? 0) + 1;
+          }
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              exam,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          ),
-          const SizedBox(height: 8),
-          for (var i = 1; i <= 5; i++)
+            Text(
+              'Subjects: $subjects',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 8),
+            // Stats Header
+            Container(
+              child: Row(
+                children: [
+                  Expanded(flex: 2, child: Text('Present Level', style: TextStyle(fontWeight: FontWeight.bold))),
+                  Expanded(flex: 2, child: Text('Attempted', style: TextStyle(fontWeight: FontWeight.bold))),
+                  Expanded(flex: 2, child: Text('Average Score', style: TextStyle(fontWeight: FontWeight.bold))),
+                  Expanded(flex: 2, child: Text('Lowest Score', style: TextStyle(fontWeight: FontWeight.bold))),
+                  Expanded(flex: 2, child: Text('Highest Score', style: TextStyle(fontWeight: FontWeight.bold))),
+                ],
+              ),
+            ),
+            // Stats Values
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(4),
+              ),
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      currentLevel,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _getLevelColor(currentLevel),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      attempts.toStringAsFixed(0),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '${averageScore.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _getScoreColor(averageScore),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '${lowestScore.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _getScoreColor(lowestScore),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '${highestScore.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _getScoreColor(highestScore),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Level attempts
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2.0),
-              child: Text('Level $i: Not attempted yet'),
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Text(
+                'Level Attempts:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-          const Text('Present Status: Not started'),
-          const Divider(),
-        ],
-      ),
+            for (var level in ['Simple', 'Medium', 'Complex', 'Difficult', 'Advance'])
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text('Level $level'),
+                    ),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        'Attempted: ${levelCounts[level] ?? 0} times',
+                        style: TextStyle(
+                          color: level == currentLevel ? Colors.green : Colors.black,
+                          fontWeight: level == currentLevel ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 4),
+            Text(
+              'Current Status: $currentLevel',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: _getLevelColor(currentLevel),
+              ),
+            ),
+            const Divider(),
+          ],
+        );
+      },
     );
+  }
+
+// Helper method to get color based on score
+  Color _getScoreColor(double score) {
+    if (score >= 90) return Colors.green;
+    if (score >= 80) return Colors.lightGreen;
+    if (score >= 70) return Colors.blue;
+    if (score >= 60) return Colors.orange;
+    return Colors.red;
   }
 
   Widget _buildMetricCard(String title, String value) {
