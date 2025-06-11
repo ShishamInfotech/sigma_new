@@ -563,6 +563,23 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
               onPressed: () async {
                 final prefs = await SharedPreferences.getInstance();
 
+                final subjectTitle = widget.title;
+
+                final attemptData = prefs.getString('mock_attempt_counts');
+                Map<String, int> attemptCounts = {};
+
+                if (attemptData != null) {
+                  try {
+                    attemptCounts = Map<String, int>.from(jsonDecode(attemptData));
+                  } catch (_) {
+                    attemptCounts = {};
+                  }
+                }
+
+                attemptCounts[subjectTitle] = (attemptCounts[subjectTitle] ?? 0) + 1;
+
+
+
                 final newSubmission = {
                   'title': widget.title,
                   'timestamp': DateTime.now().toIso8601String(),
@@ -591,6 +608,8 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
 
                 // Save updated list
                 await prefs.setString('mock_submissions', jsonEncode(allSubmissions));
+                // Save back to SharedPreferences
+                await prefs.setString('mock_attempt_counts', jsonEncode(attemptCounts));
 
                 // Optionally: Navigate to homepage or evaluation
                 Get.offAll(HomePage());

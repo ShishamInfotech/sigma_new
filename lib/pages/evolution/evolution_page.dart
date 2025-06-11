@@ -87,12 +87,13 @@ class _EvaluationPageState extends State<EvaluationPage> {
                           itemCount: submissions.length,
                           itemBuilder: (context, index) {
                             final sub = submissions[index];
+                            print("Subject ${sub["questions"][0]["stream"]}");
                             final title = sub['title'] ?? 'Untitled';
                             final timestamp = sub['timestamp'] ?? '';
                             final dateTime = DateTime.tryParse(timestamp);
 
                             return ListTile(
-                              title: Text(title),
+                              title: Text("Class:${sub["questions"][0]["stream"]} $title"),
                               subtitle: Text(dateTime != null
                                   ? '${dateTime.toLocal()}'
                                   : 'Unknown time'),

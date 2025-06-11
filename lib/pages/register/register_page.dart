@@ -15,23 +15,40 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   String? selectedTitle;
-  String? selectedStandardString;
-  String? selectedBoardString;
-  String? selectedCourseString;
-
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
 
   EnrolConfigStandard? selectedStandard;
   EnrolConfigBoard? selectedBoard;
-  EnrolConfigCourses? selectedCourse;
+  List<EnrolConfigCourses> selectedCourses = [];
 
   late Future<Map<String, dynamic>> enrolDataFuture;
 
-  List<EnrolConfigCourses> selectedCourses = [] ;
+  @override
+  void initState() {
+    super.initState();
+    enrolDataFuture = Future.wait([
+      ConfigLoader.getEnrolConfigStandard(),
+      ConfigLoader.getEnrolConfigBoard(),
+      ConfigLoader.getEnrolConfigCourses(),
+    ]).then((results) {
+      return {
+        'standard': results[0] ?? [],
+        'board': results[1] ?? [],
+        'courses': results[2] ?? [],
+      };
+    });
+  }
 
+  List<EnrolConfigCourses> getFilteredCourses(List<EnrolConfigCourses> courses) {
+    if (selectedStandard != null && selectedBoard != null) {
+      final filterKey = "${selectedStandard!.stdID}_${selectedBoard!.boardKey}";
+      return courses.where((course) => course.stdBoardKey == filterKey).toList();
+    }
+    return [];
+  }
 
-  void _showMultiSelectDialog(List coursesList) async {
+  void _showMultiSelectDialog(List<EnrolConfigCourses> coursesList) {
     showDialog(
       context: context,
       builder: (context) {
@@ -53,9 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             selectedCourses.remove(course);
                           }
                         });
-
-                        // Update the main UI in real-time
-                        setState(() {});
+                        setState(() {}); // Update main UI
                       },
                     );
                   }).toList(),
@@ -74,31 +89,32 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    enrolDataFuture = Future.wait([
-      ConfigLoader.getEnrolConfigStandard(),
-      ConfigLoader.getEnrolConfigBoard(),
-      ConfigLoader.getEnrolConfigCourses(),
-    ]).then((results) {
-      return {
-        'standard': results[0] ?? [],
-        'board': results[1] ?? [],
-        'courses': results[2] ?? [],
-      };
-    });
-  }
-
-  /// Filters courses based on selected Standard and Board.
-  List<EnrolConfigCourses> getFilteredCourses(List<EnrolConfigCourses> courses) {
-    print("SelectedCon ${selectedStandard != null && selectedBoard != null}");
-    if (selectedStandard != null && selectedBoard != null) {
-      final filterKey = "${selectedStandard!.stdID}_${selectedBoard!.boardKey}";
-     // print("List ${courses.where((course) => course.stdBoardKey == filterKey).toList()} CC ${}");
-      return courses.where((course) => course.stdBoardKey == filterKey).toList();
+  void _saveData() {
+    if (selectedTitle == null ||
+        firstNameController.text.isEmpty ||
+        lastNameController.text.isEmpty ||
+        selectedStandard == null ||
+        selectedBoard == null ||
+        selectedCourses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields before continuing")),
+      );
+      return;
     }
-    return [];
+
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString('title', selectedTitle!);
+      prefs.setString('firstName', firstNameController.text);
+      prefs.setString('lastName', lastNameController.text);
+      prefs.setString('standard', selectedStandard!.name);
+      prefs.setString('board', selectedBoard!.board);
+      prefs.setString('course', selectedCourses.map((e) => e.course).join(", "));
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const RegisterSuccessPage()),
+      );
+    });
   }
 
   @override
@@ -107,255 +123,125 @@ class _RegisterPageState extends State<RegisterPage> {
       future: enrolDataFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         if (snapshot.hasError || snapshot.data == null) {
-          return const Scaffold(
-            body: Center(child: Text("Error loading enrollment configurations")),
-          );
+          return const Scaffold(body: Center(child: Text("Error loading config")));
         }
+
         final standardList = snapshot.data!['standard'] as List<EnrolConfigStandard>;
         final boardList = snapshot.data!['board'] as List<EnrolConfigBoard>;
         final coursesList = snapshot.data!['courses'] as List<EnrolConfigCourses>;
-
-        // Hardcoded title dropdown values.
-        final titleList = ["Mr", "Ms"];
-        // Filter courses based on selected standard and board.
         final filteredCourses = getFilteredCourses(coursesList);
+        final titleList = ["Mr", "Ms"];
 
         return Scaffold(
           backgroundColor: backgroundColor,
           body: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.15),
                 Center(
                   child: Card(
                     elevation: 6,
-                    shadowColor: blackColor,
                     child: Container(
                       width: MediaQuery.of(context).size.width * 0.7,
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: backgroundColor,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(top: 10.0),
-                            child: Text("Registration", style: black20w400MediumTextStyle),
-                          ),
+                          const Text("Registration", style: black20w400MediumTextStyle),
                           const Text("Register to your account", style: grey14MediumTextStyle),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Title Dropdown
-                                const Text("Title", style: black16MediumTextStyle),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey, width: 1),
-                                    borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                                  ),
-                                  height: MediaQuery.of(context).size.height * 0.05,
-                                  width: MediaQuery.of(context).size.width * 0.9,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<String>(
-                                        value: selectedTitle,
-                                        isExpanded: true,
-                                        hint: const Text("Select", style: grey16MediumTextStyle),
-                                        onChanged: (newValue) {
-                                          setState(() {
-                                            selectedTitle = newValue;
-                                          });
-                                        },
-                                        items: titleList.map((valueItem) {
-                                          return DropdownMenuItem<String>(
-                                            value: valueItem,
-                                            child: Text(valueItem),
-                                          );
-                                        }).toList(),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // First Name Field
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 5.0),
-                                  child: Text("First Name", style: black16MediumTextStyle),
-                                ),
-                                Container(
-                                  decoration: const BoxDecoration(
-                                    borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                                  ),
-                                  height: MediaQuery.of(context).size.height * 0.05,
-                                  width: MediaQuery.of(context).size.width * 0.9,
-                                  child: TextFormField(
-                                    controller: firstNameController,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-                                      hintText: "First Name",
-                                      hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w400),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(15.0),
-                                        gapPadding: 20,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Last Name Field
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 5.0),
-                                  child: Text("Last Name", style: black16MediumTextStyle),
-                                ),
-                                Container(
-                                  decoration: const BoxDecoration(
-                                    borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                                  ),
-                                  height: MediaQuery.of(context).size.height * 0.05,
-                                  width: MediaQuery.of(context).size.width * 0.9,
-                                  child: TextFormField(
-                                    controller: lastNameController,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-                                      hintText: "Last Name",
-                                      hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w400),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(15.0),
-                                        gapPadding: 20,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Standard Dropdown
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 5.0),
-                                  child: Text("Standard", style: black16MediumTextStyle),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey, width: 1),
-                                    borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                                  ),
-                                  height: MediaQuery.of(context).size.height * 0.05,
-                                  width: MediaQuery.of(context).size.width * 0.9,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<EnrolConfigStandard>(
-                                        value: selectedStandard,
-                                        isExpanded: true,
-                                        hint: const Text("Select", style: grey16MediumTextStyle),
-                                        onChanged: (newValue) {
-                                          setState(() {
-                                            selectedStandard = newValue;
-                                            // When standard changes, reset the course selection.
-                                            //selectedCourse = null;
-                                          });
-                                        },
-                                        items: standardList.map((valueItem) {
-                                          return DropdownMenuItem<EnrolConfigStandard>(
-                                            value: valueItem,
-                                            child: Text(valueItem.name),
-                                          );
-                                        }).toList(),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Board Dropdown
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 5.0),
-                                  child: Text("Board", style: black16MediumTextStyle),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey, width: 1),
-                                    borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                                  ),
-                                  height: MediaQuery.of(context).size.height * 0.05,
-                                  width: MediaQuery.of(context).size.width * 0.9,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<EnrolConfigBoard>(
-                                        value: selectedBoard,
-                                        isExpanded: true,
-                                        hint: const Text("Select", style: grey16MediumTextStyle),
-                                        onChanged: (newValue) {
-                                          setState(() {
-                                            selectedBoard = newValue;
-                                            // When board changes, reset course selection.
-                                            print("Selected $selectedBoard");
-                                            //selectedCourse = null;
-                                          });
-                                        },
-                                        items: boardList.map((valueItem) {
-                                          return DropdownMenuItem<EnrolConfigBoard>(
-                                            value: valueItem,
-                                            child: Text(valueItem.board),
-                                          );
-                                        }).toList(),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Courses Dropdown (dependent on Standard & Board)
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 5.0),
-                                  child: Text("Courses", style: black16MediumTextStyle),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey, width: 1),
-                                    borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                                  ),
-                                  height: MediaQuery.of(context).size.height * 0.05,
-                                  width: MediaQuery.of(context).size.width * 0.9,
-                                  child: GestureDetector(
-                                    onTap: (){
-                                      _showMultiSelectDialog(coursesList);
+                          const SizedBox(height: 10),
 
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.blue, width: 1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              selectedCourses.isEmpty
-                                                  ? "Select Courses"
-                                                  : selectedCourses.map((e) => e.course).join(", "),
-                                              style: const TextStyle(fontSize: 16),
-                                            ),
-                                          ),
-                                          const Icon(Icons.arrow_drop_down, color: Colors.blue),
-                                        ],
-                                      ),
+                          // Title Dropdown
+                          _buildDropdown<String>(
+                            label: "Title",
+                            value: selectedTitle,
+                            hint: "Select",
+                            items: titleList,
+                            onChanged: (value) => setState(() => selectedTitle = value),
+                          ),
+
+                          // First Name
+                          _buildTextField("First Name", firstNameController),
+                          _buildTextField("Last Name", lastNameController),
+
+                          // Standard
+                          _buildDropdown<EnrolConfigStandard>(
+                            label: "Standard",
+                            value: selectedStandard,
+                            hint: "Select",
+                            items: standardList,
+                            onChanged: (value) => setState(() {
+                              selectedStandard = value;
+                              selectedCourses.clear(); // Reset courses
+                            }),
+                            itemToString: (e) => e.name,
+                          ),
+
+                          // Board
+                          _buildDropdown<EnrolConfigBoard>(
+                            label: "Board",
+                            value: selectedBoard,
+                            hint: "Select",
+                            items: boardList,
+                            onChanged: (value) => setState(() {
+                              selectedBoard = value;
+                              selectedCourses.clear();
+                            }),
+                            itemToString: (e) => e.board,
+                          ),
+
+                          // Course (Multi-select)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 5.0),
+                            child: Text("Courses", style: black16MediumTextStyle),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              if (selectedStandard == null || selectedBoard == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Please select Standard and Board first")),
+                                );
+                                return;
+                              }
+                              _showMultiSelectDialog(filteredCourses);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 5),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      selectedCourses.isEmpty
+                                          ? "Select Courses"
+                                          : selectedCourses.map((e) => e.course).join(", "),
+                                      style: const TextStyle(fontSize: 16),
                                     ),
                                   ),
-
-                                ),
-                                const SizedBox(height: 20),
-                                Text(
-                                  "Selected: ${selectedCourses.isEmpty ? "None" : selectedCourses.map((e) => e.course).join(", ")}",
-                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
-                              ],
+                                  const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                                ],
+                              ),
                             ),
-                          )
+                          ),
+                          const SizedBox(height: 10),
+
+                          Text(
+                            "Selected: ${selectedCourses.isEmpty ? "None" : selectedCourses.map((e) => e.course).join(", ")}",
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -368,14 +254,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xff7F0081),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
-                    onPressed: () {
-                      // TODO: Save registration data and update global config accordingly.
-                      _saveData();
-                    },
+                    onPressed: _saveData,
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -394,33 +275,66 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-
-  void _saveData() {
-    print('String Value ${selectedStandard!.name+selectedBoard!.board+selectedCourses.map((e) => e.course).join(", ")} ');
-    if (selectedTitle == null ||
-        firstNameController.text.isEmpty ||
-        lastNameController.text.isEmpty ||
-        selectedStandard == null ||
-        selectedBoard == null ||
-        selectedCourses.length==0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill all fields before continuing")),
-      );
-      return;
-    }
-
-
-
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setString('title', selectedTitle!);
-      prefs.setString('firstName', firstNameController.text);
-      prefs.setString('lastName', lastNameController.text);
-      prefs.setString('standard', selectedStandard!.name);
-      prefs.setString('board', selectedBoard!.board);
-      prefs.setString('course', selectedCourses.map((e) => e.course).join(", "));
-
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterSuccessPage()));
-    });
+  Widget _buildDropdown<T>({
+    required String label,
+    required T? value,
+    required String hint,
+    required List<T> items,
+    required void Function(T?) onChanged,
+    String Function(T)? itemToString,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(padding: const EdgeInsets.only(top: 5.0), child: Text(label, style: black16MediumTextStyle)),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          margin: const EdgeInsets.only(bottom: 5),
+          height: MediaQuery.of(context).size.height * 0.05,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<T>(
+                value: value,
+                isExpanded: true,
+                hint: Text(hint, style: grey16MediumTextStyle),
+                onChanged: onChanged,
+                items: items.map((item) {
+                  return DropdownMenuItem<T>(
+                    value: item,
+                    child: Text(itemToString != null ? itemToString(item) : item.toString()),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
+  Widget _buildTextField(String label, TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(padding: const EdgeInsets.only(top: 5.0), child: Text(label, style: black16MediumTextStyle)),
+        Container(
+          margin: const EdgeInsets.only(bottom: 5),
+          height: MediaQuery.of(context).size.height * 0.05,
+          child: TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+              hintText: label,
+              hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w400),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0), gapPadding: 20),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

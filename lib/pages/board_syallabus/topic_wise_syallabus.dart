@@ -59,13 +59,16 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
     if (!storedChapters.contains(chapterNumber)) {
       // Get the percentage (assuming it's the same for all questions in the chapter)
       final percentage = widget.pathQuestionList[0]["percentage"]?.toString() ?? "0";
+      final target_date = widget.pathQuestionList[0]["target_date"]?.toString() ?? "No Target Date";
 
       // Store the chapter percentage
       await prefs.setDouble('chapter_${chapterNumber}_percentage', double.parse(percentage));
+      await prefs.setString('chapter_${chapterNumber}_target', target_date);
 
       // Mark this chapter as stored
       storedChapters.add(chapterNumber);
       await prefs.setStringList('completed_chapters', storedChapters);
+
 
       print('Stored percentage $percentage for chapter $chapterNumber');
     }
