@@ -551,7 +551,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
         final sigmaList = decoded['sigma_data'] as List<dynamic>;
         final questionList = sigmaList.map((e) {
           final question = SubCahpDatum.fromJson(e);
-          question.subject = subject; // Ensure subject is set
+          question.question = subject; // Ensure subject is set
           return question;
         }).toList();
 
