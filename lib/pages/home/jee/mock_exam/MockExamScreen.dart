@@ -204,23 +204,23 @@ class _MockExamScreenState extends State<MockExamScreen> {
   List<SubCahpDatum> _filterQuestionsByComplexity(List<SubCahpDatum> allQuestions) {
     switch (currentLevel) {
       case 's': // Simple - 100% simple
-        return allQuestions.where((q) => q.complexity == QuestionComplexity.simple).toList();
+        return allQuestions.where((q) => q.complexity == 's').toList();
       case 'm': // Medium - 40% simple, 60% medium
-        final simple = allQuestions.where((q) => q.complexity == QuestionComplexity.simple).toList();
-        final medium = allQuestions.where((q) => q.complexity == QuestionComplexity.medium).toList();
+        final simple = allQuestions.where((q) => q.complexity == 's').toList();
+        final medium = allQuestions.where((q) => q.complexity == 'm').toList();
         return [...simple.take((simple.length * 0.4).round()), ...medium];
       case 'c': // Complex - 40% medium, 60% complex
-        final medium = allQuestions.where((q) => q.complexity == QuestionComplexity.medium).toList();
-        final complex = allQuestions.where((q) => q.complexity == QuestionComplexity.complex).toList();
+        final medium = allQuestions.where((q) => q.complexity == 'm').toList();
+        final complex = allQuestions.where((q) => q.complexity == 'c').toList();
         return [...medium.take((medium.length * 0.4).round()), ...complex];
       case 'd': // Difficult - 50% complex, 50% difficult
-        final complex = allQuestions.where((q) => q.complexity == QuestionComplexity.complex).toList();
-        final difficult = allQuestions.where((q) => q.complexity == QuestionComplexity.difficult).toList();
+        final complex = allQuestions.where((q) => q.complexity == 'c').toList();
+        final difficult = allQuestions.where((q) => q.complexity == 'd').toList();
         return [...complex.take((complex.length * 0.5).round()), ...difficult];
       case 'a': // Advanced - 30% complex, 30% difficult, 40% advanced
-        final complex = allQuestions.where((q) => q.complexity == QuestionComplexity.complex).toList();
-        final difficult = allQuestions.where((q) => q.complexity == QuestionComplexity.difficult).toList();
-        final advanced = allQuestions.where((q) => q.complexity == QuestionComplexity.advanced).toList();
+        final complex = allQuestions.where((q) => q.complexity == 'c').toList();
+        final difficult = allQuestions.where((q) => q.complexity == 'd').toList();
+        final advanced = allQuestions.where((q) => q.complexity == 'a').toList();
         return [
           ...complex.take((complex.length * 0.3).round()),
           ...difficult.take((difficult.length * 0.3).round()),
