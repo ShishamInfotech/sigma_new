@@ -206,7 +206,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     if (questions.length > 10) {
       final firstQuestions = questions.sublist(0, 10);
       final remainingQuestions = questions.sublist(10);
-      remainingQuestions.shuffle();
+      remainingQuestions;
 
       setState(() {
         questions = firstQuestions + remainingQuestions;
