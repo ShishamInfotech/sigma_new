@@ -25,9 +25,6 @@ class MainActivity : FlutterFragmentActivity() {
             .registry
             .registerViewFactory("mathview-native", MathViewFactory())
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "mathview/height")
-            .also { MethodChannelHandler.channel = it }
-
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {

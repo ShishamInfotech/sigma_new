@@ -33,7 +33,7 @@ class _MathTextState extends State<MathText> {
         viewType: 'mathview-native',
         layoutDirection: TextDirection.ltr,
         creationParams: {
-          'expression': sanitizedExpression,
+          'expression': widget.expression,
           'textSize': 24.0,
         },
         creationParamsCodec: const StandardMessageCodec(),

@@ -1,5 +1,6 @@
 
 class SubCahpDatum {
+  String? subject;
   String? subchapterid;
   String? subchapter;
   String? subchapterNumber;
@@ -44,6 +45,7 @@ class SubCahpDatum {
     this.option5,
     this.answer,
     this.ansExplaination,
+    this.subject,
   });
 
   factory SubCahpDatum.fromJson(Map<String, dynamic> json) => SubCahpDatum(
@@ -68,6 +70,7 @@ class SubCahpDatum {
     option5: json['option_5'],
     answer: json['answer'],
     ansExplaination: json['ans_explaination'],
+    subject: json["subject"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -92,5 +95,6 @@ class SubCahpDatum {
     'option_5': option5,
     'answer': answer,
     'ans_explaination': ansExplaination,
+    "subject": subject,
   };
 }

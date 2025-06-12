@@ -6,6 +6,8 @@ import 'package:sigma_new/pages/evolution/evolution_page.dart';
 import 'package:sigma_new/pages/exam_preparation/exam_preparation.dart';
 import 'package:sigma_new/pages/home/home.dart';
 import 'package:sigma_new/pages/usage_report/usage_report_page.dart';
+import 'package:sigma_new/side_navigation/about_us.dart';
+import 'package:sigma_new/side_navigation/sigma_team.dart';
 import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
@@ -81,14 +83,20 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 title: const Text('About Us'),
                 leading: const Icon(Icons.details),
                 onTap: () {
-                  Get.snackbar("About Us", "About us Click");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AboutUs()),
+                  );
                 }
               ),
               ListTile(
                   title: const Text('Team'),
                   leading: const Icon(Icons.person),
                   onTap: () {
-                    Get.snackbar("Team", "Team Click");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SigmaTeam()),
+                    );
                   }
               ),
               ListTile(
@@ -133,7 +141,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
                     "$company",
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                    style: TextStyle(color: Colors.black, fontSize: 16),
                   ),
                 ),
               )
