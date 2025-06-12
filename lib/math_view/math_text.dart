@@ -13,7 +13,7 @@ class MathText extends StatefulWidget {
 
 class _MathTextState extends State<MathText> {
   String sanitizeMathExpression(String input) {
-
+  if(input.contains("matrix")) {
     return input
         .replaceAll(r'\\begin', r'\begin')
         .replaceAll(r'\\end', r'\end')
@@ -22,6 +22,9 @@ class _MathTextState extends State<MathText> {
         .replaceAll(r'\left[\begin', r'\(\left[\begin')
         .replaceAll(r'\right]', r'\right]\)')
         .replaceAll(r'z-[1', r'z_{1');
+  }else{
+    return input;
+  }
   }
 
   @override
@@ -33,7 +36,7 @@ class _MathTextState extends State<MathText> {
         viewType: 'mathview-native',
         layoutDirection: TextDirection.ltr,
         creationParams: {
-          'expression': widget.expression,
+          'expression': sanitizedExpression,//widget.expression,
           'textSize': 24.0,
         },
         creationParamsCodec: const StandardMessageCodec(),
