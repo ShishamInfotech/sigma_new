@@ -192,6 +192,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       }
 
       setState(() {
+
         questions.addAll(biologyQuestions);
         questions.addAll(physicsQuestions);
         questions.addAll(chemistryQuestions);
@@ -206,7 +207,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     if (questions.length > 10) {
       final firstQuestions = questions.sublist(0, 10);
       final remainingQuestions = questions.sublist(10);
-      remainingQuestions.shuffle();
+      //remainingQuestions.shuffle();
 
       setState(() {
         questions = firstQuestions + remainingQuestions;
@@ -335,6 +336,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
         return question;
       }).toList();
 
+      allQuestions.shuffle();
       // Filter questions based on current level
       List<SubCahpDatum> filteredQuestions = _filterQuestionsByComplexity(allQuestions);
 
