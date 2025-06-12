@@ -192,6 +192,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       }
 
       setState(() {
+
         questions.addAll(biologyQuestions);
         questions.addAll(physicsQuestions);
         questions.addAll(chemistryQuestions);
@@ -206,11 +207,29 @@ class _MockExamScreenState extends State<MockExamScreen> {
     if (questions.length > 10) {
       final firstQuestions = questions.sublist(0, 10);
       final remainingQuestions = questions.sublist(10);
-      remainingQuestions;
+      //remainingQuestions.shuffle();
 
       setState(() {
         questions = firstQuestions + remainingQuestions;
       });
+    }
+  }
+
+
+  Future<void> _loadPhyQuestion()async{
+    final phyFiles = await SdCardUtility.getFileListBasedOnPref(context, "JEE/MCQ", PHY_FILE_PREFIX) ?? [];
+    final phyUri = FileUri(
+      files: phyFiles,
+      perChapterCount: phyFiles.isNotEmpty ? PHYSICS_Q_COUNT ~/ phyFiles.length : 0,
+      remainCount: phyFiles.isNotEmpty ? PHYSICS_Q_COUNT % phyFiles.length : 0,
+    );
+
+    List<SubCahpDatum> physicsQuestions = [];
+    await _processFiles(phyUri, physicsQuestions, "Physics");
+
+    // Ensure exactly 50 Physics questions
+    if (physicsQuestions.length > PHYSICS_Q_COUNT) {
+      physicsQuestions = physicsQuestions.sublist(0, PHYSICS_Q_COUNT);
     }
   }
 
@@ -335,6 +354,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
         return question;
       }).toList();
 
+      allQuestions.shuffle();
       // Filter questions based on current level
       List<SubCahpDatum> filteredQuestions = _filterQuestionsByComplexity(allQuestions);
 
@@ -666,7 +686,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
-                  'Question ${currentIndex + 1} of ${questions.length}',
+                  'Question ${currentIndex + 1} of 198',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
