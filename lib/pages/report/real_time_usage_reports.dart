@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
@@ -51,6 +54,8 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     sharePreferenceData();
     _loadAttempts();
     subjectWiseTest();
+
+    saveAllDataToMemoryCard();
 
   }
 
@@ -961,4 +966,102 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       });
     }
   }
+
+  Future<void> saveAllDataToMemoryCard() async {
+    try {
+      // Prepare the data structure
+      final Map<String, dynamic> dataToSave = {
+        'study_time': {
+          'today': today.inSeconds,
+          'yesterday': yesterday.inSeconds,
+          'total': total.inSeconds,
+          'average': average.inSeconds,
+          'lowest': lowest.inSeconds,
+          'highest': highest.inSeconds,
+        },
+        'activity_counts': {
+          'video_count': videoCount,
+          'answer_count': answerCount,
+        },
+        'course_progress': {
+          'total_percentage': totalpercentageValue,
+          'subjects': await _getAllSubjectProgressData(),
+        },
+        'target_dates': _getTargetDatesData(),
+        'mock_exams': await _getMockExamData(),
+        'competitive_exams': await _getCompetitiveExamData(),
+        'metadata': {
+          'last_updated': DateTime.now().toIso8601String(),
+          'device_id': await _getDeviceId(),
+        }
+      };
+
+      // Convert to JSON string
+      final String jsonData = jsonEncode(dataToSave);
+
+      // Get the directory for saving
+      final directory = await getExternalStorageDirectory();
+      final filePath = '${directory?.path}/study_tracker_data.json';
+
+      // Write to file
+      final File file = File(filePath);
+      await file.writeAsString(jsonData);
+
+      print('Data saved successfully to: $filePath');
+    } catch (e) {
+      print('Error saving data: $e');
+    }
+  }
+
+// Helper methods for data preparation
+  Future<List<Map<String, dynamic>>> _getAllSubjectProgressData() async {
+    final subjectPercentages = await getAllSubjectPercentages();
+    return subjectPercentages.entries.map((entry) {
+      return {
+        'subject': entry.key,
+        'percentage': entry.value,
+      };
+    }).toList();
+  }
+
+  Map<String, dynamic> _getTargetDatesData() {
+    Map<String, dynamic> data = {};
+    for (int i = 0; i < subjects.length; i++) {
+      final subject = subjects[i];
+      final date = targetDate[i];
+      data[subject] = date == "null" ? null : date;
+    }
+    return data;
+  }
+
+  Future<Map<String, dynamic>> _getMockExamData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('mock_attempt_counts');
+    return data != null ? jsonDecode(data) : {};
+  }
+
+  Future<Map<String, dynamic>> _getCompetitiveExamData() async {
+    final pcmStats = await _calculateExamStats(false);
+    final pcbStats = await _calculateExamStats(true);
+
+    return {
+      'pcm': pcmStats,
+      'pcb': pcbStats,
+    };
+  }
+
+  Future<String> _getDeviceId() async {
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      final androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.id;
+    } else if (Platform.isIOS) {
+      final iosInfo = await deviceInfo.iosInfo;
+      return iosInfo.identifierForVendor ?? 'unknown-ios-device';
+    }
+    return 'unknown-device';
+  }
+
+
+
 }

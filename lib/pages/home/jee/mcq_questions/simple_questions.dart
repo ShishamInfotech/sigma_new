@@ -86,7 +86,13 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isSubmitted
+                          ? (isCorrect
+                          ? Colors.green.withOpacity(0.2)
+                          : (selectedAnswers[index] == option
+                          ? Colors.red.withOpacity(0.2)
+                          : Colors.transparent))
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.black),
                     ),
