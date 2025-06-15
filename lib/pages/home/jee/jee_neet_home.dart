@@ -6,6 +6,8 @@ import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/home/jee/jee_subjectwise.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import 'ComplexitySelectionScreen.dart';
+
   class JeeNeetHome extends StatefulWidget {
   const JeeNeetHome({super.key});
 
@@ -25,7 +27,9 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
       Menu(
           color: 0xFFF2C6DF,
           imagePath: 'assets/svg/concept.svg',
-          navigation: () {},
+          navigation: () {
+            Get.to(() => const ComplexitySelectionScreen());
+          },
           title: 'Concept'),
       Menu(
           color: 0xFFC5DEF2, // Corrected color code
@@ -99,8 +103,14 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
                           splashColor: Colors.transparent,
                           onTap: () {
                             if (examPreparationMenu[index].navigation != null) {
-                              examPreparationMenu[index].navigation!();
-                              Get.to(JeeSubjectwise(path: examPreparationMenu[index].title,));
+                              if(examPreparationMenu[index].title.contains('Concept')) {
+                                examPreparationMenu[index].navigation!();
+                                Get.to(ComplexitySelectionScreen());
+                              }else {
+                                examPreparationMenu[index].navigation!();
+                                Get.to(JeeSubjectwise(
+                                  path: examPreparationMenu[index].title,));
+                              }
                             }else{
                               print(
                                   'No navigation route defined for this menu item');

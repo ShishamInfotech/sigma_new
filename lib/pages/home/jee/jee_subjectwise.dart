@@ -18,8 +18,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class JeeSubjectwise extends StatefulWidget {
   String path;
+  final String? complexity;
+  final bool isConcept;
 
-  JeeSubjectwise({required this.path, super.key});
+  JeeSubjectwise({
+    required this.path,
+    this.complexity,
+    this.isConcept = false,
+    super.key
+  });
 
   @override
   State<JeeSubjectwise> createState() => _JeeSubjectwiseState();
@@ -91,11 +98,67 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
     return title;
   }
 
+  // subjectWiseTest() async {
+  //   var newPath;
+  //   var board;
+  //   // final prefs = await SharedPreferences.getInstance();
+  //   // String? course = prefs.getString('course');
+  //
+  //   if (widget.path.contains("Concept")) {
+  //     newPath = "/THEORY";
+  //   } else {
+  //     newPath = "/MCQ";
+  //   }
+  //
+  //   var inputFile = await SdCardUtility.getSubjectEncJsonData(
+  //       'JEE$newPath/sigma_data.json');
+  //
+  //   print("INput File  $inputFile");
+  //   Map<String, dynamic> parsedJson = jsonDecode(inputFile!);
+  //   // Extracting subject values
+  //   List<dynamic> sigmaData = parsedJson["sigma_data"];
+  //
+  //   subjects = sigmaData.map((data) => data["subject"].toString()).toList();
+  //   subjectsId = sigmaData.map((data) => data["subjectid"].toString()).toList();
+  //   // Get all subjects
+  //
+  //   if (!widget.path.contains("Concept")) {
+  //     for (int i = 0; i < subjects.length; i++) {
+  //       if (widget.path.removeAllWhitespace
+  //               .toLowerCase()
+  //               .contains("multiplechoicequestion") &&
+  //           !subjects[i].contains("Offline") &&
+  //           !subjects[i].contains("Mock")) {
+  //         subjectsTopic.add(subjects[i]);
+  //       }
+  //
+  //       if (widget.path.removeAllWhitespace
+  //               .toLowerCase()
+  //               .contains("subjectwiseexam") &&
+  //           subjects[i].contains("Offline")) {
+  //         subjectsTopic.add(subjects[i]);
+  //       }
+  //
+  //       if (widget.path.removeAllWhitespace
+  //               .toLowerCase()
+  //               .contains("mockexam") &&
+  //           subjects[i].contains("Mock")) {
+  //         subjectsTopic.add(subjects[i]);
+  //       }
+  //     }
+  //   } else {
+  //     subjectsTopic = subjects;
+  //   }
+  //
+  //   //removeTestSeriesFromSubjectTitle(subjects);
+  //
+  //   // Print subjects
+  //   print(subjects);
+  //   setState(() {});
+  // }
+
   subjectWiseTest() async {
     var newPath;
-    var board;
-    // final prefs = await SharedPreferences.getInstance();
-    // String? course = prefs.getString('course');
 
     if (widget.path.contains("Concept")) {
       newPath = "/THEORY";
@@ -106,25 +169,30 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
     var inputFile = await SdCardUtility.getSubjectEncJsonData(
         'JEE$newPath/sigma_data.json');
 
-    print("INput File  $inputFile");
     Map<String, dynamic> parsedJson = jsonDecode(inputFile!);
-    // Extracting subject values
     List<dynamic> sigmaData = parsedJson["sigma_data"];
+
+    // Apply complexity filter if it exists
+    if (widget.complexity != null) {
+      sigmaData = sigmaData.where((data) =>
+      data["complexity"]?.toString().toLowerCase() == widget.complexity!.toLowerCase()
+      ).toList();
+    }
 
     subjects = sigmaData.map((data) => data["subject"].toString()).toList();
     subjectsId = sigmaData.map((data) => data["subjectid"].toString()).toList();
-    // Get all subjects
 
     if (!widget.path.contains("Concept")) {
+      // Existing filtering logic for non-concept paths
       for (int i = 0; i < subjects.length; i++) {
         if (widget.path.removeAllWhitespace
-                .toLowerCase()
-                .contains("multiplechoicequestion") &&
+            .toLowerCase()
+            .contains("multiplechoicequestion") &&
             !subjects[i].contains("Offline") &&
             !subjects[i].contains("Mock")) {
           subjectsTopic.add(subjects[i]);
         }
-
+        // ... rest of your existing filtering logic
         if (widget.path.removeAllWhitespace
                 .toLowerCase()
                 .contains("subjectwiseexam") &&
@@ -143,13 +211,8 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
       subjectsTopic = subjects;
     }
 
-    //removeTestSeriesFromSubjectTitle(subjects);
-
-    // Print subjects
-    print(subjects);
     setState(() {});
   }
-
   @override
   Widget build(BuildContext context) {
     print("Subject ${widget.path}");
@@ -245,6 +308,14 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                         InkWell(
                           splashColor: Colors.transparent,
                           onTap: () {
+                            if (widget.isConcept) {
+                              // Directly navigate to JeeNeetConcept with the selected complexity
+                              Get.to(JeeNeetConcept(
+                                subjectId: subjectsId[index],
+                                complexity: widget.complexity, // Use the already selected complexity
+                                title: subjectsTopic[index],
+                              ));
+                            } else
                             if (examPreparationMenu[index].navigation != null) {
                               examPreparationMenu[index].navigation!();
                               if (widget.path.removeAllWhitespace
