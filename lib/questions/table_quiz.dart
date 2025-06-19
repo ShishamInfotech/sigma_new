@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,6 +27,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
   bool isLoading = true;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<Map<String, dynamic>> selectedQuestions = [];
+  List<Map<String, dynamic>> submissions = [];
 
   Map<String, dynamic> parsedJson = {};
   List<dynamic> sigmaData = [];
@@ -611,8 +613,13 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
                 // Save back to SharedPreferences
                 await prefs.setString('mock_attempt_counts', jsonEncode(attemptCounts));
 
+
+                loadSubmissions();
+
                 // Optionally: Navigate to homepage or evaluation
                 Get.offAll(HomePage());
+
+
               },
               child: const Text('Yes'),
             ),
@@ -626,6 +633,73 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
         );
       },
     );
+  }
+
+
+  Future<void> loadSubmissions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString('mock_submissions');
+    if (stored != null) {
+      try {
+        final parsed = jsonDecode(stored) as List;
+        submissions = parsed.map((e) => Map<String, dynamic>.from(e)).toList();
+      } catch (_) {
+        submissions = [];
+      }
+    }
+    await appendSubmissionsToSDCard(submissions);
+    setState(() {});
+  }
+
+
+  Future<void> appendSubmissionsToSDCard(List<Map<String, dynamic>> newSubmissions) async {
+
+
+    try {
+      final directory = await SdCardUtility.getBasePath();
+      final dir = Directory(directory);
+      final filePath = '$directory/mock_exam.json';
+      final file = File(filePath);
+
+      //  final file = File('${directory.path}/mock_exam.json');
+
+      List<Map<String, dynamic>> existingData = [];
+
+      // Read existing data if file exists
+      if (await file.exists()) {
+        final contents = await file.readAsString();
+        try {
+          final decoded = jsonDecode(contents);
+          if (decoded is List) {
+            existingData = decoded.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+          }
+        } catch (e) {
+          print('Could not decode existing file: $e');
+        }
+      }
+
+      // Extract existing timestamps for comparison
+      final existingTimestamps = existingData.map((e) => e['timestamp']?.toString()).toSet();
+
+      // Filter new submissions (only ones with unique timestamps)
+      final uniqueNewSubmissions = newSubmissions.where((entry) {
+        final ts = entry['timestamp']?.toString();
+        return ts != null && !existingTimestamps.contains(ts);
+      }).toList();
+
+      if (uniqueNewSubmissions.isEmpty) {
+        print('No new unique submissions to add.');
+        return;
+      }
+
+      // Append and save
+      existingData.addAll(uniqueNewSubmissions);
+      await file.writeAsString(jsonEncode(existingData));
+
+      print('Unique submissions appended successfully.');
+    } catch (e) {
+      print('Error appending submissions: $e');
+    }
   }
 
 }

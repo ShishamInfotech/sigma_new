@@ -1,6 +1,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sigma_new/pages/pdf/pdf_viewer.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
@@ -91,7 +92,10 @@ class _LibraryHomeState extends State<LibraryHome> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 48, color: color),
+                SvgPicture.asset(
+                  isFolder ? 'assets/svg/quick_guide.svg' : 'assets/svg/pdf.svg',
+                  fit: BoxFit.contain,
+                ),
                 SizedBox(height: 8),
                 Text(
                   name,

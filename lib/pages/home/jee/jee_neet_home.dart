@@ -27,9 +27,7 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
       Menu(
           color: 0xFFF2C6DF,
           imagePath: 'assets/svg/concept.svg',
-          navigation: () {
-            Get.to(() => const ComplexitySelectionScreen());
-          },
+          navigation: () {},
           title: 'Concept'),
       Menu(
           color: 0xFFC5DEF2, // Corrected color code
@@ -103,14 +101,8 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
                           splashColor: Colors.transparent,
                           onTap: () {
                             if (examPreparationMenu[index].navigation != null) {
-                              if(examPreparationMenu[index].title.contains('Concept')) {
-                                examPreparationMenu[index].navigation!();
-                                Get.to(ComplexitySelectionScreen());
-                              }else {
-                                examPreparationMenu[index].navigation!();
-                                Get.to(JeeSubjectwise(
-                                  path: examPreparationMenu[index].title,));
-                              }
+                              examPreparationMenu[index].navigation!();
+                              Get.to(JeeSubjectwise(path: examPreparationMenu[index].title,));
                             }else{
                               print(
                                   'No navigation route defined for this menu item');

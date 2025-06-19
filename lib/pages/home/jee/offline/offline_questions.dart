@@ -469,11 +469,8 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
   }
 }*/
 
-
-
-
-
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -541,6 +538,8 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
     };
 
     await prefs.setString('offline_quiz_${widget.chapterId}', jsonEncode(attempt));
+
+    saveMockAttemptsToSDCard();
   }
 
   void submitAnswer() {
@@ -830,4 +829,65 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
       ),
     );
   }
+
+
+
+  Future<void> saveMockAttemptsToSDCard() async {
+    // Ask for permission
+
+    // Collect current mock attempts from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final Map<String, dynamic> currentAttempts = {};
+
+    for (var key in prefs.getKeys()) {
+      if (key.startsWith('offline_quiz_')) {
+        final jsonStr = prefs.getString(key);
+        if (jsonStr != null) {
+          currentAttempts[key] = jsonDecode(jsonStr);
+        }
+      }
+    }
+
+    // Locate the storage directory
+
+    final directory = await SdCardUtility.getBasePath();
+    final dir = Directory(directory);
+    final filePath = '$directory/mock_exam_attempts.json';
+    final file = File(filePath);
+
+    Map<String, dynamic> existingAttempts = {};
+
+    if (await file.exists()) {
+      try {
+        final content = await file.readAsString();
+        existingAttempts = jsonDecode(content);
+      } catch (e) {
+        print("Error reading existing file: $e");
+        // fallback: treat as if empty
+      }
+    }
+
+    // Compare and only add new or changed attempts
+    bool hasNewData = false;
+    for (var key in currentAttempts.keys) {
+      final newData = jsonEncode(currentAttempts[key]);
+      final existingData = existingAttempts.containsKey(key)
+          ? jsonEncode(existingAttempts[key])
+          : null;
+
+      if (newData != existingData) {
+        existingAttempts[key] = currentAttempts[key];
+        hasNewData = true;
+      }
+    }
+
+    // Save if there's anything new or file doesn't exist
+    if (hasNewData || !(await file.exists())) {
+      await file.writeAsString(jsonEncode(existingAttempts));
+      print("Mock attempts saved to: $filePath");
+    } else {
+      print("No new data to write. File unchanged.");
+    }
+  }
+
 }

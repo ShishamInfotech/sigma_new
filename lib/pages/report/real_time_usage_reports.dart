@@ -9,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
 
-
 class StudyTrackerHomePage extends StatefulWidget {
   const StudyTrackerHomePage({super.key});
 
@@ -18,7 +17,6 @@ class StudyTrackerHomePage extends StatefulWidget {
 }
 
 class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
-
 
   Duration today = Duration.zero;
   Duration yesterday = Duration.zero;
@@ -35,6 +33,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
   int videoCount = 0;
   int answerCount = 0;
+
   List<String> courseList=[];
   bool showJEE=false;
   Map<String, int> attemptCounts = {};
@@ -55,8 +54,36 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     _loadAttempts();
     subjectWiseTest();
 
-    saveAllDataToMemoryCard();
+    fetchStudyTrackerData();
 
+  }
+
+
+  Future<void> fetchStudyTrackerData() async {
+    final directory = await SdCardUtility.getBasePath(); // Your custom utility
+    final dir = Directory(directory);
+    final filePath = '$directory/study_tracker_data.json';
+    final file = File(filePath);
+
+    if (await dir.exists()) {
+      if (await file.exists()) {
+        try {
+          final contents = await file.readAsString();
+          final jsonData = jsonDecode(contents);
+          print('Fetched Data: $jsonData');
+          loadDataFromMemoryCard();
+          // Use jsonData here...
+        } catch (e) {
+          print('Error reading JSON file: $e');
+        }
+      } else {
+        print('File does not exist at: $filePath');
+        saveAllDataToMemoryCard();
+      }
+    } else {
+      print('Directory does not exist: $directory');
+      saveAllDataToMemoryCard();
+    }
   }
 
 
@@ -261,7 +288,11 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       videoCount = videos;
       answerCount = answers;
     });
+
+
+    saveAllDataToMemoryCard();
   }
+
 
   // Method to load mock exam results
   Future<List<Map<String, dynamic>>> _loadMockExamResults(bool isPCB) async {
@@ -941,7 +972,6 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     }
   }
 
-
   Future<void> _loadAttempts() async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString('mock_attempt_counts');
@@ -1000,14 +1030,15 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       final String jsonData = jsonEncode(dataToSave);
 
       // Get the directory for saving
-      final directory = await getExternalStorageDirectory();
-      final filePath = '${directory?.path}/study_tracker_data.json';
+      final directory = await SdCardUtility.getBasePath();
+      final filePath = '${directory}/study_tracker_data.json';
 
       // Write to file
       final File file = File(filePath);
       await file.writeAsString(jsonData);
 
       print('Data saved successfully to: $filePath');
+
     } catch (e) {
       print('Error saving data: $e');
     }
@@ -1062,6 +1093,70 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     return 'unknown-device';
   }
 
+  Future<void> loadDataFromMemoryCard() async {
+    try {
+      final directory = await SdCardUtility.getBasePath();
+      final filePath = '${directory}/study_tracker_data.json';
+      final File file = File(filePath);
 
+      if (await file.exists()) {
+        final jsonData = await file.readAsString();
+        final Map<String, dynamic> data = jsonDecode(jsonData);
+
+        // Update your state with the loaded data
+        setState(() {
+          // Study time
+          today = Duration(seconds: data['study_time']['today'] ?? 0);
+          yesterday = Duration(seconds: data['study_time']['yesterday'] ?? 0);
+          total = Duration(seconds: data['study_time']['total'] ?? 0);
+          average = Duration(seconds: data['study_time']['average'] ?? 0);
+          lowest = Duration(seconds: data['study_time']['lowest'] ?? 0);
+          highest = Duration(seconds: data['study_time']['highest'] ?? 0);
+
+          // Activity counts
+          videoCount = data['activity_counts']['video_count'] ?? 0;
+          answerCount = data['activity_counts']['answer_count'] ?? 0;
+
+          // Course progress
+          totalpercentageValue = data['course_progress']['total_percentage'] ?? "0.0";
+
+          // You'll need to implement similar updates for other data
+        });
+
+        print("Total Value ${total} __ $answerCount ");
+        // You may also want to update SharedPreferences with this data
+        await _updateSharedPreferences(data);
+
+        print('Data loaded successfully from: $filePath');
+      } else {
+        print('No saved data file found');
+      }
+    } catch (e) {
+      print('Error loading data: $e');
+    }
+  }
+
+  Future<void> _updateSharedPreferences(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Update study time data
+    final now = DateTime.now();
+    String todayKey = "${now.year}-${now.month}-${now.day}";
+    String yesterdayKey = "${now.year}-${now.month}-${now.day - 1}";
+
+    await prefs.setInt(todayKey, data['study_time']['today'] ?? 0);
+    await prefs.setInt(yesterdayKey, data['study_time']['yesterday'] ?? 0);
+
+    // Update activity counts
+    await prefs.setInt('video_count', data['activity_counts']['video_count'] ?? 0);
+    await prefs.setInt('answer_count', data['activity_counts']['answer_count'] ?? 0);
+
+    // Update mock exam attempts
+    if (data['mock_exams'] != null) {
+      await prefs.setString('mock_attempt_counts', jsonEncode(data['mock_exams']));
+    }
+
+    // You can add more updates for other data as needed
+  }
 
 }

@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import '../../utility/sd_card_utility.dart';
 import '../usage_report/mock_exam_detail_page.dart';
 import 'mock_exam_details.dart'; // You'll create this next
 
@@ -23,12 +25,14 @@ class _EvaluationPageState extends State<EvaluationPage> {
   @override
   void initState() {
     super.initState();
-    loadMockAttempts();
-    loadSubmissions();
+   // loadMockAttempts();
+   // loadSubmissions();
     loadMockAttemptsMock();
+    loadSubmissionsFromSDCard();
+    loadAttemptsFromSDCard();
   }
 
-  Future<void> loadSubmissions() async {
+  /*Future<void> loadSubmissions() async {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString('mock_submissions');
     if (stored != null) {
@@ -39,8 +43,59 @@ class _EvaluationPageState extends State<EvaluationPage> {
         submissions = [];
       }
     }
+    await appendSubmissionsToSDCard(submissions);
     setState(() {});
+  }*/
+
+
+
+
+
+
+
+
+
+  Future<void> loadSubmissionsFromSDCard() async {
+
+
+    try {
+
+      final directory = await SdCardUtility.getBasePath();
+      final dir = Directory(directory);
+      final filePath = '$directory/mock_exam.json';
+      final file = File(filePath);
+
+      if (await file.exists()) {
+        final contents = await file.readAsString();
+        final parsed = jsonDecode(contents);
+
+        if (parsed is List) {
+          setState(() {
+            submissions = parsed
+                .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+                .toList();
+          });
+        } else {
+          print('File content is not a List');
+          setState(() {
+            submissions = [];
+          });
+        }
+      } else {
+        print('mock_exam.json not found');
+        setState(() {
+          submissions = [];
+        });
+      }
+    } catch (e) {
+      print('Error loading submissions: $e');
+      setState(() {
+        submissions = [];
+      });
+    }
   }
+
+
 
   final GlobalKey<ScaffoldState> _evolutionscaffoldKey =
       GlobalKey<ScaffoldState>();
@@ -284,6 +339,61 @@ class _EvaluationPageState extends State<EvaluationPage> {
       ),
     );
   }
+
+
+
+
+  Future<void> loadAttemptsFromSDCard() async {
+
+
+    final directory = await SdCardUtility.getBasePath();
+    final dir = Directory(directory);
+    final filePath = '$directory/mock_exam_attempts.json';
+
+    final file = File(filePath);
+    if (!(await file.exists())) {
+      print("No saved attempts file found");
+      return;
+    }
+
+    final content = await file.readAsString();
+    final Map<String, dynamic> rawJson = jsonDecode(content);
+
+    // Convert it into subject-wise grouped list
+    Map<String, List<Map<String, dynamic>>> temp = {};
+
+    rawJson.forEach((key, value) {
+      // value can be either a Map or a List
+      if (value is Map<String, dynamic>) {
+        final subject = value['subjectId'] ?? value['subject'] ?? 'Unknown';
+        temp.putIfAbsent(subject, () => []);
+        temp[subject]!.add(value);
+      } else if (value is List) {
+        for (var item in value) {
+          if (item is Map<String, dynamic>) {
+            final subject = item['subjectId'] ?? item['subject'] ?? 'Unknown';
+            temp.putIfAbsent(subject, () => []);
+            temp[subject]!.add(item);
+          }
+        }
+      }
+    });
+
+    // Sort each subject’s attempts by date descending
+    temp.forEach((subject, attempts) {
+      attempts.sort((a, b) {
+        final dateA = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+        final dateB = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+        return dateB.compareTo(dateA);
+      });
+    });
+
+    setState(() {
+      subjectAttempts = temp;
+    });
+  }
+
+
 
   Future<void> loadMockAttempts() async {
     final prefs = await SharedPreferences.getInstance();
