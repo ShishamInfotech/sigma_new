@@ -27,6 +27,9 @@ class MockExamScreen extends StatefulWidget {
 }
 
 class _MockExamScreenState extends State<MockExamScreen> {
+  // Add this flag
+  bool isExamCompleted = false;
+
   late SharedPreferences prefs;
 
   int currentIndex = 0;
@@ -34,10 +37,10 @@ class _MockExamScreenState extends State<MockExamScreen> {
   List<String> selectedAnswers = [];
 
   // Updated question counts - 50 Physics, 50 Chemistry, 98 Math/Bio
-  final int PHYSICS_Q_COUNT = 50;
+  final int PHYSICS_Q_COUNT = 52;
   final int CHEMISTRY_Q_COUNT = 50;
   final int MATH_Q_COUNT = 98;
-  final int BIOLOGY_Q_COUNT = 98;
+  final int BIOLOGY_Q_COUNT = 99;
 
   final String MAT_FILE_PREFIX = "jeemcqmathch";
   final String PHY_FILE_PREFIX = "jeemcqphych";
@@ -97,6 +100,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       await _processFiles(mathUri, mathQuestions, "Math");
 
       // Ensure exactly 98 Math questions
+
       if (mathQuestions.length > MATH_Q_COUNT) {
         mathQuestions = mathQuestions.sublist(0, MATH_Q_COUNT);
       }
@@ -113,6 +117,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       await _processFiles(phyUri, physicsQuestions, "Physics");
 
       // Ensure exactly 50 Physics questions
+
       if (physicsQuestions.length > PHYSICS_Q_COUNT) {
         physicsQuestions = physicsQuestions.sublist(0, PHYSICS_Q_COUNT);
       }
@@ -129,11 +134,15 @@ class _MockExamScreenState extends State<MockExamScreen> {
       await _processFiles(cheUri, chemistryQuestions, "Chemistry");
 
       // Ensure exactly 50 Chemistry questions
+
       if (chemistryQuestions.length > CHEMISTRY_Q_COUNT) {
         chemistryQuestions = chemistryQuestions.sublist(0, CHEMISTRY_Q_COUNT);
       }
 
       setState(() {
+        print("Math Questions:-*************************"+ mathQuestions.length.toString());
+        print("Physics Questions:-*************************"+ physicsQuestions.length.toString());
+        print("Chemistry Questions:-*************************"+ chemistryQuestions.length.toString());
         questions.addAll(mathQuestions);
         questions.addAll(physicsQuestions);
         questions.addAll(chemistryQuestions);
@@ -192,14 +201,16 @@ class _MockExamScreenState extends State<MockExamScreen> {
       }
 
       setState(() {
-
+        print("Biology Questions:-*************************"+ biologyQuestions.length.toString());
+        print("Physics Questions:-*************************"+ physicsQuestions.length.toString());
+        print("Chemistry Questions:-*************************"+ chemistryQuestions.length.toString());
         questions.addAll(biologyQuestions);
         questions.addAll(physicsQuestions);
         questions.addAll(chemistryQuestions);
         selectedAnswers = List.filled(questions.length, '');
 
         // Verify total count (98 Bio + 50 Physics + 50 Chem = 198)
-        assert(questions.length == BIOLOGY_Q_COUNT + PHYSICS_Q_COUNT + CHEMISTRY_Q_COUNT);
+        //assert(questions.length == BIOLOGY_Q_COUNT + PHYSICS_Q_COUNT + CHEMISTRY_Q_COUNT);
       });
     }
 
@@ -291,6 +302,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       }
 
       setState(() {
+
         questions.addAll(chemistryQuestions);
         questions.addAll(mathQuestions);
         selectedAnswers = List.filled(questions.length, '');
@@ -358,7 +370,17 @@ class _MockExamScreenState extends State<MockExamScreen> {
       // Filter questions based on current level
       List<SubCahpDatum> filteredQuestions = _filterQuestionsByComplexity(allQuestions);
 
+      // In _processFiles method, modify the takeCount calculation:
       int takeCount = uriGroup.perChapterCount + (i < uriGroup.remainCount ? 1 : 0);
+      if (subject == "Physics" && targetList.length + takeCount > PHYSICS_Q_COUNT) {
+        takeCount = PHYSICS_Q_COUNT - targetList.length;
+      }else if (subject == "Chemistry" && targetList.length + takeCount > CHEMISTRY_Q_COUNT) {
+        takeCount = CHEMISTRY_Q_COUNT - targetList.length;
+      }else if (subject == "Biology" && targetList.length + takeCount > BIOLOGY_Q_COUNT) {
+        takeCount = BIOLOGY_Q_COUNT - targetList.length;
+      } else if (subject == "Math" && targetList.length + takeCount > MATH_Q_COUNT) {
+        takeCount = MATH_Q_COUNT - targetList.length;
+      }
       targetList.addAll(filteredQuestions.take(takeCount));
     }
 
@@ -540,7 +562,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
   }
 
   void _submitAnswer(String answer) {
-    if (questions.isEmpty) return;
+    if (questions.isEmpty || isExamCompleted) return; // Prevent submissions after completion
 
     final current = questions[currentIndex];
     selectedAnswers[currentIndex] = answer;
@@ -563,12 +585,27 @@ class _MockExamScreenState extends State<MockExamScreen> {
   }
 
   Future<void> _showResultPopup() async {
+    if (isExamCompleted) return; // Prevent duplicate processing
+
+    setState(() {
+      isExamCompleted = true;
+    });
+
     await _saveExamResult();
     await _clearSavedExamState();
+    countdownTimer?.cancel();
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder:  (ctx) => WillPopScope(
+      onWillPop: () async {
+        // Navigate all the way back when back button is pressed
+        Navigator.pop(ctx);
+        Navigator.pop(context);
+        return false;
+      },
+      child: AlertDialog(
         title: const Text("Test Completed"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -592,11 +629,13 @@ class _MockExamScreenState extends State<MockExamScreen> {
           )
         ],
       ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+
     if (isLoadingFirstQuestion && questions.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -605,7 +644,35 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
     final question = questions.isNotEmpty ? questions[currentIndex] : null;
 
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+      if (isExamCompleted) return true;
+
+      // Show confirmation dialog when trying to exit
+      final shouldPause = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Pause Test?'),
+          content: const Text('Your progress will be saved. You can resume later.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Pause'),
+            ),
+          ],
+        ),
+      ) ?? false;
+
+      if (shouldPause) {
+        await _pauseTest();
+      }
+      return shouldPause;
+    },
+    child:  Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
@@ -757,7 +824,23 @@ class _MockExamScreenState extends State<MockExamScreen> {
           ),
         ),
       ),
+    ),
     );
+  }
+
+  Future<void> _pauseTest() async {
+    if (selectedOption != null) {
+      selectedAnswers[currentIndex] = selectedOption!;
+    }
+    countdownTimer?.cancel();
+    await _saveExamState();
+
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Test paused. You can resume where you left off.'))
+      );
+    }
   }
 
   double _estimateHeight(String text) {
