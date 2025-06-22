@@ -851,7 +851,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
 
     double height = (lines + longLines) * 20.0;
-    height = height * 2.5;
+    height = height * 4.0;
 
     if (hasComplexMath) {
       height += 30.0;

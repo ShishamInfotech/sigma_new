@@ -13,9 +13,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
 
-    //await requestStoragePermission();
+    if(requestStoragePermission()==true ||requestAllFileAccessPermission()==true){
+      AppUsageTracker.startTracking();
+      AppUsageTracker.startAutoSave();
+    }
 
-    await requestAllFileAccessPermission();
+ //   await requestAllFileAccessPermission();
 
 
     // 🔹 Create bind files if first time
@@ -28,8 +31,7 @@ void main() async {
     runApp(const MyApp());
 
     // Initialize app tracking only after successful binding
-    AppUsageTracker.startTracking();
-    AppUsageTracker.startAutoSave();
+
   } catch (e) {
     // If validation fails, show error screen
     print("Failed to pick folder: ${e}");

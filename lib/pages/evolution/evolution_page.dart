@@ -25,14 +25,14 @@ class _EvaluationPageState extends State<EvaluationPage> {
   @override
   void initState() {
     super.initState();
-   // loadMockAttempts();
+    //loadMockAttempts();
    // loadSubmissions();
     loadMockAttemptsMock();
     loadSubmissionsFromSDCard();
     loadAttemptsFromSDCard();
   }
 
-  /*Future<void> loadSubmissions() async {
+  Future<void> loadSubmissions() async {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString('mock_submissions');
     if (stored != null) {
@@ -43,9 +43,9 @@ class _EvaluationPageState extends State<EvaluationPage> {
         submissions = [];
       }
     }
-    await appendSubmissionsToSDCard(submissions);
+   // await appendSubmissionsToSDCard(submissions);
     setState(() {});
-  }*/
+  }
 
 
 
@@ -204,7 +204,6 @@ class _EvaluationPageState extends State<EvaluationPage> {
                 );
               }).toList(),
             ),
-
             // Tab 3: JEE Mock Exam
             Container(
               margin: EdgeInsets.symmetric(horizontal:10 ),

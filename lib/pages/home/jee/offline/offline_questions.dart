@@ -774,7 +774,7 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
               MathText(
                   key: ValueKey('question_$currentQuestionIndex'),
                   expression: questionData["question"],
-                  height: 100),
+                  height: _estimateHeight(questionData["question"])),
               const SizedBox(height: 15),
               Column(
                 children: options.map((option) {
@@ -789,7 +789,7 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
                       title: MathText(
                           key: ValueKey('option_${options.indexOf(option)}_$currentQuestionIndex'),
                           expression: option,
-                          height: 80),
+                          height: _estimateOptionsHeight(option)),
                       value: option,
                       groupValue: selectedAnswer,
                       onChanged: (value) {
@@ -888,6 +888,41 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
     } else {
       print("No new data to write. File unchanged.");
     }
+  }
+
+
+  double _estimateOptionsHeight(String text) {
+    if (text.isEmpty) return 0;
+
+    final lines = text.split('\n').length;
+    final longLines = text.split('\n').where((line) => line.length > 50).length;
+    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt');
+
+    double height = (lines + longLines) * 20.0;
+
+    if (hasComplexMath) {
+      height += 40.0;
+    }
+
+    return height.clamp(50.0, 300.0);
+  }
+
+
+  double _estimateHeight(String text) {
+    if (text.isEmpty) return 0;
+
+    final lines = text.split('\n').length;
+    final longLines = text.split('\n').where((line) => line.length > 50).length;
+    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
+
+    double height = (lines + longLines) * 20.0;
+    height = height * 2.5;
+
+    if (hasComplexMath) {
+      height += 30.0;
+    }
+
+    return height.clamp(50.0, 300.0);
   }
 
 }
