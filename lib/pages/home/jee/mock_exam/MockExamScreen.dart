@@ -850,7 +850,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     final longLines = text.split('\n').where((line) => line.length > 50).length;
     final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
 
-    double height = (lines + longLines) * 20.0;
+    double height = (lines + longLines) * 30.0;
     height = height * 4.0;
 
     if (hasComplexMath) {

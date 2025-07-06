@@ -1,10 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sigma_new/config/config.dart';
+import 'package:sigma_new/config/config_loader.dart';
 import 'package:sigma_new/models/menu_models.dart';
 import 'package:sigma_new/pages/10thMh/10thmh.dart';
+import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
+import 'package:intl/intl.dart';
 
 class StudyPage extends StatefulWidget {
   const StudyPage({super.key});
@@ -29,7 +35,7 @@ class _StudyPageState extends State<StudyPage> {
     final prefs = await SharedPreferences.getInstance();
 
     String? course = prefs.getString('course');
-    print("Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
+    print("Standard${prefs.getString('StartDate')} State:${prefs.getString('board')}");
     if (course != null && course.isNotEmpty) {
       courseList = course.split(","); // Convert String to List
     }
@@ -101,16 +107,78 @@ class _StudyPageState extends State<StudyPage> {
                   return Column(
                     children: [
                       InkWell(
-                        onTap: () {
-                          // Navigation logic here
-                          if (othersMenuList[index].navigation != null) {
-                            othersMenuList[index].navigation!();
+                        onTap: () async {
+                          Config? config = await ConfigLoader.getGlobalConfig(); // or your static class name
 
-                            Get.to(StandardMenu(standard: courseList[index],));
+                          if (config == null) {
+                            Get.snackbar(
+                              "Config Error",
+                              "Unable to load configuration file.",
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                            );
+                            return;
+                          }
 
-                          } else {
-                            print(
-                                'No navigation route defined for this menu item');
+                          try {
+                            // Parse date
+                            /*DateFormat formatter = DateFormat("dd-MM-yyyy");
+                            DateTime now = DateTime.now();
+                            DateTime start = formatter.parse(config.startDate!);
+                            DateTime expiry = formatter.parse(config.expiryDate!);
+
+                            if (now.isBefore(start)) {
+                              Get.snackbar(
+                                "Access Denied",
+                                "Course access begins on ${config.startDate}.",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.orange,
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }
+
+                            if (now.isAfter(expiry)) {
+                              Get.snackbar(
+                                "Access Expired",
+                                "Course access expired on ${config.expiryDate}.",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }
+
+                            // Optional: Match Device ID; // Implement this or use MethodChannel
+                            if (config.deviceID != deviceId()) {
+                              Get.snackbar(
+                                "Unauthorized Device",
+                                "This device is not registered for access.",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.redAccent,
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }*/
+
+                            // Continue navigation
+                            if (othersMenuList[index].navigation != null) {
+                              othersMenuList[index].navigation!();
+                              Get.to(StandardMenu(standard: courseList[index]));
+                            } else {
+                              print('No navigation route defined for this menu item');
+                            }
+
+                          } catch (e) {
+                            print("Validation failed: $e");
+                            Get.snackbar(
+                              "Error",
+                              "Invalid date format or data.",
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                            );
                           }
                         },
                         child: Container(

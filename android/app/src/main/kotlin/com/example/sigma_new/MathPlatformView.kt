@@ -14,8 +14,25 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
 
     init {
         mathView.settings.javaScriptEnabled = true
-        mathView.text = expression
+        //mathView.text = expression
         // mathView.textSize = 20
+        mathView.text = """
+    <html>
+    <head>
+        <style>
+            body {
+                font-size: 20px;
+            }
+            mjx-container {
+                font-size: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        $expression
+    </body>
+    </html>
+""".trimIndent()
 
     }
 

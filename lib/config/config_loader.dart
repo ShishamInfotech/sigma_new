@@ -1,5 +1,7 @@
 // lib/config_loader.dart
 import 'dart:convert';
+import 'package:get/get.dart';
+import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:sigma_new/utility/crypto_utils.dart';
 import 'package:sigma_new/config/config.dart';
@@ -168,7 +170,8 @@ static Future<Config?> getGlobalConfig() async {
     final inputFile = await SdCardUtility.loadFileAsFile('config.json');
     if (inputFile== null) {
       print("Global config not found");
-      return null;
+      Get.snackbar("Error", "Global config not found", snackPosition: SnackPosition.BOTTOM, backgroundColor: redColor, colorText: whiteColor);
+      //return null;
     }
 
     String decrypted;

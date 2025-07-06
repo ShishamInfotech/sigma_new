@@ -102,7 +102,11 @@ class _JeeNeetHomeState extends State<JeeNeetHome> {
                           onTap: () {
                             if (examPreparationMenu[index].navigation != null) {
                               examPreparationMenu[index].navigation!();
-                              Get.to(JeeSubjectwise(path: examPreparationMenu[index].title,));
+                              print("TITLE ${examPreparationMenu[index].title}");
+                              if(examPreparationMenu[index].title=="Concept"){
+                                Get.to(ComplexitySelectionScreen());
+                              }else{
+                              Get.to(JeeSubjectwise(path: examPreparationMenu[index].title,));}
                             }else{
                               print(
                                   'No navigation route defined for this menu item');

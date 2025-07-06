@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sigma_new/config/config.dart';
+import 'package:sigma_new/config/config_loader.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
@@ -21,15 +23,42 @@ class _EvaluationPageState extends State<EvaluationPage> {
   List<Map<String, dynamic>> submissions = [];
   Map<String, List<Map<String, dynamic>>> subjectAttempts = {};
   Map<String, List<Map<String, dynamic>>> subjectAttemptsMock = {};
+  List<String> courseList=[];
+
 
   @override
   void initState() {
     super.initState();
     //loadMockAttempts();
    // loadSubmissions();
+    sharedPrefrenceData().then((_) {
+      loadSubmissionsFromSDCard(); // only after courseList is ready
+    });
     loadMockAttemptsMock();
-    loadSubmissionsFromSDCard();
+   // loadSubmissionsFromSDCard();
     loadAttemptsFromSDCard();
+  }
+
+
+  sharedPrefrenceData() async{
+  //  Config? config = await ConfigLoader.getGlobalConfig();
+    final prefs = await SharedPreferences.getInstance();
+
+    String? course = prefs.getString('course');
+    print("Standard${prefs.getString('class')} State:${prefs.getString('board')}");
+    if (course != null && course.isNotEmpty) {
+      courseList = course.split(","); // Convert String to List
+    }
+    print(courseList.length);
+    print(courseList);
+   // print("Class ${config!.class_![0]}");
+
+
+    setState(() {
+
+    });
+
+
   }
 
   Future<void> loadSubmissions() async {
@@ -56,12 +85,8 @@ class _EvaluationPageState extends State<EvaluationPage> {
 
 
   Future<void> loadSubmissionsFromSDCard() async {
-
-
     try {
-
       final directory = await SdCardUtility.getBasePath();
-      final dir = Directory(directory);
       final filePath = '$directory/mock_exam.json';
       final file = File(filePath);
 
@@ -70,10 +95,27 @@ class _EvaluationPageState extends State<EvaluationPage> {
         final parsed = jsonDecode(contents);
 
         if (parsed is List) {
+          final loadedSubmissions = parsed
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+
+          print("CouseList $courseList");
+          List<String> allowedClasses = courseList.map((course) {
+            if (course.contains("10")) return "10";
+            if (course.contains("12")) return "12";
+            if (course.contains("JEE")) return "JEE"; // If needed
+            return "";
+          }).where((cls) => cls.isNotEmpty).toList();
+
+          // Filter based on courseList
+          final filtered = loadedSubmissions.where((sub) {
+            final stream = sub["questions"][0]["stream"]?.toString() ?? '';
+            return allowedClasses.contains(stream);
+          }).toList();
+
+          print("Filtered $filtered");
           setState(() {
-            submissions = parsed
-                .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
-                .toList();
+            submissions = filtered;
           });
         } else {
           print('File content is not a List');
@@ -94,6 +136,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
       });
     }
   }
+
 
 
 

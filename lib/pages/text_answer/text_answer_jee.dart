@@ -114,7 +114,7 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
               borderRadius: const BorderRadius.all(Radius.circular(10))),
           child: MathText(
             expression: widget.imagePath,
-            height: estimateHeight(widget.imagePath),
+            height: _estimateHeight(widget.imagePath),
             // style: black16MediumTextStyle,
           ),
         ),
@@ -134,9 +134,20 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
     );
   }
 
-  double estimateHeight(String text) {
-    final lines = (text.length / 50).ceil(); // assume 30 chars per line
-    return lines * 12.0; // assume each line is about 40 pixels tall
-    // return lines * 40.0; // assume each line is about 40 pixels tall
+  double _estimateHeight(String text) {
+    if (text.isEmpty) return 0;
+
+    final lines = text.split('\n').length;
+    final longLines = text.split('\n').where((line) => line.length > 50).length;
+    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
+
+    double height = (lines + longLines) * 30.0;
+    height = height * 5.0;
+
+    if (hasComplexMath) {
+      height += 30.0;
+    }
+
+    return height.clamp(50.0, 300.0);
   }
 }

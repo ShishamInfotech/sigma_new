@@ -13,11 +13,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
 
-    if(requestStoragePermission()==true ||requestAllFileAccessPermission()==true){
-      AppUsageTracker.startTracking();
-      AppUsageTracker.startAutoSave();
-    }
+   /* if(requestStoragePermission()==true ||requestAllFileAccessPermission()==true){
 
+    }*/
+
+ //   await requestStoragePermission();
+    await requestAllFileAccessPermission();
  //   await requestAllFileAccessPermission();
 
 
@@ -29,6 +30,8 @@ void main() async {
 
     // Start app if validation succeeds
     runApp(const MyApp());
+    AppUsageTracker.startTracking();
+    AppUsageTracker.startAutoSave();
 
     // Initialize app tracking only after successful binding
 

@@ -95,8 +95,8 @@ class _EasyQuestionsState extends State<EasyQuestions> {
 
     print("Lines="+ lines.toString() + "LongLines=" + longLines.toString());
     // Base height calculation
-    double height = (lines + longLines) * 20.0;
-    height = height * 2.5;
+    double height = (lines + longLines) * 40.0;
+    height = height * 3;
     // Add extra space for complex math expressions
     if (hasComplexMath) {
       height += 30.0;

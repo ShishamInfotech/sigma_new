@@ -20,11 +20,13 @@ class JeeSubjectwise extends StatefulWidget {
   String path;
   final String? complexity;
   final bool isConcept;
+  String? complex;
 
   JeeSubjectwise({
     required this.path,
     this.complexity,
     this.isConcept = false,
+    this.complex,
     super.key
   });
 
@@ -331,62 +333,19 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                               } else if (widget.path.removeAllWhitespace
                                   .toLowerCase()
                                   .contains("concept")) {
-                                showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: const Text('Concept'),
-                                        content: const Text(
-                                          'Select any one category given below',
-                                        ),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            style: TextButton.styleFrom(
-                                                textStyle: Theme.of(context)
-                                                    .textTheme
-                                                    .labelLarge),
-                                            child: const Text(
-                                                'Elementary Concept'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                              Get.to(JeeNeetConcept(
-                                                subjectId: subjectsId[index],
-                                                complexity: "e",
-                                                title: subjects[index],
-                                              ));
-                                              //
-                                            },
-                                          ),
-                                          TextButton(
-                                            style: TextButton.styleFrom(
-                                                textStyle: Theme.of(context)
-                                                    .textTheme
-                                                    .labelLarge),
-                                            child:
-                                                const Text('Advanced Concept'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                              Get.to(JeeNeetConcept(
-                                                subjectId: subjectsId[index],
-                                                complexity: "a",
-                                                title: subjects[index],
-                                              ));
-                                              // Navigator.of(context).pop();
-                                            },
-                                          ),
-                                          TextButton(
-                                            style: TextButton.styleFrom(
-                                                textStyle: Theme.of(context)
-                                                    .textTheme
-                                                    .labelLarge),
-                                            child: const Text('Cancel'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    });
+                                if(widget.complex=="e"){
+                                  Get.to(JeeNeetConcept(
+                                    subjectId: subjectsId[index],
+                                    complexity: "e",
+                                    title: subjects[index],
+                                  ));
+                                }else{
+                                  Get.to(JeeNeetConcept(
+                                    subjectId: subjectsId[index],
+                                    complexity: "a",
+                                    title: subjects[index],
+                                  ));
+                                }
                                 // Get.to(JeeNeetConcept(subjectId: subjectsId[index],));
                               } else if (widget.path.removeAllWhitespace
                                   .toLowerCase()
