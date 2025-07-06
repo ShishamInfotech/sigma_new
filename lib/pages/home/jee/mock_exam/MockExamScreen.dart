@@ -37,10 +37,15 @@ class _MockExamScreenState extends State<MockExamScreen> {
   List<String> selectedAnswers = [];
 
   // Updated question counts - 50 Physics, 50 Chemistry, 98 Math/Bio
-  final int PHYSICS_Q_COUNT = 52;
+  /*final int PHYSICS_Q_COUNT = 52;
   final int CHEMISTRY_Q_COUNT = 50;
   final int MATH_Q_COUNT = 98;
-  final int BIOLOGY_Q_COUNT = 99;
+  final int BIOLOGY_Q_COUNT = 99;*/
+
+  final int PHYSICS_Q_COUNT = 5;
+  final int CHEMISTRY_Q_COUNT = 5;
+  final int MATH_Q_COUNT = 5;
+  final int BIOLOGY_Q_COUNT = 5;
 
   final String MAT_FILE_PREFIX = "jeemcqmathch";
   final String PHY_FILE_PREFIX = "jeemcqphych";

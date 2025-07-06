@@ -1,5 +1,6 @@
 
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -91,6 +92,18 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
     print("Questions----------"+ widget.pathQuestionList.toString());
 
      for(var question in widget.pathQuestionList) {
+       // Sanitize the LaTeX description at the source
+       //question["description"] = sanitizeMathExpression(question["description"] ?? "");
+       //print("Description:-"+ question["description"].toString());
+
+       if (question["description"].toString().contains(
+           r'\end{matrix} \begin{matrix}'))
+     {
+       print("Matrix ="+question["description"].toString());
+
+     }
+
+
       final complexity = (question["complexity"] ?? "").toString().toLowerCase();
       switch (complexity) {
       case "s": simple.add(question); break;
@@ -276,4 +289,23 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
 
     return height.clamp(50.0, 300.0);
   }
+
+  String sanitizeMathExpression(String input) {
+    return input
+        .replaceAll(r'\(', r'$')                      // Replace \( with $
+        .replaceAll(r'\)', r'$')
+        .replaceAll(r'}$,', r'},')      // Replace \) with $
+        .replaceAll(r' $\ ', r' \quad ')
+        .replaceAll(r'=$\begin{bmatrix}', r'= \begin{bmatrix}')
+        .replaceAll(r'$A', r'$$ A')
+        .replaceAll(r'\\\', r'\\');                 // Make sure existing double-backslashes remain double
+        //.replaceAllMapped(RegExp(r'(?<!\\)\\(?![a-z])'), (m) => r'\\\\') // Add missing double-backslashes between rows
+        //.replaceAll(RegExp(r'(?<!\\)begin'), r'\\begin')
+        //.replaceAll(RegExp(r'(?<!\\)end'), r'\\end')
+        //.replaceAll(RegExp(r'(?<!\\)leftrightarrow'), r'\\leftrightarrow');
+
+  }
+
+
+
 }

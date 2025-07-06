@@ -37,21 +37,18 @@ class _MathTextState extends State<MathText> {
   Widget build(BuildContext context) {
     final sanitizedExpression = sanitizeMathExpression(widget.expression);
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        minHeight: widget.height ?? 0, // Use provided height or minimum
-        maxHeight: widget.height ?? double.infinity, // Allow expansion if no height
-      ),
-      child: IntrinsicHeight(
-        child: AndroidView(
-          viewType: 'mathview-native',
-          layoutDirection: TextDirection.ltr,
-          creationParams: {
-            'expression': sanitizedExpression,
-            'textSize': widget.textSize,
-          },
-          creationParamsCodec: const StandardMessageCodec(),
-        ),
+
+    print("Height ${widget.height}");
+    return Container(
+      height: widget.height,
+      child: AndroidView(
+        viewType: 'mathview-native',
+        layoutDirection: TextDirection.ltr,
+        creationParams: {
+          'expression': sanitizedExpression,
+          'textSize': widget.textSize,
+        },
+        creationParamsCodec: const StandardMessageCodec(),
       ),
     );
   }
