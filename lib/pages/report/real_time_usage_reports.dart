@@ -43,9 +43,6 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   List<String> targetDate = [];
   List<String> subjectsId = [];
 
-  List<Map<String, dynamic>> _mockExamList = [];
-  List<Map<String, dynamic>> _competitiveExamList = [];
-
 
   Map<String, dynamic> _targetDateMap = {};
   Map<String, dynamic> _mockExamMap = {};
@@ -1079,18 +1076,12 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       existingData['target_dates'] = targetDates;
 
       // --- Append mock_exams ---
+      // --- Append mock_exams ---
       final List<dynamic> existingMockExams =
       existingData['mock_exams'] != null ? List.from(existingData['mock_exams']) : [];
 
-      final Map<String, dynamic> mockExamMap = await _getMockExamData();
-
-      mockExamMap.forEach((chapter, attemptData) {
-        existingMockExams.add({
-          "date": todayDate,
-          "chapter": chapter,
-          "data": attemptData,
-        });
-      });
+      final Map<String, dynamic> newMockExam = await _getMockExamData();
+      existingMockExams.add(newMockExam); // Append the single map
 
       existingData['mock_exams'] = existingMockExams;
 
@@ -1188,8 +1179,8 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
         final courseProgress = data['course_progress'] ?? {};
         final targetDates = Map<String, dynamic>.from(data['target_dates'] ?? {});
-        final mockExams = List<Map<String, dynamic>>.from(data['mock_exams'] ?? []);
-        final competitiveExams = List<Map<String, dynamic>>.from(data['competitive_exams'] ?? []);
+        final mockExams = Map<String, dynamic>.from(data['mock_exams'] ?? {});
+        final competitiveExams = Map<String, dynamic>.from(data['competitive_exams'] ?? {});
         final metadata = Map<String, dynamic>.from(data['metadata'] ?? {});
 
         setState(() {
@@ -1210,8 +1201,8 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
           // You can assign targetDates, mockExams, etc. to local variables or UI widgets as needed
           _targetDateMap = targetDates;
-          _mockExamList = mockExams;
-          _competitiveExamList = competitiveExams;
+          _mockExamMap = mockExams;
+          _competitiveExamMap = competitiveExams;
           _metadata = metadata;
         });
 
