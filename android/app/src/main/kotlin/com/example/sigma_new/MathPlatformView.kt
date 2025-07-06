@@ -21,10 +21,10 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
     <head>
         <style>
             body {
-                font-size: 20px;
+                font-size: 17px;
             }
             mjx-container {
-                font-size: 20px;
+                font-size: 17px;
             }
         </style>
     </head>

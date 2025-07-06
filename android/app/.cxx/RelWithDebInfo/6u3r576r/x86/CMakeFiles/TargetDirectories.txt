@@ -1,0 +1,2 @@
+C:/Users/Aniiket.Desai/StudioProjects/sigma_new/android/app/.cxx/RelWithDebInfo/6u3r576r/x86/CMakeFiles/edit_cache.dir
+C:/Users/Aniiket.Desai/StudioProjects/sigma_new/android/app/.cxx/RelWithDebInfo/6u3r576r/x86/CMakeFiles/rebuild_cache.dir

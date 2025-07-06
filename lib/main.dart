@@ -23,10 +23,10 @@ void main() async {
 
 
     // 🔹 Create bind files if first time
-   // await SdCardUtility.initializeBindingIfNeeded();
+   //await SdCardUtility.initializeBindingIfNeeded();
 
     // Validate SD card binding
-  //  await SdCardUtility.validateBinding();
+   //await SdCardUtility.validateBinding();
 
     // Start app if validation succeeds
     runApp(const MyApp());
@@ -71,7 +71,6 @@ class MyApp extends StatelessWidget {
       ),
       home: const SplashScreen(),
       localizationsDelegates: [
-
         FlutterQuillLocalizations.delegate,
       ],
     );

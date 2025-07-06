@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -101,6 +102,7 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
   @override
   Widget build(BuildContext context) {
     print("VALue ${widget.imagePath}");
+    log(widget.imagePath);
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: widget.basePath == "nr"
@@ -114,7 +116,7 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
               borderRadius: const BorderRadius.all(Radius.circular(10))),
           child: MathText(
             expression: widget.imagePath,
-            height: _estimateHeight(widget.imagePath),
+            height: estimateHeight(widget.imagePath),
             // style: black16MediumTextStyle,
           ),
         ),
@@ -134,20 +136,31 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
     );
   }
 
-  double _estimateHeight(String text) {
+  double measureTextHeight({
+    required String text,
+    required TextStyle style,
+    required double maxWidth,
+    TextAlign textAlign = TextAlign.start,
+    TextDirection textDirection = TextDirection.ltr,
+    int? maxLines,
+  }) {
     if (text.isEmpty) return 0;
-
-    final lines = text.split('\n').length;
-    final longLines = text.split('\n').where((line) => line.length > 50).length;
-    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
-
-    double height = (lines + longLines) * 30.0;
-    height = height * 5.0;
-
-    if (hasComplexMath) {
-      height += 30.0;
-    }
-
-    return height.clamp(50.0, 300.0);
+    final span = TextSpan(text: text, style: style);
+    final tp = TextPainter(
+      text: span,
+      textAlign: textAlign,
+      textDirection: textDirection,
+      maxLines: maxLines,
+      ellipsis: maxLines != null ? '…' : null,
+    )..layout(maxWidth: maxWidth);
+    return tp.size.height;
   }
+
+
+  double estimateHeight(String text) {
+    final lines = (text.length / 50).ceil(); // assume 30 chars per line
+    return lines * 12.0; // assume each line is about 40 pixels tall
+    // return lines * 40.0; // assume each line is about 40 pixels tall
+  }
+
 }

@@ -123,7 +123,7 @@ class _StudyPageState extends State<StudyPage> {
 
                           try {
                             // Parse date
-                            /*DateFormat formatter = DateFormat("dd-MM-yyyy");
+                            DateFormat formatter = DateFormat("dd-MM-yyyy");
                             DateTime now = DateTime.now();
                             DateTime start = formatter.parse(config.startDate!);
                             DateTime expiry = formatter.parse(config.expiryDate!);
@@ -160,7 +160,7 @@ class _StudyPageState extends State<StudyPage> {
                                 colorText: Colors.white,
                               );
                               return;
-                            }*/
+                            }
 
                             // Continue navigation
                             if (othersMenuList[index].navigation != null) {

@@ -36,15 +36,14 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
   List<String> courseList=[];
   bool showJEE=false;
-  Map<String, int> attemptCounts = {};
+  Map<String, dynamic> attemptCounts = {};
   bool isLoading = true;
 
   List<String> subjects = [];
   List<String> targetDate = [];
   List<String> subjectsId = [];
 
-  List<Map<String, dynamic>> _mockExamList = [];
-  List<Map<String, dynamic>> _competitiveExamList = [];
+
 
 
   Map<String, dynamic> _targetDateMap = {};
@@ -78,9 +77,9 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   void initializeAndSave() async {
     // Step 1: Load and calculate all data you want to save
     await loadUsageData();         // Populate usage data (today, total, etc.)
-    await printTotalPercentage();  // Calculate total % progress
+    //await printTotalPercentage();  // Calculate total % progress
     await sharePreferenceData();   // Load shared prefs like videoCount, etc.
-    await _loadAttempts();         // Load attempts for mock/quiz
+         // Load attempts for mock/quiz
     await subjectWiseTest();       // Load subject-wise performance
 
     // Step 2: Now that all data is ready, save it
@@ -88,6 +87,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
     // Step 3: Then load data back if needed
     await loadDataFromMemoryCard();
+   // await _loadAttempts();
   }
 
 
@@ -639,6 +639,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                   height: 250,
                   child: ListView(
                                 children: attemptCounts.entries.map((entry) {
+                                  print("Enetry ${entry}");
                   return _buildExamPerformance(entry.key, entry.value, "Simple");
                                 }).toList(),
                               ),
@@ -661,6 +662,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   }
 
   Widget _buildExamPerformance(String subject, int attempts, String level) {
+    print("Attempts $attempts");
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -1003,42 +1005,53 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString('mock_attempt_counts');
 
+
+
+    print("_moc ${_mockExamMap}");
     if (data != null) {
       try {
-        final parsed = Map<String, int>.from(jsonDecode(data));
+        final parsed = _mockExamMap;
         setState(() {
+          print("MOCKKC ${_mockExamMap}");
           attemptCounts = parsed;
           isLoading = false;
         });
       } catch (_) {
         setState(() {
-          attemptCounts = {};
+          attemptCounts = _mockExamMap;
+         // attemptCounts = {};
           isLoading = false;
         });
       }
     } else {
       setState(() {
-        attemptCounts = {};
+        attemptCounts = _mockExamMap;
+       // attemptCounts = {};
         isLoading = false;
       });
     }
   }
 
+  /// 1) Save all the data into study_tracker_data.json
+  /// 2) Immediately re-open it and print counts to verify.
   Future<void> saveAllDataToMemoryCard() async {
     try {
       final directory = await SdCardUtility.getBasePath();
       final filePath = '$directory/study_tracker_data.json';
-      final File file = File(filePath);
+      final file = File(filePath);
 
+      // 1) Read existing JSON (if any)
       Map<String, dynamic> existingData = {};
       if (await file.exists()) {
         final contents = await file.readAsString();
         existingData = jsonDecode(contents);
       }
 
-      final String todayDate = DateTime.now().toIso8601String().substring(0, 10); // yyyy-MM-dd
+      final String todayDate = DateTime.now()
+          .toIso8601String()
+          .substring(0, 10); // yyyy-MM-dd
 
-      // --- New log entries ---
+      // 2) Build your new entries
       final newStudyTimeEntry = {
         "date": todayDate,
         "today": today.inSeconds,
@@ -1048,77 +1061,117 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
         "lowest": lowest.inSeconds,
         "highest": highest.inSeconds,
       };
-
       final newActivityCountsEntry = {
         "date": todayDate,
         "video_count": videoCount,
         "answer_count": answerCount,
       };
 
-      // --- Append study_time_log ---
-      final List<dynamic> studyTimeLog =
-      existingData['study_time_log'] != null ? List.from(existingData['study_time_log']) : [];
+      // 3) Append to study_time_log
+      final studyTimeLog = (existingData['study_time_log'] is List)
+          ? List<dynamic>.from(existingData['study_time_log'])
+          : <dynamic>[];
       studyTimeLog.add(newStudyTimeEntry);
       existingData['study_time_log'] = studyTimeLog;
 
-      // --- Append activity_counts_log ---
-      final List<dynamic> activityCountsLog =
-      existingData['activity_counts_log'] != null ? List.from(existingData['activity_counts_log']) : [];
+      // 4) Append to activity_counts_log
+      final activityCountsLog = (existingData['activity_counts_log'] is List)
+          ? List<dynamic>.from(existingData['activity_counts_log'])
+          : <dynamic>[];
       activityCountsLog.add(newActivityCountsEntry);
       existingData['activity_counts_log'] = activityCountsLog;
 
-      // --- Overwrite course progress ---
-      final courseProgress = {
+      // 5) Overwrite course_progress & target_dates
+      existingData['course_progress'] = {
         'total_percentage': totalpercentageValue,
         'subjects': await _getAllSubjectProgressData(),
       };
-      existingData['course_progress'] = courseProgress;
+      existingData['target_dates'] = _getTargetDatesData();
 
-      // --- Overwrite target dates ---
-      final targetDates = _getTargetDatesData();
-      existingData['target_dates'] = targetDates;
-
-      // --- Append mock_exams ---
-      final List<dynamic> existingMockExams =
-      existingData['mock_exams'] != null ? List.from(existingData['mock_exams']) : [];
-
-      final Map<String, dynamic> mockExamMap = await _getMockExamData();
-
-      mockExamMap.forEach((chapter, attemptData) {
+      // 6) Append mock_exams safely
+      final existingMockExams = (existingData['mock_exams'] is List)
+          ? List<dynamic>.from(existingData['mock_exams'])
+          : <dynamic>[];
+      final mockList = await _getMockExamData();
+      for (var entry in mockList) {
         existingMockExams.add({
-          "date": todayDate,
-          "chapter": chapter,
-          "data": attemptData,
+          'date': todayDate,
+          ...entry, // chapter & attempts
         });
-      });
-
+      }
       existingData['mock_exams'] = existingMockExams;
 
-      // --- Append competitive_exams ---
-      final List<dynamic> existingCompetitiveExams =
-      existingData['competitive_exams'] != null ? List.from(existingData['competitive_exams']) : [];
+      // 7) Append competitive_exams safely
+      final existingComp = (existingData['competitive_exams'] is List)
+          ? List<dynamic>.from(existingData['competitive_exams'])
+          : <dynamic>[];
+      final compList = await _getCompetitiveExamData();
+      for (var entry in compList) {
+        existingComp.add({
+          'date': todayDate,
+          ...entry, // exam & stats
+        });
+      }
+      existingData['competitive_exams'] = existingComp;
 
-      final Map<String, dynamic> newCompetitiveExam = await _getCompetitiveExamData();
-      existingCompetitiveExams.add(newCompetitiveExam);
-
-      existingData['competitive_exams'] = existingCompetitiveExams;
-
-      // --- Overwrite metadata ---
-      final metadata = {
+      // 8) Overwrite metadata
+      existingData['metadata'] = {
         'last_updated': DateTime.now().toIso8601String(),
         'device_id': await _getDeviceId(),
       };
-      existingData['metadata'] = metadata;
 
-      // --- Save to file ---
-      final String jsonData = jsonEncode(existingData);
-      await file.writeAsString(jsonData);
-
+      // 9) Write back to file
+      await file.writeAsString(jsonEncode(existingData));
       print('Data saved with historical logs to: $filePath');
+
+      // 10) Debug: read it right back in and print sizes & snippets
+      await _debugSavedData(filePath);
     } catch (e) {
       print('Error saving historical data: $e');
     }
   }
+
+  /// Helper that re-opens your JSON log and prints out
+  /// the length of each array and the raw maps for quick verification.
+  Future<void> _debugSavedData(String filePath) async {
+    final file = File(filePath);
+    if (!await file.exists()) {
+      print('❌ Debug: file not found at $filePath');
+      return;
+    }
+
+    final jsonString = await file.readAsString();
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(jsonString);
+    } catch (e) {
+      print('❌ Debug: could not parse JSON: $e');
+      return;
+    }
+
+    print('=== DEBUG: Loaded JSON ===');
+    if (decoded is Map<String, dynamic>) {
+      final data = decoded;
+      print(' • study_time_log entries: ${_safeLength(data['study_time_log'])}');
+      print(' • activity_counts_log entries: ${_safeLength(data['activity_counts_log'])}');
+      print(' • mock_exams entries: ${_safeLength(data['mock_exams'])}');
+      print(' • competitive_exams entries: ${_safeLength(data['competitive_exams'])}');
+      print(' • course_progress: ${data['course_progress']}');
+      print(' • target_dates: ${data['target_dates']}');
+      print(' • metadata: ${data['metadata']}');
+    } else if (decoded is List) {
+      print(' • Top level is a List of length ${decoded.length}');
+    } else {
+      print(' • Unexpected top-level JSON type: ${decoded.runtimeType}');
+    }
+  }
+
+  /// Safe helper: returns .length if it’s a List, else 0.
+  int _safeLength(dynamic maybeList) {
+    return maybeList is List ? maybeList.length : 0;
+  }
+
+
 
 
 
@@ -1143,20 +1196,42 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     return data;
   }
 
-  Future<Map<String, dynamic>> _getMockExamData() async {
+  Future<List<Map<String, dynamic>>> _getMockExamData() async {
     final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString('mock_attempt_counts');
-    return data != null ? jsonDecode(data) : {};
+    final jsonString = prefs.getString('mock_attempt_counts') ?? '{}';
+    final decoded = jsonDecode(jsonString);
+
+    if (decoded is List) {
+      // Already a List<Map>
+      return decoded.cast<Map<String, dynamic>>();
+    } else if (decoded is Map<String, dynamic>) {
+      // Convert each key/value to its own map entry
+      return decoded.entries
+          .map((e) => {
+        'chapter': e.key,
+        'attempts': e.value,
+      })
+          .toList();
+    } else {
+      // Fallback empty list
+      return [];
+    }
   }
 
-  Future<Map<String, dynamic>> _getCompetitiveExamData() async {
+  Future<List<Map<String, dynamic>>> _getCompetitiveExamData() async {
     final pcmStats = await _calculateExamStats(false);
     final pcbStats = await _calculateExamStats(true);
 
-    return {
-      'pcm': pcmStats,
-      'pcb': pcbStats,
-    };
+    return [
+      {
+        'exam': 'pcm',
+        'stats': pcmStats,
+      },
+      {
+        'exam': 'pcb',
+        'stats': pcbStats,
+      },
+    ];
   }
 
   Future<String> _getDeviceId() async {
@@ -1177,53 +1252,110 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       final filePath = '$directory/study_tracker_data.json';
       final File file = File(filePath);
 
-      if (await file.exists()) {
-        final jsonData = await file.readAsString();
-        final Map<String, dynamic> data = jsonDecode(jsonData);
-
-        final studyLog = List<Map<String, dynamic>>.from(data['study_time_log'] ?? []);
-        final activityLog = List<Map<String, dynamic>>.from(data['activity_counts_log'] ?? []);
-        final lastStudy = studyLog.isNotEmpty ? studyLog.last : {};
-        final lastActivity = activityLog.isNotEmpty ? activityLog.last : {};
-
-        final courseProgress = data['course_progress'] ?? {};
-        final targetDates = Map<String, dynamic>.from(data['target_dates'] ?? {});
-        final mockExams = List<Map<String, dynamic>>.from(data['mock_exams'] ?? []);
-        final competitiveExams = List<Map<String, dynamic>>.from(data['competitive_exams'] ?? []);
-        final metadata = Map<String, dynamic>.from(data['metadata'] ?? {});
-
-        setState(() {
-          // Study time from last log
-          today = Duration(seconds: lastStudy['today'] ?? 0);
-          yesterday = Duration(seconds: lastStudy['yesterday'] ?? 0);
-          total = Duration(seconds: lastStudy['total'] ?? 0);
-          average = Duration(seconds: lastStudy['average'] ?? 0);
-          lowest = Duration(seconds: lastStudy['lowest'] ?? 0);
-          highest = Duration(seconds: lastStudy['highest'] ?? 0);
-
-          // Activity counts
-          videoCount = lastActivity['video_count'] ?? 0;
-          answerCount = lastActivity['answer_count'] ?? 0;
-
-          // Course progress
-          totalpercentageValue = courseProgress['total_percentage']?.toString() ?? "0.0";
-
-          // You can assign targetDates, mockExams, etc. to local variables or UI widgets as needed
-          _targetDateMap = targetDates;
-          _mockExamList = mockExams;
-          _competitiveExamList = competitiveExams;
-          _metadata = metadata;
-        });
-
-       // await _updateSharedPreferences(data);
-
-        print("✔ All data loaded from: $filePath");
-      } else {
+      if (!await file.exists()) {
         print('❌ No saved data file found at: $filePath');
+        return;
       }
+
+      final String jsonString = await file.readAsString();
+      final dynamic decoded = jsonDecode(jsonString);
+
+      // 1) Normalize to a Map<String, dynamic>
+      late Map<String, dynamic> data;
+      if (decoded is Map<String, dynamic>) {
+        data = decoded;
+      } else if (decoded is List) {
+        // old bug: top-level was a List, so wrap it as study_time_log
+        data = {
+          'study_time_log': decoded,
+          'activity_counts_log': <dynamic>[],
+          'mock_exams': <dynamic>[],
+          'competitive_exams': <dynamic>[],
+          'course_progress': <String, dynamic>{},
+          'target_dates': <String, dynamic>{},
+          'metadata': <String, dynamic>{},
+        };
+        print('⚠️ Wrapped top-level List as study_time_log');
+      } else {
+        print('❗ Unexpected JSON structure, aborting load.');
+        return;
+      }
+
+      // 2) Safely extract each part, casting Lists where needed:
+      final List<Map<String, dynamic>> studyLog =
+          (data['study_time_log'] as List?)
+              ?.cast<Map<String, dynamic>>() ??
+              [];
+
+      final List<Map<String, dynamic>> activityLog =
+          (data['activity_counts_log'] as List?)
+              ?.cast<Map<String, dynamic>>() ??
+              [];
+
+      final List<Map<String, dynamic>> mockExams =
+          (data['mock_exams'] as List?)
+              ?.cast<Map<String, dynamic>>() ??
+              [];
+
+      final List<Map<String, dynamic>> competitiveExams =
+          (data['competitive_exams'] as List?)
+              ?.cast<Map<String, dynamic>>() ??
+              [];
+
+      final Map<String, dynamic> courseProgress =
+          (data['course_progress'] as Map?)?.cast<String, dynamic>() ??
+              {};
+
+      final Map<String, dynamic> targetDates =
+          (data['target_dates'] as Map?)?.cast<String, dynamic>() ??
+              {};
+
+      final Map<String, dynamic> metadata =
+          (data['metadata'] as Map?)?.cast<String, dynamic>() ??
+              {};
+
+      final Map<String, int> newAttemptCounts = {
+        for (var exam in mockExams)
+        // key = chapter name, value = attempts (parsed as int)
+          exam['chapter'] as String:
+          (exam['attempts'] is int
+              ? exam['attempts'] as int
+              : int.tryParse(exam['attempts'].toString()) ?? 0)
+      };
+
+      // 3) Pull out “last” entries safely:
+      final lastStudy = studyLog.isNotEmpty ? studyLog.last : {};
+      final lastActivity = activityLog.isNotEmpty ? activityLog.last : {};
+
+      setState(() {
+        today = Duration(seconds: lastStudy['today'] ?? 0);
+        yesterday = Duration(seconds: lastStudy['yesterday'] ?? 0);
+        total = Duration(seconds: lastStudy['total'] ?? 0);
+        average = Duration(seconds: lastStudy['average'] ?? 0);
+        lowest = Duration(seconds: lastStudy['lowest'] ?? 0);
+        highest = Duration(seconds: lastStudy['highest'] ?? 0);
+
+        videoCount = lastActivity['video_count'] ?? 0;
+        answerCount = lastActivity['answer_count'] ?? 0;
+
+        totalpercentageValue =
+            courseProgress['total_percentage']?.toString() ?? "0.0";
+
+        _targetDateMap = targetDates;
+        _mockExamMap = mockExams.isNotEmpty ? mockExams.last : {};
+        _competitiveExamMap =
+        competitiveExams.isNotEmpty ? competitiveExams.last : {};
+        _metadata = metadata;
+        attemptCounts = newAttemptCounts;
+      });
+
+      print("Mock Exam ${_mockExamMap}");
+
+      print("✔️ All data loaded from: $filePath");
     } catch (e) {
       print('❗ Error loading data: $e');
     }
   }
+
 
 }
