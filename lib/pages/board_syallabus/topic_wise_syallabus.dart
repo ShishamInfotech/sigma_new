@@ -226,7 +226,8 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                   (question["description_image_id"].toString().toLowerCase() != "nr" && question["description_image_id"].toString().toLowerCase() != "na"))
                         TextButton(
                           onPressed: () {
-                            final isNR = question["description_image_id"].toString().toLowerCase() == "nr";
+                            final isNR =  question["description_image_id"].toString().toLowerCase() == "nr" ||
+                                question["description_image_id"].toString().toLowerCase() == "na";
                             Get.to(() => TextAnswerJee(
                               title: widget.pathQuestionList[0]["chapter"] ?? "",
                               imagePath: isNR ? question["test_answer_string"] : question["description_image_id"],

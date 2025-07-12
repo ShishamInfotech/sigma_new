@@ -18,6 +18,48 @@ class MathText extends StatefulWidget {
 }
 
 class _MathTextState extends State<MathText> {
+
+  late String _sanitized;
+  double? _measuredHeight;
+  double? _lastWidth;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resanitizeAndMeasure();
+  }
+
+  @override
+  void didUpdateWidget(covariant MathText old) {
+    super.didUpdateWidget(old);
+    if (old.expression != widget.expression ||
+        old.textSize != widget.textSize) {
+      _resanitizeAndMeasure();
+    }
+  }
+
+  void _resanitizeAndMeasure() {
+    _sanitized = sanitizeMathExpression(widget.expression);
+
+    // build a TextPainter to measure
+    final tp = TextPainter(
+      text: TextSpan(
+        text: _sanitized,
+        style: TextStyle(fontSize: widget.textSize),
+      ),
+      textDirection: TextDirection.ltr,
+      maxLines: null,
+    );
+
+    // assume we’ll use the full width of the parent:
+    final maxWidth = MediaQuery.of(context).size.width;
+    tp.layout(maxWidth: maxWidth);
+
+    setState(() {
+      _measuredHeight = tp.height;
+    });
+  }
+
   String sanitizeMathExpression(String input) {
     if(input.contains("matrix")||input.contains("vmatrix")) {
       return input
@@ -33,19 +75,79 @@ class _MathTextState extends State<MathText> {
     }
   }
 
+  void _prepareExpression() {
+    // 1) Convert <br> to real newlines before anything else
+    var withNewlines = widget.expression
+        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+
+    // 2) Your existing matrix-special fixes
+    if (withNewlines.contains("matrix")) {
+      _sanitized = withNewlines
+          .replaceAll(r'\\begin', r'\begin')
+          .replaceAll(r'\\end', r'\end')
+          .replaceAll(r'\\\\', r'\\')
+          .replaceAll(r'$', r'')
+          .replaceAll(r'\left[\begin', r'\(\left[\begin')
+          .replaceAll(r'\right]', r'\right]\)')
+          .replaceAll(r'z-[1', r'z_{1');
+    } else {
+      _sanitized = withNewlines;
+    }
+
+    // Clear last measurement so LayoutBuilder re-runs it on next build
+    _lastWidth = null;
+  }
+
+  void _measure(double maxWidth) {
+    if (_lastWidth == maxWidth && _measuredHeight != null) return;
+    _lastWidth = maxWidth;
+
+    // measure every line (newlines are honored)
+    final tp = TextPainter(
+      text: TextSpan(
+        text: _sanitized,
+        style: TextStyle(fontSize: widget.textSize),
+      ),
+      textDirection: TextDirection.ltr,
+      maxLines: null,
+    );
+    tp.layout(maxWidth: maxWidth);
+    _measuredHeight = tp.height;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final sanitizedExpression = sanitizeMathExpression(widget.expression);
+    //final sanitizedExpression = sanitizeMathExpression(widget.expression);
+    //final height = widget.height ?? _measuredHeight ?? widget.textSize * 1.2;
 
+    // If you really want it a bit tighter than the raw measurement, subtract e.g. 8px:
+    final dynamicHeight = (_measuredHeight ?? widget.textSize * 1.2) + 15;
+
+    // choose how much to trim
+    final trim = _sanitized.contains('matrix') ? 2.0 : 8.0;
+    final extraForMatrix = _sanitized.contains(r'\begin{matrix}') ? 8.0 : 0.0;
+
+// now compute your height
+    final height = (dynamicHeight).clamp(widget.textSize, double.infinity);
+
+    print('Using height $height');
+// Never use widget.height here, only your measured value:
+    //final height = dynamicHeight;//.clamp(widget.textSize, double.infinity);
+
+    print("Using dynamic height $height");
 
     print("Height ${widget.height}");
+    print("Text Size ${widget.textSize}");
+    print("Measured Height ${_measuredHeight}");
+    print("Calculated Height ${height}");
     return Container(
-      height: widget.height,
+      padding: const EdgeInsets.only(top: 10.0),
+      height: height,
       child: AndroidView(
         viewType: 'mathview-native',
         layoutDirection: TextDirection.ltr,
         creationParams: {
-          'expression': sanitizedExpression,
+          'expression': _sanitized,
           'textSize': widget.textSize,
         },
         creationParamsCodec: const StandardMessageCodec(),
