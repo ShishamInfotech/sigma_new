@@ -21,6 +21,7 @@ class _MathTextState extends State<MathText> {
 
   late String _sanitized;
   double? _measuredHeight;
+  double? _lastWidth;
 
   @override
   void didChangeDependencies() {
@@ -74,13 +75,53 @@ class _MathTextState extends State<MathText> {
     }
   }
 
+  void _prepareExpression() {
+    // 1) Convert <br> to real newlines before anything else
+    var withNewlines = widget.expression
+        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+
+    // 2) Your existing matrix-special fixes
+    if (withNewlines.contains("matrix")) {
+      _sanitized = withNewlines
+          .replaceAll(r'\\begin', r'\begin')
+          .replaceAll(r'\\end', r'\end')
+          .replaceAll(r'\\\\', r'\\')
+          .replaceAll(r'$', r'')
+          .replaceAll(r'\left[\begin', r'\(\left[\begin')
+          .replaceAll(r'\right]', r'\right]\)')
+          .replaceAll(r'z-[1', r'z_{1');
+    } else {
+      _sanitized = withNewlines;
+    }
+
+    // Clear last measurement so LayoutBuilder re-runs it on next build
+    _lastWidth = null;
+  }
+
+  void _measure(double maxWidth) {
+    if (_lastWidth == maxWidth && _measuredHeight != null) return;
+    _lastWidth = maxWidth;
+
+    // measure every line (newlines are honored)
+    final tp = TextPainter(
+      text: TextSpan(
+        text: _sanitized,
+        style: TextStyle(fontSize: widget.textSize),
+      ),
+      textDirection: TextDirection.ltr,
+      maxLines: null,
+    );
+    tp.layout(maxWidth: maxWidth);
+    _measuredHeight = tp.height;
+  }
+
   @override
   Widget build(BuildContext context) {
     //final sanitizedExpression = sanitizeMathExpression(widget.expression);
     //final height = widget.height ?? _measuredHeight ?? widget.textSize * 1.2;
 
     // If you really want it a bit tighter than the raw measurement, subtract e.g. 8px:
-    final dynamicHeight = (_measuredHeight ?? widget.textSize * 1.2);
+    final dynamicHeight = (_measuredHeight ?? widget.textSize * 1.2) + 15;
 
     // choose how much to trim
     final trim = _sanitized.contains('matrix') ? 2.0 : 8.0;
