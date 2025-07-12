@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -537,6 +538,8 @@ class _MockExamScreenState extends State<MockExamScreen> {
       subjectStats['high_score'] = correct;
     }
     await prefs.setString(subjectKey, jsonEncode(subjectStats));
+
+    loadMockAttemptsMock();
   }
 
   Future<void> _clearSavedExamState() async {
@@ -879,6 +882,122 @@ class _MockExamScreenState extends State<MockExamScreen> {
     }
 
     return height.clamp(50.0, 300.0);
+  }
+
+
+  Future<void> loadMockAttemptsMock() async {
+    final prefs = await SharedPreferences.getInstance();
+    Map<String, List<Map<String, dynamic>>> temp = {};
+
+    for (var key in prefs.getKeys()) {
+      if (key.startsWith('mock_exam_attempts')) {
+        final jsonStr = prefs.getString(key);
+        if (jsonStr != null) {
+          try {
+            final decoded = jsonDecode(jsonStr);
+            if (decoded is Map<String, dynamic>) {
+              final subject = decoded['subjectId'] ?? decoded['subject'] ?? 'Unknown';
+              temp.putIfAbsent(subject, () => []);
+              temp[subject]!.add(decoded);
+            } else if (decoded is List) {
+              for (var attempt in decoded) {
+                if (attempt is Map<String, dynamic>) {
+                  final subject = attempt['subjectId'] ?? attempt['subject'] ?? 'Unknown';
+                  temp.putIfAbsent(subject, () => []);
+                  temp[subject]!.add(attempt);
+                }
+              }
+            }
+          } catch (e) {
+            debugPrint("Error parsing $key: $e");
+          }
+        }
+      }
+    }
+
+    // Sort attempts by date (newest first)
+    temp.forEach((subject, attempts) {
+      attempts.sort((a, b) {
+        final dateA = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+        final dateB = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+        return dateB.compareTo(dateA);
+      });
+    });
+
+
+
+    // Save to external storage
+    await _saveToSDCard(temp);
+  }
+
+
+
+  Future<void> _saveToSDCard(Map<String, List<Map<String, dynamic>>> newData) async {
+
+    try {
+      final directory = await SdCardUtility.getBasePath();
+     // final dir = Directory(directory);
+      final filePath = '$directory/jee_exam_attempt.json';
+      final file = File(filePath);
+
+      // Ensure directory exists
+     // await Directory(path).create(recursive: true);
+
+      Map<String, List<Map<String, dynamic>>> existingData = {};
+
+      // If file exists, read existing data
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        if (content.trim().isNotEmpty) {
+          try {
+            final decoded = jsonDecode(content);
+            if (decoded is Map<String, dynamic>) {
+              decoded.forEach((key, value) {
+                if (value is List) {
+                  existingData[key] = value
+                      .whereType<Map<String, dynamic>>()
+                      .toList();
+                }
+              });
+            }
+          } catch (e) {
+            debugPrint("Error decoding existing file: $e");
+          }
+        }
+      }
+
+      // Append new data
+      newData.forEach((subject, newAttempts) {
+        existingData.putIfAbsent(subject, () => []);
+        final existingDates = existingData[subject]!
+            .map((e) => e['date'])
+            .whereType<String>()
+            .toSet(); // Collect existing dates
+
+        for (var attempt in newAttempts) {
+          final date = attempt['date'];
+          if (date != null && !existingDates.contains(date)) {
+            existingData[subject]!.add(attempt);
+          }
+        }
+      });
+
+      // Optional: Sort again if needed
+      existingData.forEach((subject, attempts) {
+        attempts.sort((a, b) {
+          final dateA = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+          final dateB = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+          return dateB.compareTo(dateA);
+        });
+      });
+
+      // Save updated data
+      final updatedJson = jsonEncode(existingData);
+      await file.writeAsString(updatedJson);
+      debugPrint("Data appended and saved to: ${file.path}");
+    } catch (e) {
+      debugPrint("Failed to append/save to SD card: $e");
+    }
   }
 
 

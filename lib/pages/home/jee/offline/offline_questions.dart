@@ -833,9 +833,6 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
 
 
   Future<void> saveMockAttemptsToSDCard() async {
-    // Ask for permission
-
-    // Collect current mock attempts from SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     final Map<String, dynamic> currentAttempts = {};
 
@@ -848,45 +845,54 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
       }
     }
 
-    // Locate the storage directory
-
     final directory = await SdCardUtility.getBasePath();
-    final dir = Directory(directory);
     final filePath = '$directory/mock_exam_attempts.json';
     final file = File(filePath);
 
-    Map<String, dynamic> existingAttempts = {};
+    Map<String, List<dynamic>> existingAttempts = {};
 
+    // Load existing attempts
     if (await file.exists()) {
       try {
         final content = await file.readAsString();
-        existingAttempts = jsonDecode(content);
+        final decoded = jsonDecode(content);
+        if (decoded is Map<String, dynamic>) {
+          decoded.forEach((key, value) {
+            if (value is List) {
+              existingAttempts[key] = value;
+            }
+          });
+        }
       } catch (e) {
         print("Error reading existing file: $e");
-        // fallback: treat as if empty
       }
     }
 
-    // Compare and only add new or changed attempts
     bool hasNewData = false;
-    for (var key in currentAttempts.keys) {
-      final newData = jsonEncode(currentAttempts[key]);
-      final existingData = existingAttempts.containsKey(key)
-          ? jsonEncode(existingAttempts[key])
-          : null;
 
-      if (newData != existingData) {
-        existingAttempts[key] = currentAttempts[key];
+    for (var key in currentAttempts.keys) {
+      final newAttempt = currentAttempts[key];
+
+      // Ensure list exists
+      existingAttempts.putIfAbsent(key, () => []);
+
+      // Check for duplicate timestamp before adding
+      final timestamp = newAttempt['timestamp'];
+      final alreadyExists = existingAttempts[key]!.any(
+            (attempt) => attempt['timestamp'] == timestamp,
+      );
+
+      if (!alreadyExists) {
+        existingAttempts[key]!.add(newAttempt);
         hasNewData = true;
       }
     }
 
-    // Save if there's anything new or file doesn't exist
-    if (hasNewData || !(await file.exists())) {
+    if (hasNewData) {
       await file.writeAsString(jsonEncode(existingAttempts));
-      print("Mock attempts saved to: $filePath");
+      print("Mock attempts appended to: $filePath");
     } else {
-      print("No new data to write. File unchanged.");
+      print("No new attempt to append.");
     }
   }
 
@@ -898,10 +904,10 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
     final longLines = text.split('\n').where((line) => line.length > 50).length;
     final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt');
 
-    double height = (lines + longLines) * 20.0;
+    double height = (lines + longLines) * 40.0;
 
     if (hasComplexMath) {
-      height += 40.0;
+      height += 45.0;
     }
 
     return height.clamp(50.0, 300.0);

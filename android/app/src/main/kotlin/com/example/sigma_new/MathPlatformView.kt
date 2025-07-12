@@ -15,20 +15,33 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
     init {
         mathView.settings.javaScriptEnabled = true
         //mathView.text = expression
+
+        mathView.settings.javaScriptEnabled = true
+        mathView.settings.allowFileAccess = true
+        mathView.settings.allowFileAccessFromFileURLs = true
+        mathView.settings.allowUniversalAccessFromFileURLs = true
+        mathView.settings.domStorageEnabled = true
         // mathView.textSize = 20
         mathView.text = """
     <html>
     <head>
+           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
             body {
                 font-size: 17px;
+                height: auto;
+                max-height: max-content;
+                
             }
             mjx-container {
                 font-size: 17px;
+                height: auto;
+                max-height: max-content;
             }
         </style>
     </head>
     <body>
+    
         $expression
     </body>
     </html>

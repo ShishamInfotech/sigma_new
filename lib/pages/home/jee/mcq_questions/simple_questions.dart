@@ -59,7 +59,7 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                 Expanded(
                   child: MathText(
                     expression: question,
-                    height: 150,
+                    height: _estimateHeight(question),
                   ),
                 ),
               ],
@@ -97,7 +97,7 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                       border: Border.all(color: Colors.black),
                     ),
                     child: RadioListTile<String>(
-                      title: MathText(expression: option, height: 35),
+                      title: MathText(expression: option, height: _estimateOptionsHeight(option)),
                       value: option,
                       groupValue: selectedAnswers[index],
                       onChanged: isSubmitted
@@ -250,4 +250,39 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
       duration: const Duration(seconds: 1),
     ));
   }
+
+
+  double _estimateHeight(String text) {
+    if (text.isEmpty) return 0;
+
+    final lines = text.split('\n').length;
+    final longLines = text.split('\n').where((line) => line.length > 50).length;
+    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
+
+    double height = (lines + longLines) * 30.0;
+    height = height * 4.0;
+
+    if (hasComplexMath) {
+      height += 30.0;
+    }
+
+    return height.clamp(50.0, 300.0);
+  }
+
+  double _estimateOptionsHeight(String text) {
+    if (text.isEmpty) return 0;
+
+    final lines = text.split('\n').length;
+    final longLines = text.split('\n').where((line) => line.length > 50).length;
+    final hasComplexMath = text.contains(r'\frac') || text.contains(r'\sqrt');
+
+    double height = (lines + longLines) * 40.0;
+
+    if (hasComplexMath) {
+      height += 40.0;
+    }
+
+    return height.clamp(50.0, 300.0);
+  }
+  
 }

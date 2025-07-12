@@ -83,11 +83,30 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     // Step 2: Now that all data is ready, save it
     await saveAllDataToMemoryCard();
 
+    _loadAllExamAttempts();
+
     // Step 3: Then load data back if needed
     await loadDataFromMemoryCard();
    // await _loadAttempts();
   }
 
+
+  void _loadAllExamAttempts() async {
+    final allStats = await readAllExamStats();
+
+    if (allStats.isEmpty) {
+      print("No stats found.");
+      return;
+    }
+
+    print("AL Lenght ${allStats}");
+    allStats.forEach((category, attempts) {
+      print("📘 Category: $category");
+      for (var attempt in attempts) {
+        print("  - Score: ${attempt['averageScore']}, Level: ${attempt['currentLevel']}, Time: ${attempt['timestamp']}");
+      }
+    });
+  }
 
   Future<void> fetchStudyTrackerData() async {
     final directory = await SdCardUtility.getBasePath(); // Your custom utility
@@ -315,6 +334,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     final examAttemptsJson = prefs.getString('mock_exam_attempts') ?? '[]';
     final List<dynamic> examAttempts = jsonDecode(examAttemptsJson);
 
+    print("Exam Attempts $examAttempts");
     // Filter results by PCB/PCM and sort by date
     return examAttempts
         .where((exam) => exam['isPCB'] == isPCB)
@@ -327,6 +347,8 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 // Method to calculate stats for competitive exams
   Future<Map<String, dynamic>> _calculateExamStats(bool isPCB) async {
     final results = await _loadMockExamResults(isPCB);
+
+    print("Calculate $results");
     if (results.isEmpty) {
       return {
         'attempts': 0,
@@ -358,14 +380,102 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       currentLevel = 'Simple';
     }
 
-    return {
+    final resultMap = {
       'attempts': results.length,
       'averageScore': average,
       'highestScore': highest,
       'lowestScore': lowest,
       'currentLevel': currentLevel,
     };
+
+    await appendExamStat(isPCB ? 'pcb' : 'pcm', resultMap);
+
+    return resultMap;
   }
+
+
+
+
+  Future<void> appendExamStat(String key, Map<String, dynamic> data) async {
+    final directory = await SdCardUtility.getBasePath();
+    if (directory == null) return;
+
+    final filePath = '$directory/exam_stats.json';
+    final file = File(filePath);
+
+    // Ensure directory exists
+    await file.parent.create(recursive: true);
+
+
+    Map<String, dynamic> existingData = {};
+    if (await file.exists()) {
+      try {
+        existingData = jsonDecode(await file.readAsString());
+      } catch (_) {}
+    }
+
+    // Add timestamp to data
+    data['timestamp'] = DateTime.now().toIso8601String();
+
+    // Append to list under the key
+    final List<dynamic> previousAttempts = existingData[key] ?? [];
+    previousAttempts.add(data);
+    existingData[key] = previousAttempts;
+
+    await file.writeAsString(jsonEncode(existingData));
+    print("Appended stat under key: $key");
+  }
+
+  Future<List<Map<String, dynamic>>> readExamStatsList(String key) async {
+    final directory = await SdCardUtility.getBasePath();
+    if (directory == null) return[];
+
+    final filePath = '$directory/exam_stats.json';
+    final file = File(filePath);
+
+    if (await file.exists()) {
+      try {
+        final content = await file.readAsString();
+        final allData = jsonDecode(content);
+        final List<dynamic> entries = allData[key] ?? [];
+        return entries.cast<Map<String, dynamic>>();
+      } catch (e) {
+        print("Error reading list: $e");
+      }
+    }
+
+    return [];
+  }
+
+
+  Future<Map<String, List<Map<String, dynamic>>>> readAllExamStats() async {
+    final directory = await SdCardUtility.getBasePath();
+    if (directory == null) return{};
+
+    final filePath = '$directory/exam_stats.json';
+    final file = File(filePath);
+
+    if (await file.exists()) {
+      try {
+        final content = await file.readAsString();
+        final Map<String, dynamic> rawData = jsonDecode(content);
+
+        // Convert each key's value to List<Map<String, dynamic>>
+        final result = <String, List<Map<String, dynamic>>>{};
+        rawData.forEach((key, value) {
+          result[key] = List<Map<String, dynamic>>.from(value);
+        });
+
+        return result;
+      } catch (e) {
+        print("Error reading all exam stats: $e");
+      }
+    }
+
+    return {};
+  }
+
+
 
 
   @override
@@ -702,7 +812,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
             // PCM Section
             FutureBuilder<Map<String, dynamic>>(
-              future: _calculateExamStats(false),
+              future: _getLatestStatFromFile('pcm'),
               builder: (context, snapshot) {
                 final data = snapshot.data ?? {
                   'attempts': 0,
@@ -725,7 +835,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
             // PCB Section (only show if PCB is enabled)
             if (showJEE)
               FutureBuilder<Map<String, dynamic>>(
-                future: _calculateExamStats(true),
+                future: _getLatestStatFromFile('pcb'),
                 builder: (context, snapshot) {
                   final data = snapshot.data ?? {
                     'attempts': 0,
@@ -754,10 +864,48 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     );
   }
 
+
+
+  Future<Map<String, dynamic>> _getLatestStatFromFile(String key) async {
+
+    final directory = await SdCardUtility.getBasePath();
+    if (directory == null) return _emptyStat();
+
+    final filePath = '$directory/exam_stats.json';
+    final file = File(filePath);
+
+    if (!await file.exists()) return _emptyStat();
+
+    try {
+      final content = await file.readAsString();
+      final Map<String, dynamic> data = jsonDecode(content);
+
+      if (data[key] != null && data[key] is List && data[key].isNotEmpty) {
+        final List attempts = data[key];
+        return Map<String, dynamic>.from(attempts.last); // latest attempt
+      }
+    } catch (e) {
+      print("Error reading $key stats: $e");
+    }
+
+    return _emptyStat();
+  }
+
+  Map<String, dynamic> _emptyStat() => {
+    'attempts': 0,
+    'averageScore': 0.0,
+    'highestScore': 0.0,
+    'lowestScore': 0.0,
+    'currentLevel': 'Not started',
+  };
+
 // Helper widget to build exam performance table
   Widget _buildExamPerformanceTable(String exam, String subjects, Map<String, dynamic> data) {
+
+    print("Datatat $data");
+    print("EXAMM $exam");
     // Convert all numeric values to double
-    final attempts = (data['attempts'] as int).toDouble();
+    final attempts = (data['attempts'] as int);
     final averageScore = (data['averageScore'] as num).toDouble();
     final highestScore = (data['highestScore'] as num).toDouble();
     final lowestScore = (data['lowestScore'] as num).toDouble();
@@ -771,13 +919,14 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       builder: (context, snapshot) {
         // Initialize level counters
         Map<String, int> levelCounts = {
-          'Simple': 0,
-          'Medium': 0,
-          'Complex': 0,
+          'Simple': currentLevel=="Simple" ? attempts: 0,
+          'Medium': currentLevel=="Medium" ? attempts : 0,
+          'Complex': currentLevel=="Complex" ?attempts : 0,
           'Difficult': 0,
           'Advance': 0,
         };
 
+        print("DATA MOCK ${snapshot.data}");
         // Count attempts per level if we have data
         if (snapshot.hasData && snapshot.data!.isNotEmpty) {
           for (var attempt in snapshot.data!) {
@@ -1123,7 +1272,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       print(' • study_time_log entries: ${_safeLength(data['study_time_log'])}');
       print(' • activity_counts_log entries: ${_safeLength(data['activity_counts_log'])}');
       print(' • mock_exams entries: ${_safeLength(data['mock_exams'])}');
-      print(' • competitive_exams entries: ${_safeLength(data['competitive_exams'])}');
+      print(' • competitive_exams entries: ${(data['competitive_exams'])}');
       print(' • course_progress: ${data['course_progress']}');
       print(' • target_dates: ${data['target_dates']}');
       print(' • metadata: ${data['metadata']}');
@@ -1169,19 +1318,17 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     final jsonString = prefs.getString('mock_attempt_counts') ?? '{}';
     final decoded = jsonDecode(jsonString);
 
-    if (decoded is List) {
-      // Already a List<Map>
-      return decoded.cast<Map<String, dynamic>>();
-    } else if (decoded is Map<String, dynamic>) {
-      // Convert each key/value to its own map entry
-      return decoded.entries
-          .map((e) => {
-        'chapter': e.key,
-        'attempts': e.value,
-      })
-          .toList();
+    if (decoded is Map<String, dynamic>) {
+      return decoded.entries.map((e) {
+        final value = e.value;
+        final count = (value is Map && value['count'] is int) ? value['count'] : 0;
+
+        return {
+          'chapter': e.key,
+          'count': count,
+        };
+      }).toList();
     } else {
-      // Fallback empty list
       return [];
     }
   }
