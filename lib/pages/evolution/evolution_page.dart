@@ -305,7 +305,9 @@ class _EvaluationPageState extends State<EvaluationPage> {
                                     builder: (_) => JeeMockExamDetails(
                                       subject: subjectEntry.key,
                                     //  attempts: subjectEntry.value,
-                                      attempts: attempt,
+                                      attempts: [attempt],
+                                      title: subjectEntry.value.first["title"],
+                                      date: date.toString().substring(0, 16),
                                       //  selectedAttempt: attempt,
                                     ),
                                   ),

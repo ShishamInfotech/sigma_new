@@ -5,18 +5,22 @@ import 'package:sigma_new/pages/text_answer/text_answer.dart';
 
 class JeeMockExamDetails extends StatelessWidget {
   final String subject;
-  final Map<String, dynamic> attempts;
+  final List<Map<String, dynamic>> attempts;
+  final String title;
+  final String date;
 
   const JeeMockExamDetails({
     super.key,
     required this.subject,
     required this.attempts,
+    required this.title,
+    required this.date
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Attempts: $subject")),
+      appBar: AppBar(title: Text("Attempts: $title")),
       body: ListView.builder(
         itemCount: attempts.length,
         itemBuilder: (context, index) {
@@ -29,8 +33,8 @@ class JeeMockExamDetails extends StatelessWidget {
             margin: const EdgeInsets.all(10),
             elevation: 3,
             child: ExpansionTile(
-              title: Text("Attempt ${index + 1} - Chapter: $chapter"),
-              subtitle: Text("Time: $timestamp"),
+              title: Text("${title}"),
+              subtitle: Text("Time: $date"),
               children: questions.asMap().entries.map((entry) {
                 final qIndex = entry.key + 1;
                 final q = entry.value;
