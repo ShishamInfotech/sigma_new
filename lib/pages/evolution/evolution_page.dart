@@ -34,9 +34,10 @@ class _EvaluationPageState extends State<EvaluationPage> {
     sharedPrefrenceData().then((_) {
       loadSubmissionsFromSDCard(); // only after courseList is ready
     });
-    loadMockAttemptsMock();
+    //loadMockAttemptsMock();
    // loadSubmissionsFromSDCard();
     loadAttemptsFromSDCard();
+    loadFromSDCardAndDisplay();
   }
 
 
@@ -218,172 +219,108 @@ class _EvaluationPageState extends State<EvaluationPage> {
             ),
 
             // Tab 2: JEE Subject
-            DataTable(
-              columns: const [
-                DataColumn(label: Text("Subject")),
-                DataColumn(label: Text("Attempts")),
-                // DataColumn(label: Text("Best Score")),
-              ],
-              rows: subjectAttempts.entries.map((entry) {
-                // Find best score for this subject
+            SingleChildScrollView(
+              child: DataTable(
+                columns: const [
+                  DataColumn(label: Text("Subject")),
+                  DataColumn(label: Text("Attempts")),
+                  // DataColumn(label: Text("Best Score")),
+                ],
+                rows: subjectAttempts.entries.map((entry) {
+                  // Find best score for this subject
 
-                return DataRow(
-                  cells: [
-                    DataCell(
-                      Text(entry.key),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MockExamDetailPageReport(
-                                subject: entry.key, attempts: entry.value),
-                          ),
-                        );
-                      },
-                    ),
-                    DataCell(Text("${entry.value.length}")),
-                    //DataCell(Text("$bestScore/$totalQuestions")),
-                  ],
-                );
-              }).toList(),
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Text(entry.key),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MockExamDetailPageReport(
+                                  subject: entry.key, attempts: entry.value),
+                            ),
+                          );
+                        },
+                      ),
+                      DataCell(Text("${entry.value.length}")),
+                      //DataCell(Text("$bestScore/$totalQuestions")),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
             // Tab 3: JEE Mock Exam
-            Container(
-              margin: EdgeInsets.symmetric(horizontal:10 ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                if (subjectAttemptsMock.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(
-                      child: Text("No exam attempts found",
-                          style: TextStyle(color: Colors.grey)),
-                    ),
-                  )
-                else
-                  ...subjectAttemptsMock.entries.expand((subjectEntry) {
-                    return [
-                      const SizedBox(height: 8),
-                      Text(
-                        subjectEntry.value.first["title"],
-                        style: black14BoldTextStyle.copyWith(color: Colors.blue),
-                      ),
-                      ...subjectEntry.value.map((attempt) {
-                        final date =
-                            DateTime.tryParse(attempt['date'] ?? '')?.toLocal() ??
-                                DateTime.now();
-                        final score = attempt['correct'] ?? 0;
-                        final total = attempt['total'] ?? 1;
-                        final wrong = attempt['wrong'] ?? 0;
-                        final percentage =
-                            (score / total * 100).toStringAsFixed(1);
-                        final duration = attempt['duration'] ?? 'N/A';
 
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: ListTile(
-                            title: Text("Score: $score/$total ($percentage%)"),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("Date: ${date.toString().substring(0, 16)}"),
-                                Text("Wrong: $wrong | Time: $duration"),
-                              ],
-                            ),
-                            // trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => MockExamDetailPageReport(
-                                    subject: subjectEntry.key,
-                                    attempts: subjectEntry.value,
-                                    //  selectedAttempt: attempt,
+
+            SingleChildScrollView(
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal:10 ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  if (subjectAttemptsMock.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(
+                        child: Text("No exam attempts found",
+                            style: TextStyle(color: Colors.grey)),
+                      ),
+                    )
+                  else
+                    ...subjectAttemptsMock.entries.expand((subjectEntry) {
+                      return [
+                        const SizedBox(height: 8),
+                        Text(
+                          subjectEntry.value.first["title"],
+                          style: black14BoldTextStyle.copyWith(color: Colors.blue),
+                        ),
+                        ...subjectEntry.value.map((attempt) {
+                          final date =
+                              DateTime.tryParse(attempt['date'] ?? '')?.toLocal() ??
+                                  DateTime.now();
+                          final score = attempt['correct'] ?? 0;
+                          final total = attempt['total'] ?? 1;
+                          final wrong = attempt['wrong'] ?? 0;
+                          final percentage =
+                              (score / total * 100).toStringAsFixed(1);
+                          final duration = attempt['duration'] ?? 'N/A';
+              
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            child: ListTile(
+                              title: Text("Score: $score/$total ($percentage%)"),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Date: ${date.toString().substring(0, 16)}"),
+                                  Text("Wrong: $wrong | Time: $duration"),
+                                ],
+                              ),
+                              // trailing: const Icon(Icons.chevron_right),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MockExamDetailPageReport(
+                                      subject: subjectEntry.key,
+                                      attempts: subjectEntry.value,
+                                      //  selectedAttempt: attempt,
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ];
-                  }).toList(),
-              ]),
+                                );
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ];
+                    }).toList(),
+                ]),
+              ),
             )
           ],
         ),
       ),
     );
   }
-
-  Widget _buildEvaluationStat(String label, String value, String assetPath) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SvgPicture.asset(assetPath),
-          Text(label, style: black10MediumTextStyle),
-          Text(value, style: primaryColor18BoldTextStyle),
-        ],
-      ),
-    );
-  }
-
-  Widget _divider(double height) {
-    return SizedBox(
-      height: height * 0.08,
-      child: const VerticalDivider(
-        color: primaryColor,
-        thickness: 1,
-        width: 15,
-      ),
-    );
-  }
-
-  Widget _buildStatsCard(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
-
-    return Card(
-      elevation: 6,
-      shadowColor: primaryColor,
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildEvaluationStat(
-                "Completed", "10", "assets/svg/completed_evaluation.svg"),
-            _divider(height),
-            _buildEvaluationStat(
-                "Total Score", "10", "assets/svg/totalscore_evaluation.svg"),
-            _divider(height),
-            _buildEvaluationStat(
-                "Average", "10", "assets/svg/averge_evaluation.svg"),
-            _divider(height),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SvgPicture.asset(
-                        "assets/svg/subjectwisetest_evaluation.svg"),
-                    const Text("Current Test Level",
-                        style: black10MediumTextStyle),
-                    Text("Simple", style: primaryColor16MediumTextStyle),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-
 
   Future<void> loadAttemptsFromSDCard() async {
 
@@ -492,14 +429,14 @@ class _EvaluationPageState extends State<EvaluationPage> {
     });
   }
 
-  Future<void> loadMockAttemptsMock() async {
+  /*Future<void> loadMockAttemptsMock() async {
     final prefs = await SharedPreferences.getInstance();
     Map<String, List<Map<String, dynamic>>> temp = {};
     final now = DateTime.now();
 
-    /*final attemptsJson = prefs.getString('total_mock_exam_attempts') ?? '[]';
+    *//*final attemptsJson = prefs.getString('total_mock_exam_attempts') ?? '[]';
     final List<dynamic> attempts = jsonDecode(attemptsJson);
-    print("ATtemptss $attempts");*/
+    print("ATtemptss $attempts");*//*
 
     for (var key in prefs.getKeys()) {
       if (key.startsWith('mock_exam_attempts')) {
@@ -545,5 +482,60 @@ class _EvaluationPageState extends State<EvaluationPage> {
     setState(() {
       subjectAttemptsMock = temp;
     });
+  }*/
+
+  Future<void> loadFromSDCardAndDisplay() async {
+    final data = await readMockAttemptsFromSDCard();
+    setState(() {
+      subjectAttemptsMock = data;
+    });
   }
+
+
+
+  Future<Map<String, List<Map<String, dynamic>>>> readMockAttemptsFromSDCard() async {
+
+    try {
+      final directory = await SdCardUtility.getBasePath();
+      // final dir = Directory(directory);
+      final filePath = '$directory/jee_exam_attempt.json';
+      final file = File(filePath);
+
+      if (await file.exists()) {
+        final content = await file.readAsString();
+
+        if (content.trim().isNotEmpty) {
+          final decoded = jsonDecode(content);
+          if (decoded is Map<String, dynamic>) {
+            Map<String, List<Map<String, dynamic>>> parsedData = {};
+            decoded.forEach((key, value) {
+              if (value is List) {
+                parsedData[key] = value.whereType<Map<String, dynamic>>().toList();
+              }
+            });
+
+            // Optional: Sort attempts by date
+            parsedData.forEach((subject, attempts) {
+              attempts.sort((a, b) {
+                final dateA = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+                final dateB = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+                return dateB.compareTo(dateA);
+              });
+            });
+
+            debugPrint("Loaded data from SD card: $parsedData");
+            return parsedData;
+          }
+        }
+      } else {
+        debugPrint("File not found at: ${file.path}");
+      }
+    } catch (e) {
+      debugPrint("Failed to read from SD card: $e");
+    }
+
+    return {};
+  }
+
+
 }

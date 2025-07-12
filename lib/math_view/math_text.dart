@@ -19,7 +19,7 @@ class MathText extends StatefulWidget {
 
 class _MathTextState extends State<MathText> {
   String sanitizeMathExpression(String input) {
-    if(input.contains("matrix")) {
+    if(input.contains("matrix")||input.contains("vmatrix")) {
       return input
           .replaceAll(r'\\begin', r'\begin')
           .replaceAll(r'\\end', r'\end')

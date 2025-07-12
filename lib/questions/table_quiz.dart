@@ -188,6 +188,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
 
 
   Future<void> getQuestionList() async {
+    print("Path Question ${widget.pathQuestion}");
     try {
       String? board;
       final prefs = await SharedPreferences.getInstance();
@@ -568,17 +569,23 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
                 final subjectTitle = widget.title;
 
                 final attemptData = prefs.getString('mock_attempt_counts');
-                Map<String, int> attemptCounts = {};
+                Map<String, dynamic> attemptCounts = {};
 
                 if (attemptData != null) {
                   try {
-                    attemptCounts = Map<String, int>.from(jsonDecode(attemptData));
+                    attemptCounts = jsonDecode(attemptData);
                   } catch (_) {
                     attemptCounts = {};
                   }
                 }
 
-                attemptCounts[subjectTitle] = (attemptCounts[subjectTitle] ?? 0) + 1;
+                final currentCount = (attemptCounts[subjectTitle]?['count'] ?? 0) + 1;
+                final std = widget.pathQuestion.contains("10") ? 10 : null;
+
+                attemptCounts[subjectTitle] = {
+                  'count': currentCount,
+                  if (std != null) 'std': std,
+                };
 
 
 
@@ -586,6 +593,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
                   'title': widget.title,
                   'timestamp': DateTime.now().toIso8601String(),
                   'questions': selectedQuestions,
+                  'std': widget.pathQuestion.contains("10") ? "10" : "12",
                 };
 
                 // Load existing submissions
