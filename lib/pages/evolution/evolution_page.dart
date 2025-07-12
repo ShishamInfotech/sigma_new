@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/config/config.dart';
 import 'package:sigma_new/config/config_loader.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
+import 'package:sigma_new/pages/usage_report/jee_mock_exam_details.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
 import '../../utility/sd_card_utility.dart';
@@ -300,9 +302,10 @@ class _EvaluationPageState extends State<EvaluationPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => MockExamDetailPageReport(
+                                    builder: (_) => JeeMockExamDetails(
                                       subject: subjectEntry.key,
-                                      attempts: subjectEntry.value,
+                                    //  attempts: subjectEntry.value,
+                                      attempts: attempt,
                                       //  selectedAttempt: attempt,
                                     ),
                                   ),
@@ -523,7 +526,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
               });
             });
 
-            debugPrint("Loaded data from SD card: $parsedData");
+            log("Loaded data from SD card: $parsedData");
             return parsedData;
           }
         }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -504,6 +505,28 @@ class _MockExamScreenState extends State<MockExamScreen> {
     final examAttemptsJson = prefs.getString('mock_exam_attempts') ?? '[]';
     final List<dynamic> examAttempts = jsonDecode(examAttemptsJson);
 
+
+
+    // Combine each question with selected answer, correct answer, etc.
+    final detailedQuestions = <Map<String, dynamic>>[];
+    for (int i = 0; i < questions.length; i++) {
+      detailedQuestions.add({
+        "question": questions[i].question,
+        "options": [
+          questions[i].option1,
+          questions[i].option2,
+          questions[i].option3,
+          questions[i].option4,
+          questions[i].option5,
+        ],
+        "selected": selectedAnswers[i],
+        "correct": questions[i].answer,
+      //  "explanation": questions[i].ansExplanation ?? "No explanation available",
+      //  "notes": questions[i].notes ?? "No notes available",
+      //  "text_answer": questions[i].ansExplanation ?? "No text answer available",
+      });
+    }
+
     final examResult = {
       'title': widget.title,
       'date': examStartTime?.toIso8601String() ?? DateTime.now().toIso8601String(),
@@ -514,6 +537,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       'subjectId': widget.subjectId,
       'isPCB': widget.isPCB,
       'score': (correct / questions.length * 100).toStringAsFixed(1),
+      'questions': detailedQuestions,
     };
 
     examAttempts.add(examResult);
@@ -923,6 +947,8 @@ class _MockExamScreenState extends State<MockExamScreen> {
         return dateB.compareTo(dateA);
       });
     });
+
+    log("Mock Exam $temp");
 
 
 
