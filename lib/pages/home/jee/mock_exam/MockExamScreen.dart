@@ -47,7 +47,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
   final int PHYSICS_Q_COUNT = 5;
   final int CHEMISTRY_Q_COUNT = 5;
   final int MATH_Q_COUNT = 5;
-  final int BIOLOGY_Q_COUNT = 5;
+  final int BIOLOGY_Q_COUNT = 6;
 
   final String MAT_FILE_PREFIX = "jeemcqmathch";
   final String PHY_FILE_PREFIX = "jeemcqphych";
@@ -64,7 +64,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
   String? selectedOption;
   DateTime? examStartTime;
   bool isLoadingFirstQuestion = true;
-  String currentLevel = 'm'; // Default to medium level
+  String currentLevel = 's'; // Default to medium level
 
   @override
   void initState() {
@@ -506,6 +506,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     final examAttemptsJson = prefs.getString('mock_exam_attempts') ?? '[]';
     final List<dynamic> examAttempts = jsonDecode(examAttemptsJson);
 
+    print("Inside Save ===================== 1");
     // Calculate score percentage
     final scorePercentage = (correct / questions.length * 100);
     final formattedScore = scorePercentage.toStringAsFixed(1);
@@ -530,7 +531,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       //  "text_answer": questions[i].ansExplanation ?? "No text answer available",
       });
     }
-
+    print("Inside Save ===================== 2");
     final examResult = {
       'title': widget.title,
       'date': examStartTime?.toIso8601String() ?? DateTime.now().toIso8601String(),
@@ -552,7 +553,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     // Update general stats
     final totalAttempts = prefs.getInt('total_mock_exam_attempts') ?? 0;
     await prefs.setInt('total_mock_exam_attempts', totalAttempts + 1);
-
+    print("Inside Save ===================== 3");
     // Update high score if needed
     final highScore = prefs.getInt('mock_exam_high_score') ?? 0;
     if (correct > highScore) {
@@ -570,17 +571,18 @@ class _MockExamScreenState extends State<MockExamScreen> {
     //subjectStats['level'] = currentLevel;
     subjectStats['currentLevel'] = currentLevel;
     await prefs.setString(subjectKey, jsonEncode(subjectStats));
-
+    print("Inside Save ===================== 4");
     // Level progression logic
     await _updateLevelProgression(scorePercentage);
-
+    print("Inside Save ===================== 5");
     loadMockAttemptsMock();
+    print("Inside Save ===================== 6");
   }
 
   Future<void> _updateLevelProgression(double scorePercentage) async {
     // Get current level progression data
     final progressionKey = 'level_progression_${widget.isPCB ? "PCB" : "PCM"}';
-    final progressionJson = prefs.getString(progressionKey) ?? '{"current_level": $currentLevel, "consecutive_passes": 0}';
+    final progressionJson = prefs.getString(progressionKey) ?? '{"current_level": "$currentLevel", "consecutive_passes": 0}';
     final progressionData = jsonDecode(progressionJson);
 
     String currentLevels = progressionData['current_level'] ?? 's';
