@@ -943,7 +943,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
             } else {
               level = 'Simple';
             }
-            levelCounts[level] = (levelCounts[level] ?? 0) + 1;
+            levelCounts[level] = (levelCounts[level] ?? 0);
           }
         }
 

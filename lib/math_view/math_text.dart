@@ -39,7 +39,13 @@ class _MathTextState extends State<MathText> {
   }
 
   void _resanitizeAndMeasure() {
-    _sanitized = sanitizeMathExpression(widget.expression);
+
+    // 1) Turn HTML <br> tags into actual line breaks
+    final withNewlines = widget.expression
+        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: true), '\n');
+
+    // 2) Apply your matrix/other LaTeX sanitization
+    _sanitized = sanitizeMathExpression(withNewlines);
 
     // build a TextPainter to measure
     final tp = TextPainter(
@@ -52,7 +58,8 @@ class _MathTextState extends State<MathText> {
     );
 
     // assume we’ll use the full width of the parent:
-    final maxWidth = MediaQuery.of(context).size.width;
+    final maxWidth = widget.height
+        ?? MediaQuery.of(context).size.width;  // fallback if height is null
     tp.layout(maxWidth: maxWidth);
 
     setState(() {
@@ -127,19 +134,27 @@ class _MathTextState extends State<MathText> {
     final trim = _sanitized.contains('matrix') ? 2.0 : 8.0;
     final extraForMatrix = _sanitized.contains(r'\begin{matrix}') ? 8.0 : 0.0;
 
-// now compute your height
-    final height = (dynamicHeight).clamp(widget.textSize, double.infinity);
+    // Count all LaTeX commands (anything starting with a backslash)
+    final cmdCount = RegExp(r'\\[A-Za-z]+')
+        .allMatches(_sanitized)
+        .length;
 
-    print('Using height $height');
+    // say 2px per command
+    final extra = cmdCount * 30.0;
+
+// now compute your height
+    final height = (dynamicHeight + extra).clamp(widget.textSize, double.infinity);
+
+    //print('Using height $height');
 // Never use widget.height here, only your measured value:
     //final height = dynamicHeight;//.clamp(widget.textSize, double.infinity);
 
-    print("Using dynamic height $height");
+    /*print("Using dynamic height $height");
 
     print("Height ${widget.height}");
     print("Text Size ${widget.textSize}");
     print("Measured Height ${_measuredHeight}");
-    print("Calculated Height ${height}");
+    print("Calculated Height ${height}");*/
     return Container(
       padding: const EdgeInsets.only(top: 10.0),
       height: height,
