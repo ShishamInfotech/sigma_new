@@ -92,17 +92,19 @@ class _MathTextState extends State<MathText> {
   double _calculateHeight() {
     final baseHeight = (_measuredHeight ?? widget.textSize * 1.2) + 15;
 
+    print("Data ========= ${_sanitized}");
     // Count special characters for height adjustment
+    final fractionCount = RegExp(r'\\frac{').allMatches(_sanitized).length * 10;
     final cmdCount = RegExp(r'\\').allMatches(_sanitized).length;
     final subCount = RegExp(r'<sub>').allMatches(_sanitized).length * 10;
     final iCount = RegExp(r'<i>').allMatches(_sanitized).length * 10;
-    final dollarCount = RegExp(r'\$\$').allMatches(_sanitized).length * 22;
+    final dollarCount = RegExp(r'\$\$').allMatches(_sanitized).length * 25;
     final closingTagCount = RegExp(r'</').allMatches(_sanitized).length * 3;
 
     double extra = cmdCount * 2.0;
     if (_sanitized.contains('Delta')) extra -= 10;
 
-    final calculatedHeight = baseHeight + extra + subCount + iCount + dollarCount - closingTagCount;
+    final calculatedHeight = baseHeight + extra + subCount + iCount + dollarCount + fractionCount - closingTagCount;
 
     // Get screen height in logical pixels
     final maxScreenHeight = ui.window.physicalSize.height / ui.window.devicePixelRatio;
