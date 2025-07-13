@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -484,9 +485,34 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
 
   }
 
-  Future<String> _getCurrentLevel() async {
+  Future<String> _getCurrentLevel(bool isPCB) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('currentLevel') ?? 's'; // Default to 's' if not set
+    //return prefs.getString('currentLevel') ?? 's'; // Default to 's' if not set
+
+    // Create a unique key based on the stream type
+    final levelKey = 'current_level_${isPCB ? "PCB" : "PCM"}';
+
+    // Try loading from SharedPreferences first
+    String? level = prefs.getString(levelKey);
+
+    if (level == null) {
+      // If not in SharedPreferences, try loading from SD card
+      try {
+        final directory = await SdCardUtility.getBasePath();
+        final filePath = '$directory/jee_level_data.json';
+        final file = File(filePath);
+
+        if (await file.exists()) {
+          final content = await file.readAsString();
+          final levelData = jsonDecode(content);
+          level = levelData[levelKey]?['level'];
+        }
+      } catch (e) {
+        debugPrint("Error loading level from SD card: $e");
+      }
+
+    }
+    return level ?? 's';
   }
 
   final levelNames = {
@@ -498,7 +524,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
   };
 
   void showMockExamInstructions(BuildContext context, String subjectId, String title, bool isPCB) async {
-    final currentLevel = await _getCurrentLevel();
+    final currentLevel = await _getCurrentLevel(isPCB);
     final instructions = MockExamInstructions.instructions[currentLevel]?[isPCB] ?? 'No instructions available.';
 
     showDialog(

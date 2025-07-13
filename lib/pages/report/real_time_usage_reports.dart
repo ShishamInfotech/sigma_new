@@ -364,21 +364,24 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     final highest = scores.reduce((a, b) => a > b ? a : b);
     final lowest = scores.reduce((a, b) => a < b ? a : b);
 
+    final level = results.elementAt(0)['level'].toString();
     // Determine current level based on average score
     String currentLevel;
-    if (average >= 95) {
+    if (level == 'a') {
       currentLevel = 'Advance';
-    } else if (average >= 90) {
+    } else if (level == 'd') {
       currentLevel = 'Difficult';
-    } else if (average >= 80) {
+    } else if (level == 'c') {
       currentLevel = 'Complex';
-    } else if (average >= 70) {
+    } else if (level == 'm') {
       currentLevel = 'Medium';
-    } else if (average >= 60) {
+    } else if (level == 's') {
       currentLevel = 'Simple';
     } else {
       currentLevel = 'Simple';
     }
+
+
 
     final resultMap = {
       'attempts': results.length,
@@ -814,6 +817,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
             FutureBuilder<Map<String, dynamic>>(
               future: _getLatestStatFromFile('pcm'),
               builder: (context, snapshot) {
+                print("Datatat------------- $snapshot.data");
                 final data = snapshot.data ?? {
                   'attempts': 0,
                   'averageScore': 0,
@@ -822,10 +826,27 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                   'currentLevel': 'Not started',
                 };
 
-                return _buildExamPerformanceTable(
+                /*return _buildExamPerformanceTable(
                   'JEE (PCM)',
                   'Physics, Chemistry, Mathematics',
                   data,
+                );*/
+
+                return FutureBuilder<Map<String, Map<String, int>>>(
+                  future: _getLevelAttemptsCount(),
+                  builder: (context, levelSnapshot) {
+                    final levelCounts = levelSnapshot.data ?? {
+                      'pcm': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+                      'pcb': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+                    };
+
+                    return _buildExamPerformanceTable(
+                      'JEE (PCM)',
+                      'Physics, Chemistry, Mathematics',
+                      data,
+                      levelCounts['pcm'] ?? {},
+                    );
+                  },
                 );
               },
             ),
@@ -845,10 +866,27 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                     'currentLevel': 'Not started',
                   };
 
-                  return _buildExamPerformanceTable(
+                  /*return _buildExamPerformanceTable(
                     'NEET (PCB)',
                     'Physics, Chemistry, Biology',
                     data,
+                  );*/
+
+                  return FutureBuilder<Map<String, Map<String, int>>>(
+                    future: _getLevelAttemptsCount(),
+                    builder: (context, levelSnapshot) {
+                      final levelCounts = levelSnapshot.data ?? {
+                        'pcm': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+                        'pcb': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+                      };
+
+                      return _buildExamPerformanceTable(
+                        'JEE (PCB)',
+                        'Physics, Chemistry, Biology',
+                        data,
+                        levelCounts['pcb'] ?? {},
+                      );
+                    },
                   );
                 },
               ),
@@ -899,8 +937,68 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     'currentLevel': 'Not started',
   };
 
+  Future<Map<String, Map<String, int>>> _getLevelAttemptsCount() async {
+    final directory = await SdCardUtility.getBasePath();
+    if (directory == null) return {};
+
+    final filePath = '$directory/jee_exam_attempt.json';
+    final file = File(filePath);
+
+    if (!await file.exists()) return {};
+
+    try {
+      final content = await file.readAsString();
+      final Map<String, dynamic> data = jsonDecode(content);
+
+      Map<String, Map<String, int>> levelCounts = {
+        'pcm': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+        'pcb': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+      };
+
+      data.forEach((key, value) {
+        if (value is List) {
+          for (var attempt in value) {
+            if (attempt is Map<String, dynamic>) {
+              final isPCB = attempt['isPCB'] == true;
+              final stream = isPCB ? 'pcb' : 'pcm';
+              final levelTag = attempt['level']?.toString().toLowerCase() ?? 's';
+
+              String level;
+              switch (levelTag) {
+                case 's':
+                  level = 'Simple';
+                  break;
+                case 'm':
+                  level = 'Medium';
+                  break;
+                case 'c':
+                  level = 'Complex';
+                  break;
+                case 'd':
+                  level = 'Difficult';
+                  break;
+                case 'a':
+                  level = 'Advance';
+                  break;
+                default:
+                  level = 'Simple'; // Default to Simple if level tag is unknown
+              }
+
+              levelCounts[stream]?[level] = (levelCounts[stream]?[level] ?? 0) + 1;
+            }
+          }
+        }
+      });
+
+      return levelCounts;
+    } catch (e) {
+      print('Error reading level attempts: $e');
+      return {};
+    }
+  }
+
 // Helper widget to build exam performance table
-  Widget _buildExamPerformanceTable(String exam, String subjects, Map<String, dynamic> data) {
+  Widget _buildExamPerformanceTable(String exam, String subjects, Map<String, dynamic> data, Map<String, int> levelCounts,) {
 
     print("Datatat $data");
     print("EXAMM $exam");
@@ -918,17 +1016,19 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       future: _loadMockExamResults(isPCB),
       builder: (context, snapshot) {
         // Initialize level counters
-        Map<String, int> levelCounts = {
+        /*Map<String, int> levelCounts = {
           'Simple': currentLevel=="Simple" ? attempts: 0,
           'Medium': currentLevel=="Medium" ? attempts : 0,
           'Complex': currentLevel=="Complex" ?attempts : 0,
           'Difficult': 0,
           'Advance': 0,
-        };
+        };*/
 
+
+        //levelCounts = _getLevelAttemptsCount()  //[isPCB ?? 'pcb' : 'pcm']?? {};
         print("DATA MOCK ${snapshot.data}");
         // Count attempts per level if we have data
-        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+        /*if (snapshot.hasData && snapshot.data!.isNotEmpty) {
           for (var attempt in snapshot.data!) {
             final score = double.parse(attempt['score'].toString());
             String level;
@@ -945,7 +1045,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
             }
             levelCounts[level] = (levelCounts[level] ?? 0);
           }
-        }
+        }*/
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

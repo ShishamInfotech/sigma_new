@@ -58,8 +58,7 @@ class _MathTextState extends State<MathText> {
     );
 
     // assume we’ll use the full width of the parent:
-    final maxWidth = widget.height
-        ?? MediaQuery.of(context).size.width;  // fallback if height is null
+    final maxWidth = MediaQuery.of(context).size.width;  // fallback if height is null
     tp.layout(maxWidth: maxWidth);
 
     setState(() {
@@ -143,7 +142,7 @@ class _MathTextState extends State<MathText> {
     final extra = cmdCount * 30.0;
 
 // now compute your height
-    final height = (dynamicHeight + extra).clamp(widget.textSize, double.infinity);
+    final height = (dynamicHeight).clamp(widget.textSize, double.infinity);
 
     //print('Using height $height');
 // Never use widget.height here, only your measured value:

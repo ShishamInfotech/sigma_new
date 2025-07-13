@@ -71,6 +71,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     super.initState();
     _initialize();
     _setExamDuration();
+    _loadCurrentLevel();
   }
 
   Future<void> _initialize() async {
@@ -505,7 +506,9 @@ class _MockExamScreenState extends State<MockExamScreen> {
     final examAttemptsJson = prefs.getString('mock_exam_attempts') ?? '[]';
     final List<dynamic> examAttempts = jsonDecode(examAttemptsJson);
 
-
+    // Calculate score percentage
+    final scorePercentage = (correct / questions.length * 100);
+    final formattedScore = scorePercentage.toStringAsFixed(1);
 
     // Combine each question with selected answer, correct answer, etc.
     final detailedQuestions = <Map<String, dynamic>>[];
@@ -521,6 +524,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
         ],
         "selected": selectedAnswers[i],
         "correct": questions[i].answer,
+        "level": currentLevel, // Add current level to each question
       //  "explanation": questions[i].ansExplanation ?? "No explanation available",
       //  "notes": questions[i].notes ?? "No notes available",
       //  "text_answer": questions[i].ansExplanation ?? "No text answer available",
@@ -538,6 +542,8 @@ class _MockExamScreenState extends State<MockExamScreen> {
       'isPCB': widget.isPCB,
       'score': (correct / questions.length * 100).toStringAsFixed(1),
       'questions': detailedQuestions,
+      'level': currentLevel, // Add current level to exam result
+      'currentLevel': currentLevel
     };
 
     examAttempts.add(examResult);
@@ -561,9 +567,105 @@ class _MockExamScreenState extends State<MockExamScreen> {
     if (correct > (subjectStats['high_score'] as int)) {
       subjectStats['high_score'] = correct;
     }
+    //subjectStats['level'] = currentLevel;
+    subjectStats['currentLevel'] = currentLevel;
     await prefs.setString(subjectKey, jsonEncode(subjectStats));
 
+    // Level progression logic
+    await _updateLevelProgression(scorePercentage);
+
     loadMockAttemptsMock();
+  }
+
+  Future<void> _updateLevelProgression(double scorePercentage) async {
+    // Get current level progression data
+    final progressionKey = 'level_progression_${widget.isPCB ? "PCB" : "PCM"}';
+    final progressionJson = prefs.getString(progressionKey) ?? '{"current_level": $currentLevel, "consecutive_passes": 0}';
+    final progressionData = jsonDecode(progressionJson);
+
+    String currentLevels = progressionData['current_level'] ?? 's';
+    int consecutivePasses = progressionData['consecutive_passes'] ?? 0;
+
+    // Check if user scored 70% or more
+    if (scorePercentage >= 70) {
+      consecutivePasses++;
+
+      // Check if user qualifies for next level
+      if (consecutivePasses >= 50) {
+        // Move to next level
+        final nextLevel = _getNextLevel(currentLevels);
+        if (nextLevel != currentLevels) {
+          currentLevels = nextLevel;
+          consecutivePasses = 0; // Reset counter for new level
+
+          // Show level up message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Congratulations! You\'ve advanced to $currentLevels level!'),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      }
+    } else {
+      // Reset consecutive passes if score is below 70%
+      consecutivePasses = 0;
+
+      // Optionally: Demote to previous level if performance is poor
+      // This is optional and can be removed if you don't want demotions
+      if (scorePercentage < 50 && currentLevels != 's') {
+        final prevLevel = _getPreviousLevel(currentLevels);
+        currentLevels = prevLevel;
+        consecutivePasses = 0;
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('You\'ve been moved back to $currentLevels level.'),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
+
+    // Save updated progression data
+    await prefs.setString(progressionKey, jsonEncode({
+      'current_level': currentLevels,
+      'consecutive_passes': consecutivePasses,
+    }));
+
+    // After updating the level, save it
+    await _saveCurrentLevel();
+
+    // Update the current level in state
+    setState(() {
+      this.currentLevel = currentLevels;
+    });
+  }
+
+  String _getNextLevel(String currentLevel) {
+    switch (currentLevel) {
+      case 's': return 'm'; // Simple -> Medium
+      case 'm': return 'c'; // Medium -> Complex
+      case 'c': return 'd'; // Complex -> Difficult
+      case 'd': return 'a'; // Difficult -> Advanced
+      case 'a': return 'a'; // Advanced stays at Advanced
+      default: return 's'; // Default to Simple
+    }
+  }
+
+  String _getPreviousLevel(String currentLevel) {
+    switch (currentLevel) {
+      case 'a': return 'd'; // Advanced -> Difficult
+      case 'd': return 'c'; // Difficult -> Complex
+      case 'c': return 'm'; // Complex -> Medium
+      case 'm': return 's'; // Medium -> Simple
+      case 's': return 's'; // Simple stays at Simple
+      default: return 's'; // Default to Simple
+    }
   }
 
   Future<void> _clearSavedExamState() async {
@@ -1027,6 +1129,74 @@ class _MockExamScreenState extends State<MockExamScreen> {
   }
 
 
+  Future<void> _saveCurrentLevel() async {
+    // Create a unique key based on the stream type
+    final levelKey = 'current_level_${widget.isPCB ? "PCB" : "PCM"}';
+
+    // Save to SharedPreferences
+    await prefs.setString(levelKey, currentLevel);
+
+    // Save to SD card
+    try {
+      final directory = await SdCardUtility.getBasePath();
+      final filePath = '$directory/jee_level_data.json';
+      final file = File(filePath);
+
+      Map<String, dynamic> levelData = {};
+
+      // If file exists, read existing data
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        if (content.trim().isNotEmpty) {
+          try {
+            levelData = jsonDecode(content);
+          } catch (e) {
+            debugPrint("Error decoding level file: $e");
+          }
+        }
+      }
+
+      // Update level data for this stream
+      levelData[levelKey] = {
+        'level': currentLevel,
+        'last_updated': DateTime.now().toIso8601String(),
+      };
+
+      // Save updated data
+      await file.writeAsString(jsonEncode(levelData));
+    } catch (e) {
+      debugPrint("Failed to save level to SD card: $e");
+    }
+  }
+
+  Future<void> _loadCurrentLevel() async {
+    // Create a unique key based on the stream type
+    final levelKey = 'current_level_${widget.isPCB ? "PCB" : "PCM"}';
+
+    // Try loading from SharedPreferences first
+    String? level = prefs.getString(levelKey);
+
+    if (level == null) {
+      // If not in SharedPreferences, try loading from SD card
+      try {
+        final directory = await SdCardUtility.getBasePath();
+        final filePath = '$directory/jee_level_data.json';
+        final file = File(filePath);
+
+        if (await file.exists()) {
+          final content = await file.readAsString();
+          final levelData = jsonDecode(content);
+          level = levelData[levelKey]?['level'];
+        }
+      } catch (e) {
+        debugPrint("Error loading level from SD card: $e");
+      }
+    }
+
+    setState(() {
+      currentLevel = level ?? 's'; // Default to 's' if no level found
+    });
+  }
 }
 
 class FileUri {
