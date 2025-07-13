@@ -580,7 +580,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
                 }
 
                 final currentCount = (attemptCounts[subjectTitle]?['count'] ?? 0) + 1;
-                final std = widget.pathQuestion.contains("10") ? 10 : null;
+                final std = widget.pathQuestion.contains("10") ? 10 : 12;
 
                 attemptCounts[subjectTitle] = {
                   'count': currentCount,

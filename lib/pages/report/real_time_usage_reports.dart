@@ -87,7 +87,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
     // Step 3: Then load data back if needed
     await loadDataFromMemoryCard();
-   // await _loadAttempts();
+    //await _loadAttempts();
   }
 
 
@@ -1418,14 +1418,18 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     final jsonString = prefs.getString('mock_attempt_counts') ?? '{}';
     final decoded = jsonDecode(jsonString);
 
+    print("Decoded Mock $decoded");
+
     if (decoded is Map<String, dynamic>) {
       return decoded.entries.map((e) {
         final value = e.value;
         final count = (value is Map && value['count'] is int) ? value['count'] : 0;
+        final std = (value is Map && value['std'] is int) ? value['std'] : 0;
 
         return {
           'chapter': e.key,
           'count': count,
+          'std': std,
         };
       }).toList();
     } else {
@@ -1462,6 +1466,14 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   }
 
   Future<void> loadDataFromMemoryCard() async {
+    var mockStd;
+    if(stdClass.contains('12')){
+      mockStd = 12;
+    }else if(stdClass.contains('10')){
+      mockStd =10;
+    }
+
+
     try {
       final directory = await SdCardUtility.getBasePath();
       final filePath = '$directory/study_tracker_data.json';
@@ -1507,10 +1519,14 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
               ?.cast<Map<String, dynamic>>() ??
               [];
 
+
+      print("Board Exam ${data['mock_exams']}");
       final List<Map<String, dynamic>> mockExams =
           (data['mock_exams'] as List?)
               ?.cast<Map<String, dynamic>>() ??
               [];
+
+
 
       final List<Map<String, dynamic>> competitiveExams =
           (data['competitive_exams'] as List?)
@@ -1531,12 +1547,43 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
       final Map<String, int> newAttemptCounts = {
         for (var exam in mockExams)
-        // key = chapter name, value = attempts (parsed as int)
           exam['chapter'] as String:
-          (exam['attempts'] is int
-              ? exam['attempts'] as int
-              : int.tryParse(exam['attempts'].toString()) ?? 0)
+          (exam['count'] is int
+              ? exam['count'] as int
+              : int.tryParse(exam['count'].toString()) ?? 0)
       };
+
+
+
+      final Map<String, Map<String, dynamic>> chapterData = {
+        for (var exam in mockExams)
+          exam['chapter'] as String: {
+            'count': (exam['count'] is int
+                ? exam['count'] as int
+                : int.tryParse(exam['count'].toString()) ?? 0),
+            'std': (exam['std'] is int
+                ? exam['std'] as int
+                : int.tryParse(exam['std'].toString()) ?? 0),
+            'date': exam['date']?.toString() ?? '',
+          }
+      };
+
+
+
+      print("Mock Stdd $mockStd");
+      final filteredChapterData = chapterData.entries
+          .where((entry) => entry.value['std'] == mockStd)
+          .toList();
+
+
+      final Map<String, int> newAttemptCountsStd12 = {
+        for (var entry in filteredChapterData)
+          entry.key: entry.value['count'] ?? 0
+      };
+
+
+
+
 
       // 3) Pull out “last” entries safely:
       final lastStudy = studyLog.isNotEmpty ? studyLog.last : {};
@@ -1561,7 +1608,8 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
         _competitiveExamMap =
         competitiveExams.isNotEmpty ? competitiveExams.last : {};
         _metadata = metadata;
-        attemptCounts = newAttemptCounts;
+       // attemptCounts = newAttemptCounts;
+        attemptCounts = newAttemptCountsStd12;
       });
 
       print("Mock Exam ${_mockExamMap}");
