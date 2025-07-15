@@ -1,16 +1,23 @@
+import 'dart:math';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class MathText extends StatefulWidget {
   final String expression;
-  final double? height; // Make height optional
-  final double textSize; // Add text size parameter
+  final double? height;
+  final double textSize;
+  final bool scrollable;
+  final int? maxLines;
 
   const MathText({
     super.key,
     required this.expression,
-    this.height, // Optional height
-    this.textSize = 24.0, // Default text size
+    this.height,
+    this.textSize = 24.0,
+    this.scrollable = false,
+    this.maxLines,
   });
 
   @override
@@ -18,10 +25,15 @@ class MathText extends StatefulWidget {
 }
 
 class _MathTextState extends State<MathText> {
-
   late String _sanitized;
   double? _measuredHeight;
   double? _lastWidth;
+
+  @override
+  void initState() {
+    super.initState();
+    //_sanitized = _sanitizeExpression(widget.expression);
+  }
 
   @override
   void didChangeDependencies() {
@@ -30,44 +42,41 @@ class _MathTextState extends State<MathText> {
   }
 
   @override
-  void didUpdateWidget(covariant MathText old) {
-    super.didUpdateWidget(old);
-    if (old.expression != widget.expression ||
-        old.textSize != widget.textSize) {
+  void didUpdateWidget(covariant MathText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.expression != widget.expression ||
+        oldWidget.textSize != widget.textSize) {
       _resanitizeAndMeasure();
     }
   }
 
   void _resanitizeAndMeasure() {
-
-    // 1) Turn HTML <br> tags into actual line breaks
     final withNewlines = widget.expression
         .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: true), '\n');
 
-    // 2) Apply your matrix/other LaTeX sanitization
-    _sanitized = sanitizeMathExpression(withNewlines);
+    _sanitized = sanitizeMathExpression(widget.expression);
 
-    // build a TextPainter to measure
-    final tp = TextPainter(
-      text: TextSpan(
-        text: _sanitized,
-        style: TextStyle(fontSize: widget.textSize),
-      ),
-      textDirection: TextDirection.ltr,
-      maxLines: null,
-    );
+      final tp = TextPainter(
+        text: TextSpan(
+          text: withNewlines,
+          style: TextStyle(fontSize: widget.textSize),
+        ),
+        textDirection: TextDirection.ltr,
+        maxLines: null,
+      );
 
-    // assume we’ll use the full width of the parent:
-    final maxWidth = MediaQuery.of(context).size.width;  // fallback if height is null
-    tp.layout(maxWidth: maxWidth);
+      // assume we’ll use the full width of the parent:
+      final maxWidth = MediaQuery.of(context).size.width;  // fallback if height is null
+      tp.layout(maxWidth: maxWidth);
 
-    setState(() {
-      _measuredHeight = tp.height;
-    });
+      setState(() {
+        _measuredHeight = tp.height;
+      });
+
   }
 
   String sanitizeMathExpression(String input) {
-    if(input.contains("matrix")||input.contains("vmatrix")) {
+    if (input.contains("matrix") || input.contains("vmatrix")) {
       return input
           .replaceAll(r'\\begin', r'\begin')
           .replaceAll(r'\\end', r'\end')
@@ -76,86 +85,37 @@ class _MathTextState extends State<MathText> {
           .replaceAll(r'\left[\begin', r'\(\left[\begin')
           .replaceAll(r'\right]', r'\right]\)')
           .replaceAll(r'z-[1', r'z_{1');
-    } else {
-      return input;
     }
+    return input;
   }
 
-  void _prepareExpression() {
-    // 1) Convert <br> to real newlines before anything else
-    var withNewlines = widget.expression
-        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+  double _calculateHeight() {
+    final baseHeight = (_measuredHeight ?? widget.textSize * 1.2) + 15;
 
-    // 2) Your existing matrix-special fixes
-    if (withNewlines.contains("matrix")) {
-      _sanitized = withNewlines
-          .replaceAll(r'\\begin', r'\begin')
-          .replaceAll(r'\\end', r'\end')
-          .replaceAll(r'\\\\', r'\\')
-          .replaceAll(r'$', r'')
-          .replaceAll(r'\left[\begin', r'\(\left[\begin')
-          .replaceAll(r'\right]', r'\right]\)')
-          .replaceAll(r'z-[1', r'z_{1');
-    } else {
-      _sanitized = withNewlines;
-    }
+    print("Data ========= ${_sanitized}");
+    // Count special characters for height adjustment
+    final fractionCount = RegExp(r'\\frac{').allMatches(_sanitized).length * 10;
+    final cmdCount = RegExp(r'\\').allMatches(_sanitized).length;
+    final subCount = RegExp(r'<sub>').allMatches(_sanitized).length * 10;
+    final iCount = RegExp(r'<i>').allMatches(_sanitized).length * 10;
+    final dollarCount = RegExp(r'\$\$').allMatches(_sanitized).length * 25;
+    final closingTagCount = RegExp(r'</').allMatches(_sanitized).length * 3;
 
-    // Clear last measurement so LayoutBuilder re-runs it on next build
-    _lastWidth = null;
+    double extra = cmdCount * 2.0;
+    if (_sanitized.contains('Delta')) extra -= 10;
+
+    final calculatedHeight = baseHeight + extra + subCount + iCount + dollarCount + fractionCount - closingTagCount;
+
+    // Get screen height in logical pixels
+    final maxScreenHeight = ui.window.physicalSize.height / ui.window.devicePixelRatio;
+
+    // Apply reasonable limits
+    return min(calculatedHeight.clamp(widget.textSize, double.infinity), min(maxScreenHeight, 15000.0));
+    //return calculatedHeight;
   }
 
-  void _measure(double maxWidth) {
-    if (_lastWidth == maxWidth && _measuredHeight != null) return;
-    _lastWidth = maxWidth;
-
-    // measure every line (newlines are honored)
-    final tp = TextPainter(
-      text: TextSpan(
-        text: _sanitized,
-        style: TextStyle(fontSize: widget.textSize),
-      ),
-      textDirection: TextDirection.ltr,
-      maxLines: null,
-    );
-    tp.layout(maxWidth: maxWidth);
-    _measuredHeight = tp.height;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    //final sanitizedExpression = sanitizeMathExpression(widget.expression);
-    //final height = widget.height ?? _measuredHeight ?? widget.textSize * 1.2;
-
-    // If you really want it a bit tighter than the raw measurement, subtract e.g. 8px:
-    final dynamicHeight = (_measuredHeight ?? widget.textSize * 1.2) + 15;
-
-    // choose how much to trim
-    final trim = _sanitized.contains('matrix') ? 2.0 : 8.0;
-    final extraForMatrix = _sanitized.contains(r'\begin{matrix}') ? 8.0 : 0.0;
-
-    // Count all LaTeX commands (anything starting with a backslash)
-    final cmdCount = RegExp(r'\\[A-Za-z]+')
-        .allMatches(_sanitized)
-        .length;
-
-    // say 2px per command
-    final extra = cmdCount * 30.0;
-
-// now compute your height
-    final height = (dynamicHeight).clamp(widget.textSize, double.infinity);
-
-    //print('Using height $height');
-// Never use widget.height here, only your measured value:
-    //final height = dynamicHeight;//.clamp(widget.textSize, double.infinity);
-
-    /*print("Using dynamic height $height");
-
-    print("Height ${widget.height}");
-    print("Text Size ${widget.textSize}");
-    print("Measured Height ${_measuredHeight}");
-    print("Calculated Height ${height}");*/
-    return Container(
-      padding: const EdgeInsets.only(top: 10.0),
+  Widget _buildMathView(double height) {
+    return SizedBox(
       height: height,
       child: AndroidView(
         viewType: 'mathview-native',
@@ -168,58 +128,17 @@ class _MathTextState extends State<MathText> {
       ),
     );
   }
-}
-
-
-/*
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-class MathText extends StatefulWidget {
-  final String expression;
-   double? height;
-
-  MathText({super.key, required this.expression,this.height});
-
-  @override
-  State<MathText> createState() => _MathTextState();
-}
-
-class _MathTextState extends State<MathText> {
-  double _height = 10;
-  static const _channel = MethodChannel("mathview/height");
-
-  @override
-  void initState() {
-    super.initState();
-    _channel.setMethodCallHandler((call) async {
-      if (call.method == "onHeightCalculated") {
-        final newHeight = (call.arguments as int).toDouble();
-        print("New Height $newHeight");
-        setState(() {
-          _height = newHeight.clamp(50.0, 1000.0);
-        });
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      key: ValueKey(widget.expression),
-      margin: const EdgeInsets.all(16), // equivalent to android:layout_margin
-      padding: const EdgeInsets.all(10), // equivalent to android:padding
-      width: double.infinity, // match_parent
+    final height = _calculateHeight();
 
-      child: SizedBox(
-        height: _height,
-        child: AndroidView(
-          viewType: 'mathview-native',
-          creationParams: {'expression': widget.expression},
-          creationParamsCodec: const StandardMessageCodec(),
-        ),
-      ),
-    );
+    if (widget.scrollable) {
+      return SingleChildScrollView(
+        child: _buildMathView(height),
+      );
+    }
+
+    return _buildMathView(height);
   }
 }
-*/

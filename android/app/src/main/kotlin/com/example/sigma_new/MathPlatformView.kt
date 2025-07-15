@@ -41,7 +41,7 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
         </style>
     </head>
     <body>
-    
+     
         $expression
     </body>
     </html>
