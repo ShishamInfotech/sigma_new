@@ -7,6 +7,8 @@ import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
+import '../../math_view/math_text_split.dart';
+
 
 class TextAnswerJee extends StatefulWidget {
   dynamic imagePath; // Can be String or List
@@ -114,9 +116,9 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
 
               color: blackColor.withOpacity(0.1),
               borderRadius: const BorderRadius.all(Radius.circular(10))),
-          child: MathText(
+          child: MathTextSplit(
             expression: widget.imagePath,
-            height: estimateHeight(widget.imagePath),
+            //height: estimateHeight(widget.imagePath),
             // style: black16MediumTextStyle,
           ),
         ),

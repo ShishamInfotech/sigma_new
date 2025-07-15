@@ -16,7 +16,7 @@ class MathText extends StatefulWidget {
     required this.expression,
     this.height,
     this.textSize = 24.0,
-    this.scrollable = false,
+    this.scrollable = true,
     this.maxLines,
   });
 
@@ -27,12 +27,11 @@ class MathText extends StatefulWidget {
 class _MathTextState extends State<MathText> {
   late String _sanitized;
   double? _measuredHeight;
-  double? _lastWidth;
 
   @override
   void initState() {
     super.initState();
-    //_sanitized = _sanitizeExpression(widget.expression);
+    _sanitized = sanitizeMathExpression(widget.expression);
   }
 
   @override
@@ -44,8 +43,7 @@ class _MathTextState extends State<MathText> {
   @override
   void didUpdateWidget(covariant MathText oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.expression != widget.expression ||
-        oldWidget.textSize != widget.textSize) {
+    if (oldWidget.expression != widget.expression || oldWidget.textSize != widget.textSize) {
       _resanitizeAndMeasure();
     }
   }
@@ -56,23 +54,21 @@ class _MathTextState extends State<MathText> {
 
     _sanitized = sanitizeMathExpression(widget.expression);
 
-      final tp = TextPainter(
-        text: TextSpan(
-          text: withNewlines,
-          style: TextStyle(fontSize: widget.textSize),
-        ),
-        textDirection: TextDirection.ltr,
-        maxLines: null,
-      );
+    final tp = TextPainter(
+      text: TextSpan(
+        text: withNewlines,
+        style: TextStyle(fontSize: widget.textSize),
+      ),
+      textDirection: TextDirection.ltr,
+      maxLines: null,
+    );
 
-      // assume we’ll use the full width of the parent:
-      final maxWidth = MediaQuery.of(context).size.width;  // fallback if height is null
-      tp.layout(maxWidth: maxWidth);
+    final maxWidth = MediaQuery.of(context).size.width;
+    tp.layout(maxWidth: maxWidth);
 
-      setState(() {
-        _measuredHeight = tp.height;
-      });
-
+    setState(() {
+      _measuredHeight = tp.height;
+    });
   }
 
   String sanitizeMathExpression(String input) {
@@ -90,41 +86,47 @@ class _MathTextState extends State<MathText> {
   }
 
   double _calculateHeight() {
-    final baseHeight = (_measuredHeight ?? widget.textSize * 1.2) + 15;
+    final baseHeight = (_measuredHeight ?? widget.textSize * 1.2) + 20;
 
-    print("Data ========= ${_sanitized}");
-    // Count special characters for height adjustment
-    final fractionCount = RegExp(r'\\frac{').allMatches(_sanitized).length * 10;
-    final cmdCount = RegExp(r'\\').allMatches(_sanitized).length;
-    final subCount = RegExp(r'<sub>').allMatches(_sanitized).length * 10;
-    final iCount = RegExp(r'<i>').allMatches(_sanitized).length * 10;
-    final dollarCount = RegExp(r'\$\$').allMatches(_sanitized).length * 25;
-    final closingTagCount = RegExp(r'</').allMatches(_sanitized).length * 3;
+    final patterns = {
+      r'\\frac{': 38,
+      r'\\sum': 8,
+      r'\\int': 8,
+      r'\$\$': 35,
+      r'</': -4,
+      r'<sub>': 10,
+      r'<i>': 10,
+      r'\\': 2,
+    };
 
-    double extra = cmdCount * 2.0;
-    if (_sanitized.contains('Delta')) extra -= 10;
+    double extra = patterns.entries.fold(0, (acc, entry) {
+      final count = RegExp(entry.key).allMatches(_sanitized).length;
+      return acc + (count * entry.value);
+    });
 
-    final calculatedHeight = baseHeight + extra + subCount + iCount + dollarCount + fractionCount - closingTagCount;
+    final screenHeight = MediaQuery.of(context).size.height;
+    return min(baseHeight + extra, screenHeight * 4); // Cap at 4x screen height
+  }
 
-    // Get screen height in logical pixels
-    final maxScreenHeight = ui.window.physicalSize.height / ui.window.devicePixelRatio;
-
-    // Apply reasonable limits
-    return min(calculatedHeight.clamp(widget.textSize, double.infinity), min(maxScreenHeight, 15000.0));
-    //return calculatedHeight;
+  bool _shouldScroll(double height, BuildContext context) {
+    final maxHeight = MediaQuery.of(context).size.height * 0.75;
+    return height > maxHeight;
   }
 
   Widget _buildMathView(double height) {
     return SizedBox(
       height: height,
-      child: AndroidView(
-        viewType: 'mathview-native',
-        layoutDirection: TextDirection.ltr,
-        creationParams: {
-          'expression': _sanitized,
-          'textSize': widget.textSize,
-        },
-        creationParamsCodec: const StandardMessageCodec(),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 6.0), // You can adjust this value as needed
+        child: AndroidView(
+          viewType: 'mathview-native',
+          layoutDirection: TextDirection.ltr,
+          creationParams: {
+            'expression': _sanitized,
+            'textSize': widget.textSize,
+          },
+          creationParamsCodec: const StandardMessageCodec(),
+        ),
       ),
     );
   }
@@ -132,13 +134,10 @@ class _MathTextState extends State<MathText> {
   @override
   Widget build(BuildContext context) {
     final height = _calculateHeight();
+    final needsScroll = widget.scrollable || _shouldScroll(height, context);
 
-    if (widget.scrollable) {
-      return SingleChildScrollView(
-        child: _buildMathView(height),
-      );
-    }
-
-    return _buildMathView(height);
+    return needsScroll
+        ? SingleChildScrollView(child: _buildMathView(height))
+        : _buildMathView(height.clamp(0.0, MediaQuery.of(context).size.height * 0.9));
   }
 }
