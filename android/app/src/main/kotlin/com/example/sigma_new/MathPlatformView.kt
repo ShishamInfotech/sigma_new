@@ -31,12 +31,14 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
                 font-size: 17px;
                 height: auto;
                 max-height: max-content;
-                
+                margin-top: 13px; /* 🛠 Adds visible space above the first line */
             }
             mjx-container {
                 font-size: 17px;
                 height: auto;
                 max-height: max-content;
+                padding-top: 8px;  /* 🛠 Extra padding inside MathJax container */
+
             }
         </style>
     </head>

@@ -170,6 +170,32 @@ class _MockExamScreenState extends State<MockExamScreen> {
         selectedAnswers = List.filled(questions.length, '');
       });
     }
+
+    // 🎯 Fallback: Ensure targetCount is met
+    final actualCount = questions.where((q) => q.subject == subject).length;
+    final shortfall = targetCount - actualCount;
+
+    if (shortfall > 0) {
+      debugPrint("Fallback: $subject is short by $shortfall questions. Retrying...");
+
+      try {
+        for (final file in files) {
+          final batch = await _loadQuestionBatch(file, subject, shortfall);
+          final filtered = batch.where((q) => !questions.contains(q)).toList();
+
+          if (filtered.isNotEmpty) {
+            setState(() {
+              questions.addAll(filtered.take(shortfall));
+              selectedAnswers = List.filled(questions.length, '');
+            });
+            break;
+          }
+        }
+      } catch (e) {
+        debugPrint("Fallback error for $subject: $e");
+      }
+    }
+
   }
 
   Future<List<SubCahpDatum>> _loadQuestionBatch(Uri file, String subject, int takeCount) async {
