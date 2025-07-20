@@ -49,7 +49,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
   // Updated question counts - 50 Physics, 50 Chemistry, 98 Math/Bio
 
 
-  static const _physicsQCount = 50;
+  static const _physicsQCount = 52;
   static const _chemistryQCount = 50;
   static const _mathQCount = 98;
   static const _biologyQCount = 98;
