@@ -49,7 +49,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
   // Updated question counts - 50 Physics, 50 Chemistry, 98 Math/Bio
 
 
-  static const _physicsQCount = 52;
+  static const _physicsQCount = 50;
   static const _chemistryQCount = 50;
   static const _mathQCount = 98;
   static const _biologyQCount = 98;
@@ -59,6 +59,17 @@ class _MockExamScreenState extends State<MockExamScreen> {
     'Chemistry': "jeemcqchech",
     'Biology': "jeemcqbioch",
   };
+
+   /*static const _physicsQCount = 5;
+  static const _chemistryQCount = 5;
+  static const _mathQCount = 9;
+  static const _biologyQCount = 9;
+  static const _filePrefixes = {
+    'Math': "jeemcqmathch",
+    'Physics': "jeemcqphych",
+    'Chemistry': "jeemcqchech",
+    'Biology': "jeemcqbioch",
+  };*/
 
 
   @override
@@ -334,9 +345,9 @@ class _MockExamScreenState extends State<MockExamScreen> {
         "selected": selectedAnswers[i],
         "correct": questions[i].answer,
         "level": currentLevel, // Add current level to each question
-      //  "explanation": questions[i].ansExplanation ?? "No explanation available",
+        "explanation": questions[i].ansExplaination ?? "No explanation available",
       //  "notes": questions[i].notes ?? "No notes available",
-      //  "text_answer": questions[i].ansExplanation ?? "No text answer available",
+        "text_answer": questions[i].ansExplaination ?? "No text answer available",
       });
     }
 
@@ -625,6 +636,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
         children: [
           _buildTimerAndProgress(),
           _buildQuestionCard(question),
+          SizedBox(height: 20,),
           ..._buildOptions(question),
           _buildSubmitButton(),
           const SizedBox(height: 20),
@@ -661,24 +673,32 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   Widget _buildQuestionCard(SubCahpDatum question) {
     return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.4,
-          ),
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: MathText(
-              key: ValueKey(question.question),
-              expression: question.question ?? '',
-              height: _estimateHeight(question.question ?? ''),
-            ),
+    margin: const EdgeInsets.all(8.0),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12.0), // Curve radius
+      side: const BorderSide(
+        color: Colors.black,
+        width: 2,
+      ),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.4,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: MathText(
+            key: ValueKey(question.question),
+            expression: question.question ?? '',
+            height: _estimateHeight(question.question ?? ''),
           ),
         ),
       ),
-    );
+    ),
+  );
+
   }
 
   List<Widget> _buildOptions(SubCahpDatum question) {

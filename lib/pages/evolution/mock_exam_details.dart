@@ -59,6 +59,8 @@ class MockExamDetailPage extends StatelessWidget {
                 final explanation = q['explanation'] ?? '';
                 final options = q['options'] ?? [];
 
+                print("Explain $explanation");
+
                 return Card(
                   margin: const EdgeInsets.all(10),
                   elevation: 2,
@@ -89,7 +91,7 @@ class MockExamDetailPage extends StatelessWidget {
                                                 || q['description_image_id'].toString().toLowerCase() != "na")) {
                                     // Show image answer
                                     Get.to(TextAnswer(
-                                      title: title,
+                                      title: "Q${index + 1}. Answer",
                                       imagePath: q['description_image_id'],
                                       stream: q['stream'],
                                       basePath: "/${q["subjectid"]}/images/",
@@ -105,7 +107,7 @@ class MockExamDetailPage extends StatelessWidget {
 
                             ),
                             const SizedBox(width: 10),
-                            ElevatedButton.icon(
+                           if(explanation!="") ElevatedButton.icon(
                               icon: const Icon(Icons.info_outline),
                               label: const Text("Explanation"),
                               onPressed: () =>

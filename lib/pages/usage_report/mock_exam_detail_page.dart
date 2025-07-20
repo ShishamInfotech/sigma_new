@@ -58,7 +58,7 @@ class MockExamDetailPageReport extends StatelessWidget {
                             children: [
                               ElevatedButton(
                                 onPressed: () {
-                                  Get.to(TextAnswer(imagePath: answerExplanation, title: "chapter",basePath: "nr",));
+                                  Get.to(TextAnswer(imagePath: answerExplanation, title: "Q$qIndex. Answer",basePath: "nr",));
                                 },
                                 child: Text("Show Answer"),
                               ),

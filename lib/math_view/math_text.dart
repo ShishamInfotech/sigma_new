@@ -1,8 +1,10 @@
 import 'dart:math';
-import 'dart:ui' as ui;
+
+import 'dart:developer' as ld;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sigma_new/utility/sd_card_utility.dart';
 
 class MathText extends StatefulWidget {
   final String expression;
@@ -76,20 +78,23 @@ class _MathTextState extends State<MathText> {
     input = input.trim();
     if (input.contains("matrix") || input.contains("vmatrix")) {
       print("Matrix Test================   $input");
-      return input
+      input= input
           .replaceAll(r'\\begin', r'\begin')
           .replaceAll(r'\\end', r'\end')
           .replaceAll(r'\\\\', r'\\')
           .replaceAll(r'$', r'')
-          .replaceAll(r'\left[\begin', r'\(\left[\begin')
-          .replaceAll(r'\right]', r'\right]\)')
+          //.replaceAll(r'\left[\begin', r'\(\left[\begin')
+         // .replaceAll(r'\right]', r'\right]\)')
           .replaceAll(r'z-[1', r'z_{1');
     }
+    
     return input;
   }
 
+
+
   double _calculateHeight() {
-    final baseHeight = (_measuredHeight ?? widget.textSize * 1.2) + 20;
+    var baseHeight = (_measuredHeight ?? widget.textSize * 1.2) + 20;
 
     /*final patterns = {
       r'\\frac{': 38,
@@ -125,7 +130,7 @@ class _MathTextState extends State<MathText> {
       r'<table': 10,
       r'<tr>':5,
       r'&nbsp;':25,
-      r'\(': 2,
+      r'\(': 6,
       // From Excel content
       r'\\propto': 10,
       r'n_1': 8,
@@ -143,6 +148,10 @@ class _MathTextState extends State<MathText> {
       r'\\tiny': 2,
       r'\omega':-5
     };
+
+    if(_sanitized.length > 60 && patterns.containsKey(r'\(')){
+      baseHeight = baseHeight+10 ;
+    }
 
     double extra = patterns.entries.fold(0, (acc, entry) {
       final count = RegExp(entry.key).allMatches(_sanitized).length;
@@ -176,7 +185,7 @@ class _MathTextState extends State<MathText> {
           viewType: 'mathview-native',
           layoutDirection: TextDirection.ltr,
           creationParams: {
-            'expression': _sanitized,
+            'expression': _sanitized.isNotEmpty ? _sanitized : '1+1',
             'textSize': widget.textSize,
           },
           creationParamsCodec: const StandardMessageCodec(),

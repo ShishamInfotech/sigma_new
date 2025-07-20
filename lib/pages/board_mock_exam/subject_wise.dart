@@ -38,6 +38,7 @@ class _SubjectWiseState extends State<SubjectWise> {
     subjectWiseTest();
   }
 
+
   String removeTestSeriesFromSubjectTitle(String title) {
     if (title.toLowerCase().contains("test series")) {
       List<String> parts = title.split("-");
@@ -136,6 +137,7 @@ class _SubjectWiseState extends State<SubjectWise> {
                   ),
                   itemCount: subjects.length,
                   itemBuilder: (BuildContext context, int index) {
+                    print("Subjetc Inxdex ${subjects[index]}");
                     return Column(
                       children: [
                         InkWell(

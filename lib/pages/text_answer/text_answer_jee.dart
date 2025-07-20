@@ -15,8 +15,9 @@ class TextAnswerJee extends StatefulWidget {
   String? basePath;
   String title;
   String? stream;
+  String? baseImagePath;
 
-  TextAnswerJee({required this.imagePath, this.basePath,required this.title, this.stream, super.key});
+  TextAnswerJee({required this.imagePath, this.basePath,required this.title, this.stream, this.baseImagePath, super.key});
 
   @override
   State<TextAnswerJee> createState() => _TextAnswerJeeState();
@@ -24,19 +25,26 @@ class TextAnswerJee extends StatefulWidget {
 
 class _TextAnswerJeeState extends State<TextAnswerJee> {
   List<File> imageFiles = [];
+ // String baseImagePath="";
 
   @override
   void initState() {
     super.initState();
     incrementAnswerCount();
+  //  getBasetree();
     if(widget.basePath?.toLowerCase().toString() != "nr")loadImage();
 
   }
+
+
 
   void incrementAnswerCount() async {
     final prefs = await SharedPreferences.getInstance();
     int current = prefs.getInt('answer_count') ?? 0;
     await prefs.setInt('answer_count', current + 1);
+
+    print("COUnt ");
+
   }
 
   loadImage() async {
@@ -103,8 +111,10 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
 
   @override
   Widget build(BuildContext context) {
-    print("VALue ${widget.imagePath}");
-    log(widget.imagePath);
+   // getBasetree();
+    log("VALue ${widget.imagePath}");
+    print("Image ${widget.baseImagePath}");
+   // log(widget.imagePath);
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: widget.basePath == "nr"
@@ -118,6 +128,7 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
               borderRadius: const BorderRadius.all(Radius.circular(10))),
           child: MathTextSplit(
             expression: widget.imagePath,
+            basePath: widget.baseImagePath!,
             //height: estimateHeight(widget.imagePath),
             // style: black16MediumTextStyle,
           ),

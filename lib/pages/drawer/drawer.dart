@@ -52,23 +52,24 @@ class _DrawerWidgetState extends State<DrawerWidget> {
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: primaryColor),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Device Details',
-                        style: white16w400MediumTextStyle),
-                    const SizedBox(height: 10),
-                    Text('Start Date: $startDate',
-                        style: white16w400MediumTextStyle),
-                    const SizedBox(height: 10),
-                    Text('End Date: $endDate',
-                        style: white16w400MediumTextStyle),
-                    const SizedBox(height: 10),
-                    Text('Device ID: ${deviceId()}',
-                        style: white16w400MediumTextStyle),
-                  ],
+              Container(
+                height: 250,
+                color: primaryColor,
+                padding: const EdgeInsets.all(16.0),
+                child: Container(
+                  margin: EdgeInsets.only(top: 15, right: 15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Device Details', style: white16w400MediumTextStyle),
+                      const SizedBox(height: 10),
+                      Text('Start Date: $startDate', style: white16w400MediumTextStyle),
+                      const SizedBox(height: 10),
+                      Text('End Date: $endDate', style: white16w400MediumTextStyle),
+                      const SizedBox(height: 8),
+                      Text('Device ID: ${deviceId()}', style: white16w400MediumTextStyle),
+                    ],
+                  ),
                 ),
               ),
               ListTile(
@@ -135,6 +136,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 ),
               ),
              // Spacer(),
+              Divider(height: 2,color: Colors.black,),
               Container(
                 height: 150,
                 child: Padding(

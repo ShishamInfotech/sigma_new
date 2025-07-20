@@ -8,6 +8,7 @@ import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/text_answer/text_answer.dart';
 import 'package:sigma_new/pages/video_explanation/VideoEncrypted.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
+import 'package:sigma_new/utility/sd_card_utility.dart';
 import '../../math_view/math_text.dart';
 import '../notepad/noteswrite.dart';
 import '../text_answer/text_answer_jee.dart';
@@ -33,6 +34,7 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
   List<Map<String, dynamic>> difficult = [];
   List<Map<String, dynamic>> advanced = [];
   List<Map<String, dynamic>> others= [];
+  String baseImagePath="";
 
 
 
@@ -42,11 +44,22 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
 
 
 
+    getBasetree();
     getQuestionList();
     _storeChapterPercentage();
     _subjectPercentage();
+
   }
 
+  getBasetree() async {
+    print("Get Base Tress");
+    baseImagePath = await SdCardUtility.getBasePath();
+    print("PAtyh $baseImagePath");
+    setState(() {
+
+    });
+
+  }
 
   Future<void> _storeChapterPercentage() async {
     final prefs = await SharedPreferences.getInstance();
@@ -233,6 +246,8 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                               imagePath: isNR ? question["test_answer_string"] : question["description_image_id"],
                               basePath: isNR ? "nr" : "/${question["subjectid"]}/images/",
                               stream: question["stream"],
+                              baseImagePath: baseImagePath,
+
                             ));
                           },
                           child: const Text("Text Answer"),

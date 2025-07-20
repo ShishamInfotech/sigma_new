@@ -264,8 +264,9 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
     String target_date = "No Target Date";
 
+    print("Completed Chap $completedChapters");
     for (String chapter in completedChapters) {
-       target_date = prefs.getString('chapter_${chapter}_percentage')!;
+       target_date = prefs.getString('chapter_${chapter.toString()}_percentage')!;
 
     }
 
@@ -718,12 +719,16 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                 ? const Center(child: Text("No attempts recorded."))
                 : Container(
                   height: 250,
-                  child: ListView(
-                                children: attemptCounts.entries.map((entry) {
+                  child: Scrollbar(
+                    thumbVisibility: true,
+                    child: ListView(
 
-                  return _buildExamPerformance(entry.key, entry.value, "Simple");
-                                }).toList(),
-                              ),
+                                  children: attemptCounts.entries.map((entry) {
+
+                    return _buildExamPerformance(entry.key, entry.value, "Simple");
+                                  }).toList(),
+                                ),
+                  ),
                 ),
             const SizedBox(height: 8),
             const Text(

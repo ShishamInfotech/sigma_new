@@ -142,7 +142,7 @@ class _StudyPageState extends State<StudyPage> {
                             if (now.isAfter(expiry)) {
                               Get.snackbar(
                                 "Access Expired",
-                                "Course access expired on ${config.expiryDate}.",
+                                "Course access expired on ${config.expiryDamte}.",
                                 snackPosition: SnackPosition.BOTTOM,
                                 backgroundColor: Colors.red,
                                 colorText: Colors.white,

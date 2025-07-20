@@ -1,19 +1,23 @@
 import 'dart:math';
 import 'dart:ui' as ui;
+import 'dart:developer' as ld;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sigma_new/utility/sd_card_utility.dart';
 
 class MathTextSplit extends StatelessWidget {
   final String expression;
   final double textSize;
-  final String delimiter; // Default: <br>
+  final String delimiter;
+  final String basePath;// Default: <br>
 
   const MathTextSplit({
     super.key,
     required this.expression,
     this.textSize = 24.0,
     this.delimiter = '<br>',
+    required this.basePath
   });
 
   String sanitize(String input) {
@@ -26,6 +30,38 @@ class MathTextSplit extends StatelessWidget {
         .replaceAll(r'\right]', r'\right]\)')
         .replaceAll(r'z-[1', r'z_{1');
   }
+
+
+
+
+  String sanitizeMathExpression(String input) {
+    //debugPrint("Matrix Test================   $input");
+    input = input.trim();
+    if (input.contains("matrix") || input.contains("vmatrix")) {
+      print("Matrix Test================   $input");
+      input= input
+          .replaceAll(r'\\begin', r'\begin')
+          .replaceAll(r'\\end', r'\end')
+          .replaceAll(r'\\\\', r'\\')
+          .replaceAll(r'$', r'')
+      //.replaceAll(r'\left[\begin', r'\(\left[\begin')
+      // .replaceAll(r'\right]', r'\right]\)')
+          .replaceAll(r'z-[1', r'z_{1');
+    }
+    ld.log("Inputtt $input");
+    if(input.contains("img src")){
+      print("getBasepath ${basePath}");
+      input = input.replaceAll("/sigma", basePath).replaceAll("style= width : 100px/", "style=\"width: 500px; height: auto;\"");
+
+      print("After Image $input");
+    }
+    
+
+    return input;
+  }
+
+
+
 
   double estimateHeight(BuildContext context, String subExpr, double textSize) {
     //final withNewlines = subExpr.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: true), '\n');
@@ -51,6 +87,7 @@ class MathTextSplit extends StatelessWidget {
       r'\int': 10,
       r'\\': 2,
       r'</': -4,
+      r'<img':500
     };
 
     double extra = symbolBonus.entries.fold(0.0, (acc, entry) {
@@ -67,7 +104,7 @@ class MathTextSplit extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: segments.map((segment) {
-        final subExpr = sanitize(segment);
+        final subExpr = sanitizeMathExpression(segment);
         final height = estimateHeight(context, subExpr, textSize)
             .clamp(60.0, MediaQuery.of(context).size.height * 0.8);
 
