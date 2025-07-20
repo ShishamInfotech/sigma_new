@@ -32,7 +32,7 @@ class _Appbar2State extends State<OtherPage> {
           'com.sec.android.app.popupcalculator',  // Samsung
           'com.coloros.calculator',          // Oppo
           'com.miui.calculator',             // Xiaomi
-          'com.huawei.calculator',           // Huawei
+          'com.huawei.calculator', // Huawei
         ];
 
         // Try each package until one works

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/pages/text_answer/text_answer.dart';
 
-class JeeMockExamDetails extends StatelessWidget {
+class JeeMockExamDetails extends StatefulWidget {
   final String subject;
   final List<Map<String, dynamic>> attempts;
   final String title;
@@ -14,17 +14,48 @@ class JeeMockExamDetails extends StatelessWidget {
     required this.subject,
     required this.attempts,
     required this.title,
-    required this.date
+    required this.date,
   });
 
   @override
+  State<JeeMockExamDetails> createState() => _JeeMockExamDetailsState();
+}
+
+class _JeeMockExamDetailsState extends State<JeeMockExamDetails> {
+  static const int batchSize = 5;
+  int currentMaxIndex = 5;
+
+  @override
   Widget build(BuildContext context) {
+    final displayedAttempts = widget.attempts.take(currentMaxIndex).toList();
+
     return Scaffold(
-      appBar: AppBar(title: Text("Attempts: $title")),
+      appBar: AppBar(title: Text("Attempts: ${widget.title}")),
       body: ListView.builder(
-        itemCount: attempts.length,
+        itemCount: displayedAttempts.length + 1, // +1 for Load More button
         itemBuilder: (context, index) {
-          final attempt = attempts[index];
+          if (index == displayedAttempts.length) {
+            // Load More Button
+            return Visibility(
+              visible: currentMaxIndex < widget.attempts.length,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        currentMaxIndex = (currentMaxIndex + batchSize)
+                            .clamp(0, widget.attempts.length);
+                      });
+                    },
+                    child: Text("Load More"),
+                  ),
+                ),
+              ),
+            );
+          }
+
+          final attempt = displayedAttempts[index];
           final questions = attempt['questions'] as List<dynamic>? ?? [];
           final chapter = attempt['chapter'] ?? 'Unknown';
           final timestamp = attempt['timestamp'] ?? '';
@@ -33,8 +64,8 @@ class JeeMockExamDetails extends StatelessWidget {
             margin: const EdgeInsets.all(10),
             elevation: 3,
             child: ExpansionTile(
-              title: Text("${title}"),
-              subtitle: Text("Time: $date"),
+              title: Text("${widget.title}"),
+              subtitle: Text("Time: ${widget.date}"),
               children: questions.asMap().entries.map((entry) {
                 final qIndex = entry.key + 1;
                 final q = entry.value;
@@ -46,8 +77,7 @@ class JeeMockExamDetails extends StatelessWidget {
                     q['text_answer'] ?? 'No explanation available';
 
                 return Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -56,30 +86,18 @@ class JeeMockExamDetails extends StatelessWidget {
                         height: _estimateHeight(questionText),
                       ),
                       const SizedBox(height: 4),
-                      MathText(
-                          expression: "Your Answer: $selected", height: 80),
-                      MathText(
-                          expression: "Correct Answer: $correct", height: 80),
+                      MathText(expression: "Your Answer: $selected", height: 80),
+                      MathText(expression: "Correct Answer: $correct", height: 80),
 
-                      // Answer button and explanation
-                      StatefulBuilder(
-                        builder: (context, setState) {
-                          bool showAnswer = false;
-                          return Column(
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  Get.to(TextAnswer(
-                                    imagePath: answerExplanation,
-                                    title: "chapter",
-                                    basePath: "nr",
-                                  ));
-                                },
-                                child: Text("Show Answer"),
-                              ),
-                            ],
-                          );
+                      ElevatedButton(
+                        onPressed: () {
+                          Get.to(TextAnswer(
+                            imagePath: answerExplanation,
+                            title: chapter,
+                            basePath: "nr",
+                          ));
                         },
+                        child: const Text("Show Answer"),
                       ),
                       const Divider(),
                     ],
@@ -98,9 +116,8 @@ class JeeMockExamDetails extends StatelessWidget {
 
     final lines = text.split('\n').length;
     final longLines = text.split('\n').where((line) => line.length > 50).length;
-    final hasComplexMath = text.contains(r'\frac') ||
-        text.contains(r'\sqrt') ||
-        text.contains(r'\(');
+    final hasComplexMath =
+        text.contains(r'\frac') || text.contains(r'\sqrt') || text.contains(r'\(');
 
     double height = (lines + longLines) * 30.0;
     height = height * 5.0;
