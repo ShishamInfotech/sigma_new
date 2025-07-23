@@ -60,17 +60,6 @@ class _MockExamScreenState extends State<MockExamScreen> {
     'Biology': "jeemcqbioch",
   };
 
-   /*static const _physicsQCount = 5;
-  static const _chemistryQCount = 5;
-  static const _mathQCount = 9;
-  static const _biologyQCount = 9;
-  static const _filePrefixes = {
-    'Math': "jeemcqmathch",
-    'Physics': "jeemcqphych",
-    'Chemistry': "jeemcqchech",
-    'Biology': "jeemcqbioch",
-  };*/
-
 
   @override
   void initState() {
@@ -346,7 +335,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
         "correct": questions[i].answer,
         "level": currentLevel, // Add current level to each question
         "explanation": questions[i].ansExplaination ?? "No explanation available",
-      //  "notes": questions[i].notes ?? "No notes available",
+        //  "notes": questions[i].notes ?? "No notes available",
         "text_answer": questions[i].ansExplaination ?? "No text answer available",
       });
     }
@@ -553,36 +542,36 @@ class _MockExamScreenState extends State<MockExamScreen> {
       context: context,
       barrierDismissible: false, // Prevent dismissing by tapping outside
       builder:  (ctx) => WillPopScope(
-      onWillPop: () async {
-        // Navigate all the way back when back button is pressed
-        Navigator.pop(ctx);
-        Navigator.pop(context);
-        return false;
-      },
-      child: AlertDialog(
-        title: const Text("Test Completed"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Title: ${widget.title}"),
-            Text("Date: ${examStartTime?.toLocal().toString() ?? 'Unknown'}"),
-            Text("Correct: $correct"),
-            Text("Wrong: $wrong"),
-            Text("Total Questions: ${questions.length}"),
-            Text("Score: ${(correct / questions.length * 100).toStringAsFixed(1)}%"),
+        onWillPop: () async {
+          // Navigate all the way back when back button is pressed
+          Navigator.pop(ctx);
+          Navigator.pop(context);
+          return false;
+        },
+        child: AlertDialog(
+          title: const Text("Test Completed"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Title: ${widget.title}"),
+              Text("Date: ${examStartTime?.toLocal().toString() ?? 'Unknown'}"),
+              Text("Correct: $correct"),
+              Text("Wrong: $wrong"),
+              Text("Total Questions: ${questions.length}"),
+              Text("Score: ${(correct / questions.length * 100).toStringAsFixed(1)}%"),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context);
+              },
+              child: const Text("OK"),
+            )
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-            },
-            child: const Text("OK"),
-          )
-        ],
-      ),
       ),
     );
   }
@@ -673,31 +662,31 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   Widget _buildQuestionCard(SubCahpDatum question) {
     return Card(
-    margin: const EdgeInsets.all(8.0),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12.0), // Curve radius
-      side: const BorderSide(
-        color: Colors.black,
-        width: 2,
-      ),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.4,
+      margin: const EdgeInsets.all(8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0), // Curve radius
+        side: const BorderSide(
+          color: Colors.black,
+          width: 2,
         ),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: MathText(
-            key: ValueKey(question.question),
-            expression: question.question ?? '',
-            height: _estimateHeight(question.question ?? ''),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.4,
+          ),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: MathText(
+              key: ValueKey(question.question),
+              expression: question.question ?? '',
+              height: _estimateHeight(question.question ?? ''),
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
 
   }
 
@@ -922,12 +911,12 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
     try {
       final directory = await SdCardUtility.getBasePath();
-     // final dir = Directory(directory);
+      // final dir = Directory(directory);
       final filePath = '$directory/jee_exam_attempt.json';
       final file = File(filePath);
 
       // Ensure directory exists
-     // await Directory(path).create(recursive: true);
+      // await Directory(path).create(recursive: true);
 
       Map<String, List<Map<String, dynamic>>> existingData = {};
 

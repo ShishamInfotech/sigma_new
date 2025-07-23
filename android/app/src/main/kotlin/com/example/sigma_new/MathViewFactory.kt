@@ -6,8 +6,9 @@ import io.flutter.plugin.platform.PlatformViewFactory
 import io.flutter.plugin.common.StandardMessageCodec
 
 class MathViewFactory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
-    override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
-        val expression = (args as? Map<*, *>)?.get("expression") as? String ?: ""
+    override fun create(context: Context, id: Int, args: Any?): PlatformView {
+        val creationParams = args as? Map<String, Any>
+        val expression = creationParams?.get("expression") as? String ?: "1+1"
         return MathPlatformView(context, expression)
     }
 }

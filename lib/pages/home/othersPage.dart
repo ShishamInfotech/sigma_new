@@ -24,7 +24,7 @@ class _Appbar2State extends State<OtherPage> {
 
   Future<void> _openCalculator() async {
     try {
-      if (Platform.isAndroid) {
+     // if (Platform.isAndroid) {
         // Try common calculator package names for Android
         const calculatorPackages = [
           'com.android.calculator2',          // Stock Android
@@ -62,7 +62,7 @@ class _Appbar2State extends State<OtherPage> {
         } catch (e) {
           // Fall through to URL launch
         }
-      }
+     // }
 
       // Fallback for iOS or if Android methods failed
       const url = 'calculator://';
@@ -118,9 +118,9 @@ class _Appbar2State extends State<OtherPage> {
           navigation: () {
             Navigator.push(context,
                 MaterialPageRoute(builder: (context) =>
-                const PdfFolderListPage(title: 'Motivation Stories', folderName: 'motivationstories',)));
+                const PdfFolderListPage(title: 'Motivational Stories', folderName: 'motivationalstories',)));
           },
-          title: 'Motivation Stories'),
+          title: 'Motivational Stories'),
       Menu(
           color: 0xFFC9E4DF,
           imagePath: 'assets/svg/logbook.svg',

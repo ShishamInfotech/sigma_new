@@ -1,0 +1,2 @@
+D:/Imperative/SSSIGMA/Sigma Copy/sigma_new/android/app/.cxx/Debug/2q3e6br2/x86/CMakeFiles/edit_cache.dir
+D:/Imperative/SSSIGMA/Sigma Copy/sigma_new/android/app/.cxx/Debug/2q3e6br2/x86/CMakeFiles/rebuild_cache.dir

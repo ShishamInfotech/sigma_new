@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tex/flutter_tex.dart';
 import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
@@ -17,8 +18,11 @@ class EasyQuestions extends StatefulWidget {
 }
 
 class _EasyQuestionsState extends State<EasyQuestions> {
+
+
   @override
   Widget build(BuildContext context) {
+    print("QuestionSss - ${widget.easyQuestion["question"]}");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -41,6 +41,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   List<String> targetDate = [];
   List<String> subjectsId = [];
 
+  Map<String, int> titleCountMap = {};
 
 
 
@@ -49,6 +50,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   Map<String, dynamic> _competitiveExamMap = {};
   Map<String, dynamic> _metadata = {};
 
+  List<Map<String, dynamic>> submissions = [];
 
   @override
   void initState() {
@@ -82,6 +84,8 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
     // Step 2: Now that all data is ready, save it
     await saveAllDataToMemoryCard();
+
+    await loadSubmissionsFromSDCard();
 
     _loadAllExamAttempts();
 
@@ -715,21 +719,24 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            attemptCounts.isEmpty
+            titleCountMap.isEmpty
                 ? const Center(child: Text("No attempts recorded."))
-                : Container(
-                  height: 250,
-                  child: Scrollbar(
-                    thumbVisibility: true,
-                    child: ListView(
+                : SizedBox(
+              height: 250,
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: ListView.builder(
+                  itemCount: titleCountMap .length,
+                  itemBuilder: (context, index) {
+                    final entry = titleCountMap.entries.elementAt(index);
+                    final title = entry.key;
+                    final count = entry.value;
 
-                                  children: attemptCounts.entries.map((entry) {
-
-                    return _buildExamPerformance(entry.key, entry.value, "Simple");
-                                  }).toList(),
-                                ),
-                  ),
+                    return _buildExamPerformance(title, count, "Simple");
+                  },
                 ),
+              ),
+            ),
             const SizedBox(height: 8),
             const Text(
               'Performance Levels:',
@@ -761,6 +768,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
           ),
           Expanded(
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Attempts: $attempts'),
                 const SizedBox(width: 16),
@@ -1098,7 +1106,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                   Expanded(
                     flex: 2,
                     child: Text(
-                      attempts.toStringAsFixed(0),
+                      levelCounts[currentLevel]==null ? "0" : "${levelCounts[currentLevel]}",
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -1388,6 +1396,11 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     }
   }
 
+
+
+
+
+
   /// Safe helper: returns .length if it’s a List, else 0.
   int _safeLength(dynamic maybeList) {
     return maybeList is List ? maybeList.length : 0;
@@ -1624,6 +1637,81 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       print('❗ Error loading data: $e');
     }
   }
+
+
+
+  Future<void> loadSubmissionsFromSDCard() async {
+    try {
+      final directory = await SdCardUtility.getBasePath();
+      final filePath = '$directory/mock_exam.json';
+      final file = File(filePath);
+
+      if (await file.exists()) {
+        final contents = await file.readAsString();
+        final parsed = jsonDecode(contents);
+
+        if (parsed is List) {
+          final loadedSubmissions = parsed
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+
+          print("CourseList $courseList");
+
+          List<String> allowedClasses = courseList
+              .map((course) {
+            if (course.contains("10")) return "10";
+            if (course.contains("12")) return "12";
+            if (course.contains("JEE")) return "JEE";
+            return "";
+          })
+              .where((cls) => cls.isNotEmpty)
+              .toList();
+
+          // Filter based on courseList
+          final filtered = loadedSubmissions.where((sub) {
+            final stream = sub["questions"][0]["stream"]?.toString() ?? '';
+            return allowedClasses.contains(stream);
+          }).toList();
+
+          // 🔁 Count all titles
+          Map<String, int> titleCounts = {};
+          for (var item in filtered) {
+            String title = item["title"] ?? "Unknown Title";
+            titleCounts[title] = (titleCounts[title] ?? 0) + 1;
+          }
+
+          print("Filtered Submissions: $filtered");
+          print("Title Counts: $titleCounts");
+
+          setState(() {
+            submissions = filtered;
+            titleCountMap = titleCounts; // <-- define this as Map<String, int>
+          });
+
+        } else {
+          print('File content is not a List');
+          setState(() {
+            submissions = [];
+            titleCountMap = {};
+          });
+        }
+
+      } else {
+        print('mock_exam.json not found');
+        setState(() {
+          submissions = [];
+          titleCountMap = {};
+        });
+      }
+    } catch (e) {
+      print('Error loading submissions: $e');
+      setState(() {
+        submissions = [];
+        titleCountMap = {};
+      });
+    }
+  }
+
 
 
 }

@@ -700,6 +700,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
         return;
       }
 
+
       // Append and save
       existingData.addAll(uniqueNewSubmissions);
       await file.writeAsString(jsonEncode(existingData));

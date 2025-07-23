@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:developer' as ld;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
@@ -87,7 +88,7 @@ class _MathTextState extends State<MathText> {
          // .replaceAll(r'\right]', r'\right]\)')
           .replaceAll(r'z-[1', r'z_{1');
     }
-    
+
     return input;
   }
 
@@ -189,6 +190,7 @@ class _MathTextState extends State<MathText> {
             'textSize': widget.textSize,
           },
           creationParamsCodec: const StandardMessageCodec(),
+          hitTestBehavior: PlatformViewHitTestBehavior.opaque,
         ),
       ),
     );
