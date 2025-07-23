@@ -9,6 +9,8 @@ import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:sigma_new/models/sub_cahp_datum.dart';
 import '../../../../ui_helper/constant.dart';
+import 'TimerDisplay.dart';
+
 
 class MockExamScreen extends StatefulWidget {
   final String subjectId;
@@ -49,10 +51,10 @@ class _MockExamScreenState extends State<MockExamScreen> {
   // Updated question counts - 50 Physics, 50 Chemistry, 98 Math/Bio
 
 
-  static const _physicsQCount = 50;
-  static const _chemistryQCount = 50;
-  static const _mathQCount = 98;
-  static const _biologyQCount = 98;
+  static const _physicsQCount = 5;
+  static const _chemistryQCount = 5;
+  static const _mathQCount = 9;
+  static const _biologyQCount = 9;
   static const _filePrefixes = {
     'Math': "jeemcqmathch",
     'Physics': "jeemcqphych",
@@ -279,11 +281,15 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
     final questionsJson = prefs.getString('mock_exam_questions');
     if (questionsJson != null) {
-      final decoded = jsonDecode(questionsJson) as List<dynamic>;
-      setState(() {
-        questions = decoded.map((e) => SubCahpDatum.fromJson(e)).toList();
-        isLoadingFirstQuestion = false;
-      });
+      try {
+        final decoded = jsonDecode(questionsJson) as List<dynamic>;
+        setState(() {
+          questions = decoded.map((e) => SubCahpDatum.fromJson(e)).toList();
+          isLoadingFirstQuestion = false;
+        });
+      } catch (e) {
+        debugPrint("Failed to load saved questions: $e");
+      }
     }
 
     final startTimeStr = prefs.getString('mock_exam_start_time');
@@ -493,16 +499,20 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   void _startTimer() {
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       if (duration.inSeconds == 0) {
         timer.cancel();
         _showResultPopup();
       } else {
-        setState(() {
-          duration -= const Duration(seconds: 1);
-        });
+        duration -= const Duration(seconds: 1);
+        TimerDisplay.update(duration);
       }
     });
   }
+
 
   void _submitAnswer(String answer) {
     if (questions.isEmpty || isExamCompleted) return; // Prevent submissions after completion
@@ -634,7 +644,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
     );
   }
 
-  Widget _buildTimerAndProgress() {
+  /*Widget _buildTimerAndProgress() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -644,6 +654,22 @@ class _MockExamScreenState extends State<MockExamScreen> {
             'Time Left: ${_formatDuration(duration)}',
             style: const TextStyle(fontSize: 18),
           ),
+          Text(
+            'Question ${currentIndex + 1} of ${questions.length}',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }*/
+
+  Widget _buildTimerAndProgress() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TimerDisplay(initialDuration: duration),  // This won't rebuild the parent
           Text(
             'Question ${currentIndex + 1} of ${questions.length}',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -661,32 +687,47 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
 
   Widget _buildQuestionCard(SubCahpDatum question) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0), // Curve radius
-        side: const BorderSide(
-          color: Colors.black,
-          width: 2,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.4,
+    if (question.question == null || question.question!.isEmpty) {
+      return const SizedBox();
+    }
+    try {
+      return Card(
+        margin: const EdgeInsets.all(8.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0), // Curve radius
+          side: const BorderSide(
+            color: Colors.black,
+            width: 2,
           ),
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: MathText(
-              key: ValueKey(question.question),
-              expression: question.question ?? '',
-              height: _estimateHeight(question.question ?? ''),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery
+                  .of(context)
+                  .size
+                  .height * 0.4,
+            ),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: MathText(
+                key: ValueKey(question.question),
+                expression: question.question ?? '',
+                height: _estimateHeight(question.question ?? ''),
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    } catch (e, stack) {
+  debugPrint("MathText rendering failed: $e\n$stack");
+  return Container(
+  height: 100,
+  color: Colors.grey[200],
+  child: Center(child: Text("Formula rendering failed")),
+  );
+}
 
   }
 
@@ -696,6 +737,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       if (opt == null || opt.toString().trim().isEmpty) return const SizedBox();
 
       return Padding(
+        key: ValueKey('option_${currentIndex}_$index'), // Add key here
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         child: Card(
           child: RadioListTile<String>(
@@ -714,6 +756,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
       );
     }).whereType<Widget>().toList();
   }
+
 
   Widget _buildSubmitButton() {
     return Padding(
@@ -1057,3 +1100,4 @@ class FileUri {
     required this.remainCount,
   });
 }
+
