@@ -51,10 +51,10 @@ class _MockExamScreenState extends State<MockExamScreen> {
   // Updated question counts - 50 Physics, 50 Chemistry, 98 Math/Bio
 
 
-  static const _physicsQCount = 5;
-  static const _chemistryQCount = 5;
-  static const _mathQCount = 9;
-  static const _biologyQCount = 9;
+  static const _physicsQCount = 50;
+  static const _chemistryQCount = 50;
+  static const _mathQCount = 98;
+  static const _biologyQCount = 98;
   static const _filePrefixes = {
     'Math': "jeemcqmathch",
     'Physics': "jeemcqphych",
@@ -731,7 +731,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   }
 
-  List<Widget> _buildOptions(SubCahpDatum question) {
+/*  List<Widget> _buildOptions(SubCahpDatum question) {
     return List.generate(4, (index) {
       final opt = question.toJson()['option_${index + 1}'];
       if (opt == null || opt.toString().trim().isEmpty) return const SizedBox();
@@ -755,7 +755,42 @@ class _MockExamScreenState extends State<MockExamScreen> {
         ),
       );
     }).whereType<Widget>().toList();
+  }*/
+
+  List<Widget> _buildOptions(SubCahpDatum question) {
+    return List.generate(4, (index) {
+      final opt = question.toJson()['option_${index + 1}'];
+      if (opt == null || opt.toString().trim().isEmpty) {
+        return const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text(
+            "No value",
+            style: TextStyle(color: Colors.grey),
+          ),
+        );
+      }
+
+      return Padding(
+        key: ValueKey('option_${currentIndex}_$index'),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Card(
+          child: RadioListTile<String>(
+            title: MathText(
+              key: ValueKey("_${opt}"),
+              expression: opt,
+              height: _estimateOptionsHeight(opt),
+            ),
+            value: opt,
+            groupValue: selectedOption,
+            onChanged: (value) {
+              setState(() => selectedOption = value);
+            },
+          ),
+        ),
+      );
+    }).whereType<Widget>().toList();
   }
+
 
 
   Widget _buildSubmitButton() {

@@ -77,6 +77,10 @@ class _MathTextState extends State<MathText> {
   String sanitizeMathExpression(String input) {
     //debugPrint("Matrix Test================   $input");
     input = input.trim();
+
+    input = input.replaceAll(',br>', '<br>').replaceAllMapped(RegExp(r'<br\s*/?>'), (_) => '\n');
+
+
     if (input.contains("matrix") || input.contains("vmatrix")) {
       print("Matrix Test================   $input");
       input= input
