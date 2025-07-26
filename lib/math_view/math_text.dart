@@ -27,9 +27,13 @@ class MathText extends StatefulWidget {
   State<MathText> createState() => _MathTextState();
 }
 
-class _MathTextState extends State<MathText> {
+class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   late String _sanitized;
   double? _measuredHeight;
+
+  @override
+  bool get wantKeepAlive => true;
+
 
   @override
   void initState() {
@@ -186,15 +190,17 @@ class _MathTextState extends State<MathText> {
       height: height,
       child: Padding(
         padding: EdgeInsets.only(top: 6), // You can adjust this value as needed
-        child: AndroidView(
-          viewType: 'mathview-native',
-          layoutDirection: TextDirection.ltr,
-          creationParams: {
-            'expression': _sanitized.isNotEmpty ? _sanitized : '1+1',
-            'textSize': widget.textSize,
-          },
-          creationParamsCodec: const StandardMessageCodec(),
-          hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+        child: RepaintBoundary(
+          child: AndroidView(
+            viewType: 'mathview-native',
+            layoutDirection: TextDirection.ltr,
+            creationParams: {
+              'expression': _sanitized.isNotEmpty ? _sanitized : '1+1',
+              'textSize': widget.textSize,
+            },
+            creationParamsCodec: const StandardMessageCodec(),
+            hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+          ),
         ),
       ),
     );
@@ -207,6 +213,10 @@ class _MathTextState extends State<MathText> {
     final height = _calculateHeight();
 
     final needsScroll = widget.scrollable || _shouldScroll(height, context);
+    // ✅ Avoid building AndroidView until height is known
+    if (_measuredHeight == null || height == 0) {
+      return const SizedBox(height: 40); // Placeholder
+    }
 
     return needsScroll
         ? SingleChildScrollView(child: _buildMathView(height))

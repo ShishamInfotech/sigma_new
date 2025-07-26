@@ -1,6 +1,6 @@
-import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
+
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/math_view/math_text.dart';

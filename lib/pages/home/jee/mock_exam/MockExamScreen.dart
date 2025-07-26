@@ -12,6 +12,7 @@ import '../../../../ui_helper/constant.dart';
 import 'TimerDisplay.dart';
 
 
+
 class MockExamScreen extends StatefulWidget {
   final String subjectId;
   final String title;
@@ -32,6 +33,10 @@ class MockExamScreen extends StatefulWidget {
 
 class _MockExamScreenState extends State<MockExamScreen> {
   // Add this flag
+
+  static const _maxQuestionsInMemory = 20; // Only keep 20 questions in memory at a time
+  static const _batchSize = 10;
+  final Map<String, SubCahpDatum> _questionCache = {};
   bool isExamCompleted = false;
   late SharedPreferences prefs;
   int currentIndex = 0;
@@ -192,7 +197,9 @@ class _MockExamScreenState extends State<MockExamScreen> {
             });
             break;
           }
+
         }
+
       } catch (e) {
         debugPrint("Fallback error for $subject: $e");
       }
@@ -776,10 +783,11 @@ class _MockExamScreenState extends State<MockExamScreen> {
         child: Card(
           child: RadioListTile<String>(
             title: MathText(
-              key: ValueKey("_${opt}"),
+              key:  ValueKey("option_${currentIndex}_$index"),
               expression: opt,
               height: _estimateOptionsHeight(opt),
             ),
+          //  title: Math.tex(opt, mathStyle: MathStyle.display),
             value: opt,
             groupValue: selectedOption,
             onChanged: (value) {

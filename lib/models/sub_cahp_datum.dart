@@ -15,6 +15,7 @@ class SubCahpDatum {
   String? subchapterPartNumber;
   String? contentcode;
   String? question;
+  String? questionImagesId;
   String? option1;
   String? option2;
   String? option3;
@@ -46,6 +47,7 @@ class SubCahpDatum {
     this.answer,
     this.ansExplaination,
     this.subject,
+    this.questionImagesId,
   });
 
   factory SubCahpDatum.fromJson(Map<String, dynamic> json) => SubCahpDatum(

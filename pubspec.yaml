@@ -53,7 +53,6 @@ dependencies:
   device_info_plus: ^11.3.0
   mobile_device_identifier: ^0.0.3
   flutter_tex: ^5.1.10
-  flutter_math_fork: ^0.7.3
   webview_flutter: ^4.10.0
   gpt_markdown: ^1.0.9
   android_intent_plus: ^4.0.1
