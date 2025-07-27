@@ -526,6 +526,8 @@ class _MockExamScreenState extends State<MockExamScreen> {
       wrong++;
     }
 
+    _saveExamState();
+
     if (currentIndex + 1 < questions.length) {
       setState(() {
         currentIndex++;
