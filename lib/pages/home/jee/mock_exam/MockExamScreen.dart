@@ -52,6 +52,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
   bool isLoadingFirstQuestion = true;
   String currentLevel = 's';
   bool _isLoading = false;
+  String basePath ="";
 
   // Updated question counts - 50 Physics, 50 Chemistry, 98 Math/Bio
 
@@ -76,6 +77,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   Future<void> _initialize() async {
     prefs = await SharedPreferences.getInstance();
+    basePath = await SdCardUtility.getBasePath();
     _loadCurrentLevel();
     _setExamDuration();
 
@@ -722,6 +724,7 @@ class _MockExamScreenState extends State<MockExamScreen> {
                 key: ValueKey(question.question),
                 expression: question.question ?? '',
                 height: _estimateHeight(question.question ?? ''),
+                basePath: basePath,
               ),
             ),
           ),
@@ -786,7 +789,9 @@ class _MockExamScreenState extends State<MockExamScreen> {
               key:  ValueKey("option_${currentIndex}_$index"),
               expression: opt,
               height: _estimateOptionsHeight(opt),
+              basePath: basePath,
             ),
+
           //  title: Math.tex(opt, mathStyle: MathStyle.display),
             value: opt,
             groupValue: selectedOption,

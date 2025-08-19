@@ -13,14 +13,17 @@ class MathText extends StatefulWidget {
   final double textSize;
   final bool scrollable;
   final int? maxLines;
+  String? basePath;
 
-  const MathText({
+
+  MathText({
     super.key,
     required this.expression,
     this.height,
     this.textSize = 24.0,
     this.scrollable = true,
     this.maxLines,
+    this.basePath,
   });
 
   @override
@@ -95,6 +98,13 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
           //.replaceAll(r'\left[\begin', r'\(\left[\begin')
          // .replaceAll(r'\right]', r'\right]\)')
           .replaceAll(r'z-[1', r'z_{1');
+    }
+
+    if(input.contains("img src")){
+      print("getBasepath ${widget.basePath}");
+      input = input.replaceAll("/sigma", widget.basePath!).replaceAll("style= width : 100px/", "style=\"width: 500px; height: auto;\"");
+
+      print("After Image $input");
     }
 
     return input;
