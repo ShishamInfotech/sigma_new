@@ -24,8 +24,8 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
 
                 // Safe fallback for empty or null expressions
                 val safeExpression = if (expression.isBlank()) "1+1" else expression
-
-                mathView.text = """
+                Handler(Looper.getMainLooper()).post {
+                    mathView.text = """
                 <html>
                 <head>
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,6 +51,7 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
                 </body>
                 </html>
             """.trimIndent()
+                }
                // mathView.setText(safeExpression)
                 //  Handler(Looper.getMainLooper()).postDelayed({
                 /* mathView.text = """
@@ -92,6 +93,9 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
     override fun dispose() {
         // Clean up if needed
         try {
+            mathView.stopLoading()
+            mathView.loadUrl("about:blank")
+            mathView.removeAllViews()
             mathView.destroy()
         } catch (e: Exception) {
             Log.e("MathPlatformView", "Error destroying MathView: ${e.message}")

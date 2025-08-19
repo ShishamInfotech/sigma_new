@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
 
@@ -52,6 +54,8 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
   List<Map<String, dynamic>> submissions = [];
 
+  var scoreStats;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -75,15 +79,20 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
 
   void initializeAndSave() async {
+
+    //Jee PCM and PCB
+    loadFromSDCardAndDisplay();
     // Step 1: Load and calculate all data you want to save
     await loadUsageData();         // Populate usage data (today, total, etc.)
     //await printTotalPercentage();  // Calculate total % progress
     await sharePreferenceData();   // Load shared prefs like videoCount, etc.
-         // Load attempts for mock/quiz
+    // Load attempts for mock/quiz
     await subjectWiseTest();       // Load subject-wise performance
 
     // Step 2: Now that all data is ready, save it
     await saveAllDataToMemoryCard();
+
+
 
     await loadSubmissionsFromSDCard();
 
@@ -124,14 +133,14 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
           final contents = await file.readAsString();
           final jsonData = jsonDecode(contents);
           print('Fetched Data: $jsonData');
-        //  loadDataFromMemoryCard();
+          //  loadDataFromMemoryCard();
           // Use jsonData here...
         } catch (e) {
           print('Error reading JSON file: $e');
         }
       } else {
         print('File does not exist at: $filePath');
-       // saveAllDataToMemoryCard();
+        // saveAllDataToMemoryCard();
       }
     } else {
       print('Directory does not exist: $directory');
@@ -270,7 +279,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
     print("Completed Chap $completedChapters");
     for (String chapter in completedChapters) {
-       target_date = prefs.getString('chapter_${chapter.toString()}_percentage')!;
+      target_date = prefs.getString('chapter_${chapter.toString()}_percentage')!;
 
     }
 
@@ -329,7 +338,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       answerCount = answers;
     });
 
-   // saveAllDataToMemoryCard();
+    // saveAllDataToMemoryCard();
   }
 
 
@@ -645,7 +654,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                 future: getAllSubjectPercentages(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) return CircularProgressIndicator();
-                 // print("Target ${target_date}");
+                  // print("Target ${target_date}");
                   return ListView.builder(
                     physics: NeverScrollableScrollPhysics(),
                     itemCount: subjects.length,
@@ -763,7 +772,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
         children: [
           Expanded(
             child: Text(subject, style: TextStyle(
-              fontSize: 16
+                fontSize: 16
             ),),
           ),
           Expanded(
@@ -812,7 +821,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   }
 
   // Update the _buildCompetitiveExamsSection widget
-  Widget _buildCompetitiveExamsSection() {
+  /*Widget _buildCompetitiveExamsSection() {
     return Card(
       elevation: 4,
       child: Padding(
@@ -839,11 +848,11 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                   'currentLevel': 'Not started',
                 };
 
-                /*return _buildExamPerformanceTable(
+                *//*return _buildExamPerformanceTable(
                   'JEE (PCM)',
                   'Physics, Chemistry, Mathematics',
                   data,
-                );*/
+                );*//*
 
                 return FutureBuilder<Map<String, Map<String, int>>>(
                   future: _getLevelAttemptsCount(),
@@ -879,11 +888,11 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                     'currentLevel': 'Not started',
                   };
 
-                  /*return _buildExamPerformanceTable(
+                  *//*return _buildExamPerformanceTable(
                     'NEET (PCB)',
                     'Physics, Chemistry, Biology',
                     data,
-                  );*/
+                  );*//*
 
                   return FutureBuilder<Map<String, Map<String, int>>>(
                     future: _getLevelAttemptsCount(),
@@ -913,7 +922,367 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
         ),
       ),
     );
+  }*/
+
+
+  /*Widget _buildCompetitiveExamsSection() {
+    // Process the scores from subjectAttemptsMock
+    final scoreStats = _processScores(subjectAttemptsMock);
+
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Competitive Exam Preparation',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            // PCM Section
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'JEE (PCM)',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Physics, Chemistry, Mathematics',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+
+                if (scoreStats['nonPcb'] != null && scoreStats['nonPcb']!['count']! > 0)
+                  Column(
+                    children: [
+                      _buildStatRow('Total Attempts:', '${scoreStats['nonPcb']!['count']!.toInt()}'),
+                      _buildStatRow('Average Score:', '${scoreStats['nonPcb']!['average']!.toStringAsFixed(1)}%'),
+                      _buildStatRow('Highest Score:', '${scoreStats['nonPcb']!['highest']!.toStringAsFixed(1)}%'),
+                      _buildStatRow('Lowest Score:', '${scoreStats['nonPcb']!['lowest']!.toStringAsFixed(1)}%'),
+                    ],
+                  )
+                else
+                  const Text(
+                    'No PCM test attempts yet',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // PCB Section (only show if PCB is enabled)
+            if (showJEE)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'NEET (PCB)',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Physics, Chemistry, Biology',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+
+                  if (scoreStats['pcb'] != null && scoreStats['pcb']!['count']! > 0)
+                    Column(
+                      children: [
+                        _buildStatRow('Total Attempts:', '${scoreStats['pcb']!['count']!.toInt()}'),
+                        _buildStatRow('Average Score:', '${scoreStats['pcb']!['average']!.toStringAsFixed(1)}%'),
+                        _buildStatRow('Highest Score:', '${scoreStats['pcb']!['highest']!.toStringAsFixed(1)}%'),
+                        _buildStatRow('Lowest Score:', '${scoreStats['pcb']!['lowest']!.toStringAsFixed(1)}%'),
+                      ],
+                    )
+                  else
+                    const Text(
+                      'No PCB test attempts yet',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                ],
+              ),
+
+            const SizedBox(height: 8),
+            const Text(
+              'There will be five level Mock Examinations',
+              style: TextStyle(fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+      ),
+    );
+  }*/
+
+  Widget _buildCompetitiveExamsSection() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Competitive Exam Preparation',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            // PCM Section
+            FutureBuilder<Map<String, dynamic>>(
+              future: _getLatestStatFromFile('pcm'),
+              builder: (context, snapshot) {
+                final data = snapshot.data ?? {
+                  'attempts': 0,
+                  'averageScore': 0,
+                  'highestScore': 0,
+                  'lowestScore': 0,
+                  'currentLevel': 'Not started',
+                };
+
+                return FutureBuilder<Map<String, Map<String, int>>>(
+                  future: _getLevelAttemptsCount(),
+                  builder: (context, levelSnapshot) {
+                    final levelCounts = levelSnapshot.data ?? {
+                      'pcm': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+                      'pcb': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+                    };
+
+                    return _buildExamPerformanceTable(
+                      'JEE (PCM)',
+                      'Physics, Chemistry, Mathematics',
+                      data,
+                      levelCounts['pcm'] ?? {},
+                    );
+                  },
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // PCB Section (only show if PCB is enabled)
+            if (showJEE)
+              FutureBuilder<Map<String, dynamic>>(
+                future: _getLatestStatFromFile('pcb'),
+                builder: (context, snapshot) {
+                  final data = snapshot.data ?? {
+                    'attempts': 0,
+                    'averageScore': 0,
+                    'highestScore': 0,
+                    'lowestScore': 0,
+                    'currentLevel': 'Not started',
+                  };
+
+                  return FutureBuilder<Map<String, Map<String, int>>>(
+                    future: _getLevelAttemptsCount(),
+                    builder: (context, levelSnapshot) {
+                      final levelCounts = levelSnapshot.data ?? {
+                        'pcm': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+                        'pcb': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
+                      };
+
+                      return _buildExamPerformanceTable(
+                        'NEET (PCB)',
+                        'Physics, Chemistry, Biology',
+                        data,
+                        levelCounts['pcb'] ?? {},
+                      );
+                    },
+                  );
+                },
+              ),
+
+            const SizedBox(height: 8),
+            const Text(
+              'There will be five level Mock Examinations',
+              style: TextStyle(fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+      ),
+    );
   }
+
+
+
+  Widget _buildExamPerformanceTable(
+      String exam,
+      String subjects,
+      Map<String, dynamic> data,
+      Map<String, int> levelCounts,
+      ) {
+    // Safely extract and convert values
+    final attempts = (data['attempts'] as int? ?? 0);
+    final averageScore = (data['averageScore'] as num? ?? 0).toDouble();
+    final highestScore = (data['highestScore'] as num? ?? 0).toDouble();
+    final lowestScore = (data['lowestScore'] as num? ?? 0).toDouble();
+    final currentLevel = data['currentLevel'] as String? ?? 'Not started';
+
+    // Get the score statistics from your mock data
+    final scoreStats = _processScores(subjectAttemptsMock);
+    final isPCB = exam.contains('PCB');
+    final stats = isPCB ? scoreStats['pcb'] : scoreStats['nonPcb'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          exam,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          'Subjects: $subjects',
+          style: TextStyle(color: Colors.grey[600]),
+        ),
+        const SizedBox(height: 12),
+
+        // Main Stats Table
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Header Row
+
+
+              // Data Rows
+              _buildStatRow('Level', currentLevel,
+                  color: _getLevelColor(currentLevel)),
+              width10Space,
+              _buildStatRow('Attempts', '${stats?['count']?.toInt() ?? 0}'),
+              width10Space,
+              _buildStatRow('Average', '${stats?['average']?.toStringAsFixed(1) ?? 0.0}%',
+                  color: _getScoreColor(stats?['average']?.toDouble() ?? 0.0)),
+              width10Space,
+              _buildStatRow('Highest', '${stats?['highest']?.toStringAsFixed(1) ?? 0.0}%',
+                  color: _getScoreColor(stats?['highest']?.toDouble() ?? 0.0)),
+              width10Space,
+              _buildStatRow('Lowest', '${stats?['lowest']?.toStringAsFixed(1) ?? 0.0}%',
+                  color: _getScoreColor(stats?['lowest']?.toDouble() ?? 0.0)),
+
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Level Attempts Breakdown
+        Text(
+          'Level Attempts Breakdown',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+
+        for (var level in ['Simple', 'Medium', 'Complex', 'Difficult', 'Advance'])
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    level,
+                    style: TextStyle(
+                      fontWeight: level == currentLevel ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: LinearProgressIndicator(
+                    value: (levelCounts[level] ?? 0) / (attempts == 0 ? 1 : attempts),
+                    backgroundColor: Colors.grey[200],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      level == currentLevel ? Colors.green : Colors.blue,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${levelCounts[level] ?? 0}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: level == currentLevel ? Colors.green : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+// Helper widget for consistent stat rows
+  Widget _buildStatRow(String label, String value, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color ?? Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+// Helper function to get color based on score
+  Color _getScoreColor(double score) {
+    if (score >= 80) return Colors.green;
+    if (score >= 60) return Colors.orange;
+    return Colors.red;
+  }
+
+// Helper function to get color based on level
+  Color _getLevelColor(String level) {
+    switch (level) {
+      case 'Simple': return Colors.blue;
+      case 'Medium': return Colors.teal;
+      case 'Complex': return Colors.orange;
+      case 'Difficult': return Colors.purple;
+      case 'Advance': return Colors.red;
+      default: return Colors.grey;
+    }
+  }
+
+// Helper widget for consistent stat row display
+  /*Widget _buildStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }*/
 
 
 
@@ -1011,7 +1380,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   }
 
 // Helper widget to build exam performance table
-  Widget _buildExamPerformanceTable(String exam, String subjects, Map<String, dynamic> data, Map<String, int> levelCounts,) {
+  /*Widget _buildExamPerformanceTable(String exam, String subjects, Map<String, dynamic> data, Map<String, int> levelCounts,) {
 
     print("Datatat $data");
     print("EXAMM $exam");
@@ -1029,19 +1398,19 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       future: _loadMockExamResults(isPCB),
       builder: (context, snapshot) {
         // Initialize level counters
-        /*Map<String, int> levelCounts = {
+        *//*Map<String, int> levelCounts = {
           'Simple': currentLevel=="Simple" ? attempts: 0,
           'Medium': currentLevel=="Medium" ? attempts : 0,
           'Complex': currentLevel=="Complex" ?attempts : 0,
           'Difficult': 0,
           'Advance': 0,
-        };*/
+        };*//*
 
 
         //levelCounts = _getLevelAttemptsCount()  //[isPCB ?? 'pcb' : 'pcm']?? {};
         print("DATA MOCK ${snapshot.data}");
         // Count attempts per level if we have data
-        /*if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+        *//*if (snapshot.hasData && snapshot.data!.isNotEmpty) {
           for (var attempt in snapshot.data!) {
             final score = double.parse(attempt['score'].toString());
             String level;
@@ -1058,7 +1427,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
             }
             levelCounts[level] = (levelCounts[level] ?? 0);
           }
-        }*/
+        }*//*
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1196,7 +1565,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     if (score >= 70) return Colors.blue;
     if (score >= 60) return Colors.orange;
     return Colors.red;
-  }
+  }*/
 
   Widget _buildMetricCard(String title, String value) {
     return Column(
@@ -1214,7 +1583,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     );
   }
 
-  Color _getLevelColor(String level) {
+  /*Color _getLevelColor(String level) {
     switch (level.toLowerCase()) {
       case 'simple':
         return Colors.blue;
@@ -1229,7 +1598,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       default:
         return Colors.grey;
     }
-  }
+  }*/
 
   Future<void> _loadAttempts() async {
     final prefs = await SharedPreferences.getInstance();
@@ -1249,14 +1618,14 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       } catch (_) {
         setState(() {
           attemptCounts = _mockExamMap;
-         // attemptCounts = {};
+          // attemptCounts = {};
           isLoading = false;
         });
       }
     } else {
       setState(() {
         attemptCounts = _mockExamMap;
-       // attemptCounts = {};
+        // attemptCounts = {};
         isLoading = false;
       });
     }
@@ -1626,7 +1995,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
         _competitiveExamMap =
         competitiveExams.isNotEmpty ? competitiveExams.last : {};
         _metadata = metadata;
-       // attemptCounts = newAttemptCounts;
+        // attemptCounts = newAttemptCounts;
         attemptCounts = newAttemptCountsStd12;
       });
 
@@ -1713,5 +2082,121 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
   }
 
 
+  Map<String, List<Map<String, dynamic>>> subjectAttemptsMock = {};
+
+
+  Future<void> loadFromSDCardAndDisplay() async {
+    final data = await readMockAttemptsFromSDCard();
+    setState(() {
+      subjectAttemptsMock = data;
+    });
+
+    _processScores(subjectAttemptsMock);
+  }
+
+  Future<Map<String, List<Map<String, dynamic>>>>
+  readMockAttemptsFromSDCard() async {
+    try {
+      final directory = await SdCardUtility.getBasePath();
+      // final dir = Directory(directory);
+      final filePath = '$directory/jee_exam_attempt.json';
+      final file = File(filePath);
+
+      if (await file.exists()) {
+        final content = await file.readAsString();
+
+        if (content.trim().isNotEmpty) {
+          final decoded = jsonDecode(content);
+          if (decoded is Map<String, dynamic>) {
+            Map<String, List<Map<String, dynamic>>> parsedData = {};
+            decoded.forEach((key, value) {
+              if (value is List) {
+                parsedData[key] =
+                    value.whereType<Map<String, dynamic>>().toList();
+              }
+            });
+
+            // Optional: Sort attempts by date
+            parsedData.forEach((subject, attempts) {
+              attempts.sort((a, b) {
+                final dateA =
+                    DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+                final dateB =
+                    DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+                return dateB.compareTo(dateA);
+              });
+            });
+
+            log("Loaded data from SD card: $parsedData");
+            return parsedData;
+          }
+        }
+      } else {
+        debugPrint("File not found at: ${file.path}");
+      }
+    } catch (e) {
+      debugPrint("Failed to read from SD card: $e");
+    }
+
+    return {};
+  }
+
+
+
+  Map<String, Map<String, double>> _processScores(Map<String, List<Map<String, dynamic>>> data) {
+    List<double> pcbScores = [];
+    List<double> nonPcbScores = [];
+
+    // Extract all scores and separate by isPCB
+    data.forEach((subject, attempts) {
+      for (var attempt in attempts) {
+        try {
+          // Safely convert score to double
+          double score = attempt['score'] is String
+              ? double.tryParse(attempt['score']) ?? 0.0
+              : (attempt['score'] as num).toDouble();
+
+          if (attempt['isPCB'] == true) {
+            pcbScores.add(score);
+          } else {
+            nonPcbScores.add(score);
+          }
+        } catch (e) {
+          debugPrint("Error processing attempt: $e");
+          // Skip this attempt if score conversion fails
+        }
+      }
+    });
+
+    // Helper function to calculate stats
+    Map<String, double> calculateStats(List<double> scores) {
+      if (scores.isEmpty) {
+        return {
+          'count': 0,
+          'lowest': 0,
+          'highest': 0,
+          'average': 0,
+        };
+      }
+
+      return {
+        'count': scores.length.toDouble(),
+        'lowest': scores.reduce((a, b) => a < b ? a : b),
+        'highest': scores.reduce((a, b) => a > b ? a : b),
+        'average': scores.reduce((a, b) => a + b) / scores.length,
+      };
+    }
+
+    final pcbStats = calculateStats(pcbScores);
+    final nonPcbStats = calculateStats(nonPcbScores);
+
+    debugPrint("PCB Stats: $pcbStats");
+    debugPrint("Non-PCB Stats: $nonPcbStats");
+
+    return {
+      'pcb': pcbStats,
+      'nonPcb': nonPcbStats,
+    };
+  }
 
 }
