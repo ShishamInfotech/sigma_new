@@ -53,7 +53,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   @override
   void didUpdateWidget(covariant MathText oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.expression != widget.expression || oldWidget.textSize != widget.textSize) {
+    if (oldWidget.expression != widget.expression || oldWidget.textSize != widget.textSize || widget.expression != '0') {
       _resanitizeAndMeasure();
     }
   }
@@ -82,10 +82,17 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   }
 
   String sanitizeMathExpression(String input) {
+
     //debugPrint("Matrix Test================   $input");
     input = input.trim();
 
-    input = input.replaceAll(',br>', '<br>').replaceAllMapped(RegExp(r'<br\s*/?>'), (_) => '\n');
+    if(input.contains("img src")){
+      print("getBasepath ${widget.basePath}");
+      input = input.replaceAll("/sigma", widget.basePath!).replaceAll("style= width : 100px/", "style=\"width: 450px; height: auto;\"");
+      print("After Image $input");
+    }
+
+
 
 
     if (input.contains("matrix") || input.contains("vmatrix")) {
@@ -95,17 +102,12 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
           .replaceAll(r'\\end', r'\end')
           .replaceAll(r'\\\\', r'\\')
           .replaceAll(r'$', r'')
-          //.replaceAll(r'\left[\begin', r'\(\left[\begin')
-         // .replaceAll(r'\right]', r'\right]\)')
+      //.replaceAll(r'\left[\begin', r'\(\left[\begin')
+      // .replaceAll(r'\right]', r'\right]\)')
           .replaceAll(r'z-[1', r'z_{1');
     }
 
-    if(input.contains("img src")){
-      print("getBasepath ${widget.basePath}");
-      input = input.replaceAll("/sigma", widget.basePath!).replaceAll("style= width : 100px/", "style=\"width: 500px; height: auto;\"");
-
-      print("After Image $input");
-    }
+    input = input.replaceAll(',br>', '<br>').replaceAllMapped(RegExp(r'<br\s*/?>'), (_) => '\n');
 
     return input;
   }
@@ -113,6 +115,12 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
 
 
   double _calculateHeight() {
+
+    if (_sanitized.isEmpty || widget.textSize <= 0) {
+      return 100.0; // Default safe height
+    }
+
+
     var baseHeight = (_measuredHeight ?? widget.textSize * 1.2) + 20;
 
     /*final patterns = {
@@ -171,7 +179,9 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
     if(_sanitized.length > 60 && patterns.containsKey(r'\(')){
       baseHeight = baseHeight+10 ;
     }
-
+    if(_sanitized.length > 40) {
+      baseHeight = baseHeight + 10;
+    }
     double extra = patterns.entries.fold(0, (acc, entry) {
       final count = RegExp(entry.key).allMatches(_sanitized).length;
       return acc + (count * entry.value);
@@ -195,7 +205,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
 
     //final topPadding = isMatrix ? .0 : 6.0; // add extra space for matrix top line
     height = isMatrix ? height + 37.0 : height;
-
+    print("Data Contex Height ===============$height");
     return SizedBox(
       height: height,
       child: Padding(
@@ -219,6 +229,18 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   @override
   Widget build(BuildContext context) {
     //print("Data ==============="+ widget.expression);
+
+    if (widget.expression.isEmpty) {
+      return const SizedBox(
+        height: 10,
+        child: Center(
+          child: Text(
+            " ",
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
+    }
 
     final height = _calculateHeight();
 

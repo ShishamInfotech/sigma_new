@@ -7,6 +7,7 @@ import 'package:sigma_new/math_view/math_text.dart';
 import 'package:sigma_new/pages/text_answer/text_answer.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import '../../../../utility/sd_card_utility.dart';
 import '../../../notepad/noteswrite.dart';
 
 class SimpleQuestions extends StatefulWidget {
@@ -18,12 +19,32 @@ class SimpleQuestions extends StatefulWidget {
   State<SimpleQuestions> createState() => _SimpleQuestionsState();
 }
 
+
+
 class _SimpleQuestionsState extends State<SimpleQuestions> {
   Map<int, String?> selectedAnswers = {}; // Store selected answers per question
   Map<int, bool?> answerResults = {}; // Store correct/wrong status per question
+  late String baseImagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    getBasetree();
+  }
+
+  getBasetree() async {
+    print("Get Base Tress");
+    baseImagePath = await SdCardUtility.getBasePath();
+    print("PAtyh $baseImagePath");
+    setState(() {}); // Trigger rebuild once base path is set
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (baseImagePath == null || baseImagePath!.isEmpty) {
+      // Show loading placeholder until base path is ready
+      return Center(child: CircularProgressIndicator());
+    }
     return ListView.builder(
       physics: const ScrollPhysics(),
       itemCount: widget.easyQuestion.length,
@@ -60,6 +81,7 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                   child: MathText(
                     expression: question,
                     height: _estimateHeight(question),
+                    basePath: baseImagePath,
                   ),
                 ),
               ],
@@ -97,7 +119,7 @@ class _SimpleQuestionsState extends State<SimpleQuestions> {
                       border: Border.all(color: Colors.black),
                     ),
                     child: RadioListTile<String>(
-                      title: MathText(expression: option, height: _estimateOptionsHeight(option)),
+                      title: MathText(expression: option, height: _estimateOptionsHeight(option),basePath: baseImagePath,),
                       value: option,
                       groupValue: selectedAnswers[index],
                       onChanged: isSubmitted
