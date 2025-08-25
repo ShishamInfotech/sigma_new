@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
+import 'package:html/parser.dart' as html_parser;
+import 'package:html/dom.dart' as dom;
 
 class MathText extends StatefulWidget {
   final String expression;
@@ -113,6 +115,42 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   }
 
 
+  double _getSumOfImageHeights(String input) {
+    double totalHeight = 0;
+
+    try {
+      dom.Document document = html_parser.parse(input);
+
+      var imgElements = document.getElementsByTagName('img');
+
+      for (var img in imgElements) {
+        // Read the style attribute
+        String? style = img.attributes['style'];
+
+        if (style != null) {
+          var heightMatch = RegExp(r'height\s*:\s*([0-9]+)px').firstMatch(style);
+          if (heightMatch != null) {
+            double heightValue = double.tryParse(heightMatch.group(1)!) ?? 0;
+            totalHeight += heightValue;
+          } else {
+            // Fallback: maybe width is set, and you have a fixed aspect ratio
+            // Or use a default image height, e.g. 100
+            totalHeight += 100;
+          }
+        } else {
+          // No style, add default height
+          totalHeight += 100;
+        }
+      }
+    } catch (e) {
+      // On any parsing error, ignore image height contribution
+      print("Error parsing images for height: $e");
+    }
+
+    return totalHeight;
+  }
+
+
 
   double _calculateHeight() {
 
@@ -164,6 +202,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
       r'n_2': 8,
       r'T_n': 10,
       r'<br>': 15,
+      //r'<img': 20,
 
       // LaTeX text-size affecting commands
       r'\\Huge': 25,
@@ -186,6 +225,11 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
       final count = RegExp(entry.key).allMatches(_sanitized).length;
       return acc + (count * entry.value);
     });
+
+    // Add height from images parsed from sanitized string
+    double imageHeightSum = _getSumOfImageHeights(_sanitized);
+
+    baseHeight += imageHeightSum;
 
     final screenHeight = MediaQuery.of(context).size.height;
     return min(baseHeight + extra, screenHeight * 5); // Cap at 4x screen height
