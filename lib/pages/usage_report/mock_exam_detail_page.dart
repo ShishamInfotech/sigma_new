@@ -62,7 +62,6 @@ class MockExamDetailPageReport extends StatelessWidget {
                                 },
                                 child: Text("Show Answer"),
                               ),
-
                             ],
                           );
                         },

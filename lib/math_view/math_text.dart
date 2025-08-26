@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
+import 'package:html/parser.dart' as html_parser;
+import 'package:html/dom.dart' as dom;
 
 class MathText extends StatefulWidget {
   final String expression;
@@ -53,7 +55,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   @override
   void didUpdateWidget(covariant MathText oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.expression != widget.expression || oldWidget.textSize != widget.textSize) {
+    if (oldWidget.expression != widget.expression || oldWidget.textSize != widget.textSize || widget.expression != '0') {
       _resanitizeAndMeasure();
     }
   }
@@ -82,10 +84,17 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   }
 
   String sanitizeMathExpression(String input) {
+
     //debugPrint("Matrix Test================   $input");
     input = input.trim();
 
-    input = input.replaceAll(',br>', '<br>').replaceAllMapped(RegExp(r'<br\s*/?>'), (_) => '\n');
+    if(input.contains("img src")){
+      print("getBasepath ${widget.basePath}");
+      input = input.replaceAll("/sigma", widget.basePath!).replaceAll("style= width : 100px/", "style=\"width: 450px; height: auto;\"");
+      print("After Image $input");
+    }
+
+
 
 
     if (input.contains("matrix") || input.contains("vmatrix")) {
@@ -95,24 +104,61 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
           .replaceAll(r'\\end', r'\end')
           .replaceAll(r'\\\\', r'\\')
           .replaceAll(r'$', r'')
-          //.replaceAll(r'\left[\begin', r'\(\left[\begin')
-         // .replaceAll(r'\right]', r'\right]\)')
+      //.replaceAll(r'\left[\begin', r'\(\left[\begin')
+      // .replaceAll(r'\right]', r'\right]\)')
           .replaceAll(r'z-[1', r'z_{1');
     }
 
-    if(input.contains("img src")){
-      print("getBasepath ${widget.basePath}");
-      input = input.replaceAll("/sigma", widget.basePath!).replaceAll("style= width : 100px/", "style=\"width: 500px; height: auto;\"");
-
-      print("After Image $input");
-    }
+    input = input.replaceAll(',br>', '<br>').replaceAllMapped(RegExp(r'<br\s*/?>'), (_) => '\n');
 
     return input;
   }
 
 
+  double _getSumOfImageHeights(String input) {
+    double totalHeight = 0;
+
+    try {
+      dom.Document document = html_parser.parse(input);
+
+      var imgElements = document.getElementsByTagName('img');
+
+      for (var img in imgElements) {
+        // Read the style attribute
+        String? style = img.attributes['style'];
+
+        if (style != null) {
+          var heightMatch = RegExp(r'height\s*:\s*([0-9]+)px').firstMatch(style);
+          if (heightMatch != null) {
+            double heightValue = double.tryParse(heightMatch.group(1)!) ?? 0;
+            totalHeight += heightValue;
+          } else {
+            // Fallback: maybe width is set, and you have a fixed aspect ratio
+            // Or use a default image height, e.g. 100
+            totalHeight += 100;
+          }
+        } else {
+          // No style, add default height
+          totalHeight += 100;
+        }
+      }
+    } catch (e) {
+      // On any parsing error, ignore image height contribution
+      print("Error parsing images for height: $e");
+    }
+
+    return totalHeight;
+  }
+
+
 
   double _calculateHeight() {
+
+    if (_sanitized.isEmpty || widget.textSize <= 0) {
+      return 100.0; // Default safe height
+    }
+
+
     var baseHeight = (_measuredHeight ?? widget.textSize * 1.2) + 20;
 
     /*final patterns = {
@@ -156,6 +202,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
       r'n_2': 8,
       r'T_n': 10,
       r'<br>': 15,
+      //r'<img': 20,
 
       // LaTeX text-size affecting commands
       r'\\Huge': 25,
@@ -171,11 +218,18 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
     if(_sanitized.length > 60 && patterns.containsKey(r'\(')){
       baseHeight = baseHeight+10 ;
     }
-
+    if(_sanitized.length > 40) {
+      baseHeight = baseHeight + 10;
+    }
     double extra = patterns.entries.fold(0, (acc, entry) {
       final count = RegExp(entry.key).allMatches(_sanitized).length;
       return acc + (count * entry.value);
     });
+
+    // Add height from images parsed from sanitized string
+    double imageHeightSum = _getSumOfImageHeights(_sanitized);
+
+    baseHeight += imageHeightSum;
 
     final screenHeight = MediaQuery.of(context).size.height;
     return min(baseHeight + extra, screenHeight * 5); // Cap at 4x screen height
@@ -195,7 +249,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
 
     //final topPadding = isMatrix ? .0 : 6.0; // add extra space for matrix top line
     height = isMatrix ? height + 37.0 : height;
-
+    print("Data Contex Height ===============$height");
     return SizedBox(
       height: height,
       child: Padding(
@@ -219,6 +273,18 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   @override
   Widget build(BuildContext context) {
     //print("Data ==============="+ widget.expression);
+
+    if (widget.expression.isEmpty) {
+      return const SizedBox(
+        height: 10,
+        child: Center(
+          child: Text(
+            " ",
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
+    }
 
     final height = _calculateHeight();
 

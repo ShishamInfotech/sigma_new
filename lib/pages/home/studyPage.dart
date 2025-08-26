@@ -93,7 +93,7 @@ class _StudyPageState extends State<StudyPage> {
           Center(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10),
-              height: MediaQuery.of(context).size.height,
+              height: MediaQuery.of(context).size.height-80.0,
               width: MediaQuery.of(context).size.width * 0.9,
               child: GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -108,7 +108,7 @@ class _StudyPageState extends State<StudyPage> {
                     children: [
                       InkWell(
                         onTap: () async {
-                          Config? config = await ConfigLoader.getGlobalConfig(); // or your static class name
+                          /*Config? config = await ConfigLoader.getGlobalConfig(); // or your static class name
 
                           if (config == null) {
                             Get.snackbar(
@@ -119,7 +119,7 @@ class _StudyPageState extends State<StudyPage> {
                               colorText: Colors.white,
                             );
                             return;
-                          }
+                          }*/
 
                           try {
                             // Parse date
@@ -142,7 +142,7 @@ class _StudyPageState extends State<StudyPage> {
                             if (now.isAfter(expiry)) {
                               Get.snackbar(
                                 "Access Expired",
-                                "Course access expired on ${config.expiryDamte}.",
+                                "Course access expired on ${config.expiryDate}.",
                                 snackPosition: SnackPosition.BOTTOM,
                                 backgroundColor: Colors.red,
                                 colorText: Colors.white,
