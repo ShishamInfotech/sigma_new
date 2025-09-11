@@ -117,11 +117,31 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
       //   await _controller!.setLooping(true);
       //  await _controller!.play();
 
-      flickManager.flickControlManager?.addListener(() {
+      /*flickManager.flickControlManager?.addListener(() {
         if (flickManager.flickControlManager?.isFullscreen == true && !_isFullScreen) {
           _enterFullScreen();
         } else if (flickManager.flickControlManager?.isFullscreen == false && _isFullScreen) {
           _exitFullScreen();
+        }
+      });*/
+
+      flickManager.flickControlManager?.addListener(() {
+        final isFullscreen = flickManager.flickControlManager?.isFullscreen ?? false;
+
+        if (isFullscreen != _isFullScreen) {
+          setState(() {
+            _isFullScreen = isFullscreen;
+          });
+          if (isFullscreen) {
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.landscapeLeft,
+              DeviceOrientation.landscapeRight,
+            ]);
+          } else {
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.portraitUp,
+            ]);
+          }
         }
       });
 

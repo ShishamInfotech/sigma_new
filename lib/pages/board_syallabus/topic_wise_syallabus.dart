@@ -2,7 +2,11 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:get/get.dart';
+import 'package:gpt_markdown/custom_widgets/markdown_config.dart';
+import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/text_answer/text_answer.dart';
@@ -225,6 +229,42 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
                 children: [
                   Text("${index+1}:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
                   Expanded(child: MathText(expression: question["description"] ?? "", height: _estimateHeight(question["description"]))),
+                  /*Expanded(
+                    child: GptMarkdown(
+                        "${question["description"]}",
+                      latexBuilder:(context, tex, textStyle, inline) {
+                          return Math.tex(
+                            tex,
+                            mathStyle: inline ? MathStyle.text : MathStyle.display,
+                            textStyle: textStyle,
+                          );
+                      },
+                    ),
+                  )*/
+                  /*Expanded(
+                    child: Html(
+                      data: question["description"] ?? "",
+                      extensions: [
+                        /// Custom `<tex>` tag renderer
+                        TagExtension(
+
+                          tagsToExtend: {"tex"},
+                          builder: (ctx) {
+                            final text = ctx.element!.innerHtml;
+                            final tex =
+                            text.replaceAll(r"$$", "");
+                            return Math.tex(
+
+                              tex,
+                              mathStyle: MathStyle.display,
+                              textStyle: const TextStyle(fontSize: 16),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),*/
+
                 ],
               ),
               
@@ -322,6 +362,19 @@ class _TopicWiseSyllabusState extends State<TopicWiseSyllabus> {
 
   }
 
+
+
+  String preprocessLatex(String input) {
+    // Convert \( ... \) into <tex> ... </tex>
+    String processed = input
+        .replaceAllMapped(RegExp(r'\\\((.+?)\\\)'), (m) => "<tex>${m[1]}</tex>");
+
+    // Convert $$ ... $$ into <tex> ... </tex>
+    processed = processed.replaceAllMapped(RegExp(r'\$\$(.+?)\$\$'),
+            (m) => "<tex>${m[1]}</tex>");
+
+    return processed;
+  }
 
 
 }

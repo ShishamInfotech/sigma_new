@@ -141,7 +141,7 @@ class _LibraryHomeState extends State<LibraryHome> {
   }
 
   Future<void> requestPermissionAndLoad() async {
-    if (await Permission.manageExternalStorage.request().isGranted) {
+     if (await Permission.manageExternalStorage.request().isGranted) {
       final sigmaPath = await SdCardUtility.getBasePath();
 
       final baseDir = Directory("$sigmaPath/library");
