@@ -59,7 +59,13 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
 
       print("Last Minute ${widget.path}");
       print("Last Minute Board${prefs.getString('board')}");
-      String board =widget.path!.contains("10") ||widget.path!.contains("12") ? prefs.getString('board') == "Maharashtra" ? "MH/" : prefs.getString('board') ?? '' : "";
+      String? boardPref = prefs.getString('board');
+
+      String board = (widget.path?.contains("10") == true || widget.path?.contains("12") == true)
+          ? (boardPref == "Maharashtra"
+          ? "MH/"
+          : "${boardPref ?? ""}/")
+          : "";
       String newPath = widget.path?.contains("10") == true ? "10/" :widget.path?.contains("12")==true ? "12/" : "JEE/THEORY/" ;
       String sigmaDataPath = '${newPath}${board}sigma_data.json';
 

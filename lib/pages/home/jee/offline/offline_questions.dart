@@ -512,7 +512,10 @@ class _OfflineQuestionsState extends State<OfflineQuestions> {
 
   getQuestionList() async {
     final prefs = await SharedPreferences.getInstance();
-    var board = prefs.getString('board') == "Maharashtra" ? "MH/" : prefs.getString('board');
+    String? boardPref = prefs.getString('board');
+    var board = (boardPref != null && boardPref == "Maharashtra")
+        ? "MH/"
+        : "${boardPref ?? ""}/";
 
     var inputFile = await SdCardUtility.getSubjectEncJsonData('jee/mcq/${widget.chapterId}.json');
     if (inputFile != null) {

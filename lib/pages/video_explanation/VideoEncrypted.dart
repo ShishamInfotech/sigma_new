@@ -57,7 +57,14 @@ class _EncryptedVideoPlayerState extends State<EncryptedVideoPlayer> {
 
       if (widget.basePath.contains("10")) classes = "10";
       if (widget.basePath.contains("12")) classes = "12";
-      if (widget.basePath.toLowerCase().contains('mh')) state = "MH";
+      if (widget.basePath.toLowerCase().contains('mh')){ state = "MH";}else{
+        final prefs = await SharedPreferences.getInstance();
+
+        String? boardPref = prefs.getString('board');
+        state = (boardPref != null && boardPref == "Maharashtra")
+            ? "MH"
+            : "${boardPref ?? ""}";
+      }
 
       final cleaned = widget.basePath
           .replaceAll(classes, "")

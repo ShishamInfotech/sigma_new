@@ -5,100 +5,93 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import io.flutter.plugin.platform.PlatformView
-import io.github.kexanie.library.MathView
 
 class MathPlatformView(context: Context, private val expression: String) : PlatformView {
-    private val mathView: MathView = MathView(context, null)
+    private val webView: WebView = WebView(context)
 
-    private var isInitialized = false
     init {
-        if (!isInitialized) {
-            isInitialized = true
-            try {
-                mathView.settings.javaScriptEnabled = true
-                mathView.settings.allowFileAccess = true
-                mathView.settings.allowFileAccessFromFileURLs = true
-                mathView.settings.allowUniversalAccessFromFileURLs = true
-                mathView.settings.domStorageEnabled = true
+        try {
+            webView.settings.javaScriptEnabled = true
+            webView.settings.allowFileAccess = true
+            webView.settings.allowFileAccessFromFileURLs = true
+            webView.settings.allowUniversalAccessFromFileURLs = true
+            webView.settings.domStorageEnabled = true
 
-                // Safe fallback for empty or null expressions
-                val safeExpression = if (expression.isBlank()) "1+1" else expression
-                Handler(Looper.getMainLooper()).post {
-                    mathView.text = """
-                <html>
-                <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>
-                        body {
-                            font-size: 17px;
-                            height: auto;
-                            max-height: max-content;
-                            margin-top: 13px;
-                            margin-bottom:5px;
-                        }
-                        mjx-container {
-                            font-size: 17px;
-                            height: auto;
-                            max-height: max-content;
-                            padding-top: 8px;
-                        }
-                    </style>
-                </head>
-                <body>
+            webView.webViewClient = WebViewClient()
+            webView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+            val safeExpression = if (expression.isBlank()) "1+1" else expression
 
-                    $safeExpression
-                </body>
-                </html>
-            """.trimIndent()
-                }
-               // mathView.setText(safeExpression)
-                //  Handler(Looper.getMainLooper()).postDelayed({
-                /* mathView.text = """
-                <html>
-                <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>
-                        body {
-                            font-size: 17px;
-                            height: auto;
-                            max-height: max-content;
-                            margin-top: 13px;
-                            margin-bottom:5px;
-                        }
-                        mjx-container {
-                            font-size: 17px;
-                            height: auto;
-                            max-height: max-content;
-                            padding-top: 8px;
-                        }
-                    </style>
-                </head>
-                <body>
+            Handler(Looper.getMainLooper()).post {
+                val html = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <script type="text/x-mathjax-config">
+                          window.MathJax = {
+                            loader: {
+                              load: ['input/tex', 'output/chtml'], 
+                              paths: {mathjax: 'file:///android_asset/mathjax'}
+                            },
+                            options: {
+                              enableMenu: false
+                            },
+                            tex: {
+                              inlineMath: [['\\(','\\)']],
+                              displayMath: [['$$','$$']]
+                            },
+                            svg: { fontCache: 'none' },
+                            
+                          };
+                        </script>
+                        <script id="MathJax-script" type="text/javascript" src="file:///android_asset/mathjax/tex-mml-chtml.js"></script>
+                        <style>
+                            body {
+                                font-size: 15px;
+                                height: auto;
+                                max-height: max-content;
+                                margin-top: 13px;
+                                margin-bottom:5px;
+                            }
+                            mjx-container {
+                                font-size: 15px;
+                                height: auto;
+                                max-height: max-content;
+                                padding-top: 10px;
+                                transform: translateY(6px); /* move everything lower */
+                            }
+                            
+                           
+                        </style>
+                    </head>
+                    <body>
+                    
+                        $safeExpression
+                    </body>
+                    </html>
+                """.trimIndent()
 
-                    $safeExpression
-                </body>
-                </html>
-            """.trimIndent()},100)*/
-
-
-            } catch (e: Exception) {
-                Log.e("MathPlatformView", "Error initializing MathView: ${e.message}")
+                webView.loadDataWithBaseURL("file:///android_asset/mathjax/", html, "text/html", "utf-8", null)
             }
+        } catch (e: Exception) {
+            Log.e("MathPlatformView", "Error initializing WebView: ${e.message}")
         }
     }
 
-    override fun getView(): View = mathView
+    override fun getView(): View = webView
 
     override fun dispose() {
-        // Clean up if needed
         try {
-            mathView.stopLoading()
-            mathView.loadUrl("about:blank")
-            mathView.removeAllViews()
-            mathView.destroy()
+            webView.stopLoading()
+            webView.loadUrl("about:blank")
+            webView.removeAllViews()
+            webView.destroy()
         } catch (e: Exception) {
-            Log.e("MathPlatformView", "Error destroying MathView: ${e.message}")
+            Log.e("MathPlatformView", "Error destroying WebView: ${e.message}")
         }
     }
 }

@@ -67,7 +67,16 @@ class _TextAnswerJeeState extends State<TextAnswerJee> {
 
     if(widget.basePath!.contains('mh')  && !widget.stream!.contains("jee")){
       state = "/MH";
+    }else{
+      final prefs = await SharedPreferences.getInstance();
+
+      String? boardPref = prefs.getString('board');
+      state = (boardPref != null && boardPref == "Maharashtra")
+          ? "/MH"
+          : "/${boardPref ?? ""}";
     }
+
+
 
     String cleaned="";
     if(widget.stream!.contains("jee")){

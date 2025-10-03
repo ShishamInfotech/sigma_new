@@ -108,7 +108,7 @@ class _StudyPageState extends State<StudyPage> {
                     children: [
                       InkWell(
                         onTap: () async {
-                          /*Config? config = await ConfigLoader.getGlobalConfig(); // or your static class name
+                          Config? config = await ConfigLoader.getGlobalConfig(); // or your static class name
 
                           if (config == null) {
                             Get.snackbar(
@@ -119,11 +119,11 @@ class _StudyPageState extends State<StudyPage> {
                               colorText: Colors.white,
                             );
                             return;
-                          }*/
+                          }
 
                           try {
                             // Parse date
-                            /*DateFormat formatter = DateFormat("dd-MM-yyyy");
+                            DateFormat formatter = DateFormat("dd-MM-yyyy");
                             DateTime now = DateTime.now();
                             DateTime start = formatter.parse(config.startDate!);
                             DateTime expiry = formatter.parse(config.expiryDate!);
@@ -160,7 +160,7 @@ class _StudyPageState extends State<StudyPage> {
                                 colorText: Colors.white,
                               );
                               return;
-                            }*/
+                            }
 
                             // Continue navigation
                             if (othersMenuList[index].navigation != null) {

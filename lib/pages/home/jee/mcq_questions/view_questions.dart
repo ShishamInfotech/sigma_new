@@ -52,11 +52,10 @@ class _ViewQuestionsState extends State<ViewQuestions>
     print(
         "Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
 
-    if (prefs.getString('board') == "Maharashtra") {
-      board = "MH/";
-    } else {
-      board = prefs.getString('board');
-    }
+    String? boardPref = prefs.getString('board');
+    board = (boardPref != null && boardPref == "Maharashtra")
+        ? "MH/"
+        : "${boardPref ?? ""}/";
 
     /*if (widget.pathQuestion!.contains("10")) {
       newPath = "10/";

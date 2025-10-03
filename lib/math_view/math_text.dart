@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'dart:developer' as ld;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -39,13 +42,21 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   @override
   bool get wantKeepAlive => true;
 
+  double? _imageHeightSum;
 
   @override
   void initState() {
     super.initState();
     _sanitized = sanitizeMathExpression(widget.expression);
+    loadImageHeights(_sanitized);
   }
 
+  Future<void> loadImageHeights(String input) async {
+    double sum = await _getSumOfImageHeights(input);
+    setState(() {
+      _imageHeightSum = sum;
+    });
+  }
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -96,7 +107,6 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
 
 
 
-
     if (input.contains("matrix") || input.contains("vmatrix")) {
       print("Matrix Test================   $input");
       input= input
@@ -104,8 +114,8 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
           .replaceAll(r'\\end', r'\end')
           .replaceAll(r'\\\\', r'\\')
           .replaceAll(r'$', r'')
-      //.replaceAll(r'\left[\begin', r'\(\left[\begin')
-      // .replaceAll(r'\right]', r'\right]\)')
+      .replaceAll(r'\left[\begin', r'\(\left[\begin')
+       .replaceAll(r'\right]', r'\right]\)')
           .replaceAll(r'z-[1', r'z_{1');
     }
 
@@ -115,41 +125,64 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   }
 
 
-  double _getSumOfImageHeights(String input) {
+  Future<double> _getSumOfImageHeights(String input) async {
     double totalHeight = 0;
 
     try {
       dom.Document document = html_parser.parse(input);
-
       var imgElements = document.getElementsByTagName('img');
 
       for (var img in imgElements) {
-        // Read the style attribute
         String? style = img.attributes['style'];
+        String? src = img.attributes['src'];
 
-        if (style != null) {
-          var heightMatch = RegExp(r'height\s*:\s*([0-9]+)px').firstMatch(style);
-          if (heightMatch != null) {
-            double heightValue = double.tryParse(heightMatch.group(1)!) ?? 0;
-            totalHeight += heightValue;
+        if (src != null) {
+          Size intrinsicSize = await getImageSizeFromFile(src);
+
+          double renderedWidth = 100; // default fallback width
+          if (style != null) {
+            var widthMatch = RegExp(r'width\s*:\s*([0-9]+)px').firstMatch(style);
+            if (widthMatch != null) {
+              renderedWidth = double.tryParse(widthMatch.group(1)!) ?? renderedWidth;
+            }
+          }
+
+          if (intrinsicSize != Size.zero && intrinsicSize.width > 0) {
+            // Scale height to match rendered width while keeping aspect ratio
+            double scaledHeight = intrinsicSize.height * (renderedWidth / intrinsicSize.width);
+            totalHeight += scaledHeight;
           } else {
-            // Fallback: maybe width is set, and you have a fixed aspect ratio
-            // Or use a default image height, e.g. 100
-            totalHeight += 100;
+            totalHeight += 100; // fallback
           }
         } else {
-          // No style, add default height
-          totalHeight += 100;
+          totalHeight += 100; // fallback
         }
       }
     } catch (e) {
-      // On any parsing error, ignore image height contribution
       print("Error parsing images for height: $e");
     }
-
     return totalHeight;
   }
 
+
+  Future<Size> getImageSizeFromFile(String fileUri) async {
+    try {
+      String filePath = Uri.parse(fileUri).toFilePath();
+
+      final file = File(filePath);
+      final bytes = await file.readAsBytes();
+      final completer = Completer<ui.Image>();
+      ui.decodeImageFromList(bytes, (ui.Image img) {
+        completer.complete(img);
+      });
+
+      ui.Image image = await completer.future;
+      return Size(image.width.toDouble(), image.height.toDouble());
+    } catch (e) {
+      print('Error loading local image: $e');
+      return Size.zero;
+    }
+  }
 
 
   double _calculateHeight() {
@@ -160,26 +193,6 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
 
 
     var baseHeight = (_measuredHeight ?? widget.textSize * 1.2) + 20;
-
-    /*final patterns = {
-      r'\\frac{': 38,
-      r'\\sum': 8,
-      r'\\int': 8,
-      r'\$\$': 35,
-      r'</': -4,
-      r'<sub>': 10,
-      r'<i>': 10,
-      r'\\': 2,
-      r'<table':30,
-      r'<tr>':5,
-      r'&nbsp;':25,
-      r'<p>':20,
-      r'\\propto': 12,
-      r'n_1': 8,
-      r'n_2': 8,
-      r'T_n': 10,
-      r'<br>': 15,
-    };*/
 
     final patterns = {
       // Existing
@@ -202,7 +215,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
       r'n_2': 8,
       r'T_n': 10,
       r'<br>': 15,
-      //r'<img': 20,
+      //r'<img': 85,
 
       // LaTeX text-size affecting commands
       r'\\Huge': 25,
@@ -227,9 +240,10 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
     });
 
     // Add height from images parsed from sanitized string
-    double imageHeightSum = _getSumOfImageHeights(_sanitized);
+    //double imageHeightSum = _getSumOfImageHeights(_sanitized);
 
-    baseHeight += imageHeightSum;
+
+
 
     final screenHeight = MediaQuery.of(context).size.height;
     return min(baseHeight + extra, screenHeight * 5); // Cap at 4x screen height
@@ -286,7 +300,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
       );
     }
 
-    final height = _calculateHeight();
+    final height = _calculateHeight() + ((_imageHeightSum ?? 0));
 
     final needsScroll = widget.scrollable || _shouldScroll(height, context);
     // ✅ Avoid building AndroidView until height is known

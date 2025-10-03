@@ -17,9 +17,8 @@ void main() async {
 
     }*/
 
- //   await requestStoragePermission();
+    //await requestStoragePermission();
     await requestAllFileAccessPermission();
- //   await requestAllFileAccessPermission();
 
 
     // 🔹 Create bind files if first time

@@ -55,7 +55,10 @@ class _SubjectWiseState extends State<SubjectWise> {
       String newPath;
       final prefs = await SharedPreferences.getInstance();
 
-      board = prefs.getString('board') == "Maharashtra" ? "MH/" : prefs.getString('board');
+      String? boardPref = prefs.getString('board');
+      board = (boardPref != null && boardPref == "Maharashtra")
+          ? "MH/"
+          : "${boardPref ?? ""}/";
 
       if (widget.path!.contains("10")) {
         newPath = "10/";

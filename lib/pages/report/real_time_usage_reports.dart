@@ -157,11 +157,10 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     print(
         "Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
 
-    if (prefs.getString('board') == "Maharashtra") {
-      board = "MH/";
-    } else {
-      board = prefs.getString('board');
-    }
+    String? boardPref = prefs.getString('board');
+    board = (boardPref != null && boardPref == "Maharashtra")
+        ? "MH/"
+        : "${boardPref ?? ""}/";
 
     if (prefs.getString('standard').toString().contains("10th")) {
       newPath = "10/";

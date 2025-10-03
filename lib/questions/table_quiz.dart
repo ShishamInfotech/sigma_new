@@ -194,7 +194,7 @@ class _TableQuizState extends State<TableQuiz> with TickerProviderStateMixin {
       final prefs = await SharedPreferences.getInstance();
       board = prefs.getString('board') == "Maharashtra"
           ? "MH/"
-          : prefs.getString('board');
+          : "${prefs.getString('board')}/";
 
       String newPath = widget.pathQuestion.contains("10")
           ? "10/"

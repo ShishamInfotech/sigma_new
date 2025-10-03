@@ -25,7 +25,7 @@ class _LibraryHomeState extends State<LibraryHome> {
   }
 
   Future<void> requestPermissionAndLoad() async {
-    if (await Permission.manageExternalStorage.request().isGranted) {
+    //if (await Permission.manageExternalStorage.request().isGranted) {
       final sigmaPath = await SdCardUtility.getBasePath();
 
       final baseDir = Directory("${sigmaPath}/library");
@@ -141,7 +141,7 @@ class _LibraryHomeState extends State<LibraryHome> {
   }
 
   Future<void> requestPermissionAndLoad() async {
-     if (await Permission.manageExternalStorage.request().isGranted) {
+     //if (await Permission.manageExternalStorage.request().isGranted) {
       final sigmaPath = await SdCardUtility.getBasePath();
 
       final baseDir = Directory("$sigmaPath/library");
@@ -169,11 +169,11 @@ class _LibraryHomeState extends State<LibraryHome> {
           SnackBar(content: Text("Library folder not found.")),
         );
       }
-    } else {
+    /*} else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Storage permission is required.")),
       );
-    }
+    }*/
   }
 
   @override

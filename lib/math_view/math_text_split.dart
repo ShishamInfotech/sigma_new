@@ -21,6 +21,7 @@ class MathTextSplit extends StatelessWidget {
   });
 
   String sanitize(String input) {
+
     return input
         .replaceAll(r'\\begin', r'\begin')
         .replaceAll(r'\\end', r'\end')
@@ -37,6 +38,7 @@ class MathTextSplit extends StatelessWidget {
   String sanitizeMathExpression(String input) {
     //debugPrint("Matrix Test================   $input");
     input = input.trim();
+
     if (input.contains("matrix") || input.contains("vmatrix")) {
       print("Matrix Test================   $input");
       input= input
@@ -96,6 +98,39 @@ class MathTextSplit extends StatelessWidget {
 
     return baseHeight + extra;
   }
+
+  String convertMathToKaTeX(String input) {
+    String output = input;
+    // Check if input contains either \overset or \underset
+    final containsOverset = output.contains(r'\overset');
+    final containsUnderset = output.contains(r'\underset');
+
+    if (containsOverset) {
+      final oversetRegex = RegExp(r'\\overset\{([^}]*)\}\{\\longrightarrow\}');
+      output = output.replaceAllMapped(oversetRegex, (match) {
+        return r'\xrightarrow{\text{' + match.group(1)! + '}}';
+      });
+    }
+
+    if (containsUnderset) {
+      final undersetRegex = RegExp(r'\\underset\{([^}]*)\}\{([^}]*)\}');
+      output = output.replaceAllMapped(undersetRegex, (match) {
+        return r'\underset{\text{' + match.group(1)! + '}}{' + match.group(2)! + '}';
+      });
+
+    }
+
+    if(containsUnderset || containsOverset) {
+      //output = r'$$' + output + r'$$';
+      output = output.replaceAll(r'\(', r'$$').replaceAll(r'\)', r'$$');
+    }
+
+    print("After Conversion ========== $output");
+    return output;
+
+  }
+
+
 
   @override
   Widget build(BuildContext context) {

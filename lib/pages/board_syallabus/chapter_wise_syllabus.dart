@@ -49,11 +49,10 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
     print(
         "Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
 
-    if (prefs.getString('board') == "Maharashtra") {
-      board = "MH/";
-    } else {
-      board = prefs.getString('board');
-    }
+    String? boardPref = prefs.getString('board');
+      board = (boardPref != null && boardPref == "Maharashtra")
+          ? "MH/"
+          : "${boardPref ?? ""}/";
 
     if (widget.path!.contains("10")) {
       newPath = "10/";
@@ -261,11 +260,10 @@ class _ChapterWiseSyllabusState extends State<ChapterWiseSyllabus> {
     final prefs = await SharedPreferences.getInstance();
     //String? course = prefs.getString('course');
 
-    if (prefs.getString('board') == "Maharashtra") {
-      board = "MH/";
-    } else {
-      board = prefs.getString('board');
-    }
+    String? boardPref = prefs.getString('board');
+    board = (boardPref != null && boardPref == "Maharashtra")
+        ? "MH/"
+        : "${boardPref ?? ""}/";
 
     if (widget.path!.contains("10")) {
       newPath = "10/";
