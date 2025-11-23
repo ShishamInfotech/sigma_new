@@ -33,14 +33,14 @@ class _StandardMenuState extends State<StandardMenu> {
           navigation:() {
 
           },
-          title: 'Study/Revise'),
+          title: 'Syllabus'),
       if(!widget.standard.toString().contains("IIT"))Menu(
           color: 0xFFC9E4DF,
           imagePath: 'assets/svg/exam_preparation_logo.svg',
           navigation: (){
 
           },
-          title: 'Board Mock Exam'),
+          title: 'Board Mock Exams'),
     ];
     final isPortrait =
         MediaQuery.of(context).orientation == Orientation.portrait;

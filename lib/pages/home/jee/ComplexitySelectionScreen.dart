@@ -18,7 +18,7 @@ class ComplexitySelectionScreen extends StatelessWidget {
           navigation: () {
 
           },
-          title: 'Elementry Concept'),
+          title: 'Elementary Concept'),
       Menu(
           color: 0xFFC5DEF2,
           imagePath: 'assets/svg/exam_prep.svg',
