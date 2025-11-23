@@ -51,14 +51,14 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
                         <script id="MathJax-script" type="text/javascript" src="file:///android_asset/mathjax/tex-mml-chtml.js"></script>
                         <style>
                             body {
-                                font-size: 15px;
+                                font-size: 17px;
                                 height: auto;
                                 max-height: max-content;
                                 margin-top: 13px;
                                 margin-bottom:5px;
                             }
                             mjx-container {
-                                font-size: 15px;
+                                font-size: 17px;
                                 height: auto;
                                 max-height: max-content;
                                 padding-top: 10px;
