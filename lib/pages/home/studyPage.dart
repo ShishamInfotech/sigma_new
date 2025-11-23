@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigma_new/config/config.dart';
 import 'package:sigma_new/config/config_loader.dart';
@@ -11,6 +13,9 @@ import 'package:sigma_new/pages/10thMh/10thmh.dart';
 import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:intl/intl.dart';
+
+import '../../utility/sd_card_utility.dart';
+import 'home_with_sponsors.dart';
 
 class StudyPage extends StatefulWidget {
   const StudyPage({super.key});
@@ -22,20 +27,28 @@ class StudyPage extends StatefulWidget {
 class _StudyPageState extends State<StudyPage> {
 
 
-  List<String> courseList=[];
+  List<String> courseList = [];
+  List<SponsorItem> sponsors = [];
 
 
   @override
-  void initState()  {
+  void initState() {
     super.initState();
     sharedPrefrenceData();
-
+    loadSponsors();
   }
-  sharedPrefrenceData() async{
+
+  Future<void> loadSponsors() async {
+    final items = await loadSponsorsFromSigmaLibrary();
+    setState(() => sponsors = items);
+  }
+
+  sharedPrefrenceData() async {
     final prefs = await SharedPreferences.getInstance();
 
     String? course = prefs.getString('course');
-    print("Standard${prefs.getString('StartDate')} State:${prefs.getString('board')}");
+    print("Standard${prefs.getString('StartDate')} State:${prefs.getString(
+        'board')}");
     if (course != null && course.isNotEmpty) {
       courseList = course.split(","); // Convert String to List
     }
@@ -45,8 +58,6 @@ class _StudyPageState extends State<StudyPage> {
     setState(() {
 
     });
-
-
   }
 
   @override
@@ -56,22 +67,21 @@ class _StudyPageState extends State<StudyPage> {
           color: 0xFFFAEDCB, // Corrected color code
           imagePath: 'assets/svg/10_mh.svg',
           navigation: () {
-
-          //  Get.to(StandardMenu(standard: "10th MH",));
+            //  Get.to(StandardMenu(standard: "10th MH",));
           },
           title: '10th MH'),
       Menu(
           color: 0xFFC9E4DF,
           imagePath: 'assets/svg/12_mh.svg',
           navigation: () {
-          //  Get.to(StandardMenu(standard: "12th MH",));
+            //  Get.to(StandardMenu(standard: "12th MH",));
           },
           title: '12th MH PCM'),
       Menu(
           color: 0xFFC5DEF2,
           imagePath: 'assets/svg/jee_cet_neet.svg',
           navigation: () {
-           // Get.to(StandardMenu(standard: "JEE",));
+            // Get.to(StandardMenu(standard: "JEE",));
           },
           title: 'JEE CEE NEET'),
       Menu(
@@ -86,6 +96,7 @@ class _StudyPageState extends State<StudyPage> {
             );
           },
           title: 'Engineer'),
+
     ];
     return Scaffold(
       body: Column(
@@ -93,9 +104,16 @@ class _StudyPageState extends State<StudyPage> {
           Center(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10),
-              height: MediaQuery.of(context).size.height-80.0,
-              width: MediaQuery.of(context).size.width * 0.9,
+              //height: MediaQuery.of(context).size.height-80.0,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width * 0.9,
               child: GridView.builder(
+                shrinkWrap: true,
+                // ✅ Important
+                physics: NeverScrollableScrollPhysics(),
+                // ❌ Disable internal scrolling
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: 20,
@@ -108,7 +126,8 @@ class _StudyPageState extends State<StudyPage> {
                     children: [
                       InkWell(
                         onTap: () async {
-                          Config? config = await ConfigLoader.getGlobalConfig(); // or your static class name
+                          Config? config = await ConfigLoader
+                              .getGlobalConfig(); // or your static class name
 
                           if (config == null) {
                             Get.snackbar(
@@ -126,9 +145,10 @@ class _StudyPageState extends State<StudyPage> {
                             DateFormat formatter = DateFormat("dd-MM-yyyy");
                             DateTime now = DateTime.now();
                             DateTime start = formatter.parse(config.startDate!);
-                            DateTime expiry = formatter.parse(config.expiryDate!);
+                            DateTime expiry = formatter.parse(
+                                config.expiryDate!);
 
-                            if (now.isBefore(start)) {
+                            /*if (now.isBefore(start)) {
                               Get.snackbar(
                                 "Access Denied",
                                 "Course access begins on ${config.startDate}.",
@@ -160,16 +180,16 @@ class _StudyPageState extends State<StudyPage> {
                                 colorText: Colors.white,
                               );
                               return;
-                            }
+                            }*/
 
                             // Continue navigation
                             if (othersMenuList[index].navigation != null) {
                               othersMenuList[index].navigation!();
                               Get.to(StandardMenu(standard: courseList[index]));
                             } else {
-                              print('No navigation route defined for this menu item');
+                              print(
+                                  'No navigation route defined for this menu item');
                             }
-
                           } catch (e) {
                             print("Validation failed: $e");
                             Get.snackbar(
@@ -182,8 +202,14 @@ class _StudyPageState extends State<StudyPage> {
                           }
                         },
                         child: Container(
-                          height: MediaQuery.of(context).size.height * 0.13,
-                          width: MediaQuery.of(context).size.width * 0.3,
+                          height: MediaQuery
+                              .of(context)
+                              .size
+                              .height * 0.13,
+                          width: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.3,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
                             color: Color(othersMenuList[index].color),
@@ -192,9 +218,10 @@ class _StudyPageState extends State<StudyPage> {
                             children: [
                               Padding(
                                 padding:
-                                    const EdgeInsets.only(left: 63.0, top: 6),
+                                const EdgeInsets.only(left: 63.0, top: 6),
                                 child: SvgPicture.asset(
-                                  'assets/svg/arrow.svg', // Correct interpolation
+                                  'assets/svg/arrow.svg',
+                                  // Correct interpolation
                                   height: 20,
                                   width: 20,
                                   fit: BoxFit.contain,
@@ -229,8 +256,75 @@ class _StudyPageState extends State<StudyPage> {
               ),
             ),
           ),
+          const SizedBox(height: 20),
+
+          // ⭐ ADD SPONSORS HERE (NOW IT WILL DISPLAY)
+          SponsorsSection(
+            sectionTitle: 'Our Sponsors',
+            sponsors: sponsors,
+          ),
+
         ],
       ),
     );
+  }
+}
+
+/// Loads sponsor files from:   <SD Card base path> / library /
+/// Example: /storage/emulated/0/Sigma/library
+Future<List<SponsorItem>> loadSponsorsFromSigmaLibrary() async {
+  try {
+    // Get Sigma base path (your utility)
+    final sigmaPath = await SdCardUtility.getBasePath();
+
+    // Your sponsors directory: Sigma/library
+    final baseDir = Directory("$sigmaPath/sponsors");
+
+    if (!await baseDir.exists()) {
+      print("⚠️ Sponsor directory not found: $baseDir");
+      return [];
+    }
+
+    // Read all files inside the directory
+    final entries = await baseDir.list().toList();
+
+    final files = entries.whereType<File>().toList();
+
+    // Optional: sort alphabetically
+    files.sort((a, b) => p.basename(a.path).compareTo(p.basename(b.path)));
+
+    final sponsors = <SponsorItem>[];
+
+    for (final file in files) {
+      final ext = p.extension(file.path).toLowerCase();
+      if (ext.isEmpty) continue;
+
+      final type = guessTypeFromUrl(file.path);
+      if (type == SponsorMediaType.unknown) {
+        // Skip unsupported file types
+        continue;
+      }
+
+      // Title = file name without extension
+      final title = p.basenameWithoutExtension(file.path);
+
+      // Local file URL (used by viewers)
+      final url = "file://${file.path}";
+
+      sponsors.add(
+        SponsorItem(
+          id: title,
+          title: title,
+          url: url,
+          type: type,
+        ),
+      );
+    }
+
+    return sponsors;
+
+  } catch (e) {
+    print("ERROR while reading sponsors: $e");
+    return [];
   }
 }

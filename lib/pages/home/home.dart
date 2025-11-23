@@ -4,6 +4,8 @@ import 'package:sigma_new/pages/home/othersPage.dart';
 import 'package:sigma_new/pages/home/studyPage.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import 'home_with_sponsors.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -95,9 +97,12 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
+
+
               const SizedBox(
                 height: 15,
               ),
+
               SizedBox(
                 height: MediaQuery.of(context).size.height,
                 child: const TabBarView(children: [
@@ -106,8 +111,15 @@ class _HomePageState extends State<HomePage> {
                 ]),
               ),
               const SizedBox(height: 15),
+
+
+
+
+
             ],
+
           ),
+
         ),
         drawer: DrawerWidget(),
       ),

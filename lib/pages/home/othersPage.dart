@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:path/path.dart' as p;
 import 'package:sigma_new/models/menu_models.dart';
 import 'package:sigma_new/pages/exam_preparation/exam_preparation.dart';
 import 'package:sigma_new/pages/home/quick_guide/quick_guide.dart';
@@ -10,7 +11,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 
+import '../../utility/sd_card_utility.dart';
 import '../pdf/PdfFolderListPage.dart';
+import 'home_with_sponsors.dart';
 
 class OtherPage extends StatefulWidget {
   const OtherPage({super.key});
@@ -21,6 +24,19 @@ class OtherPage extends StatefulWidget {
 
 class _Appbar2State extends State<OtherPage> {
 
+  List<SponsorItem> sponsors = [];
+
+
+  @override
+  void initState() {
+    super.initState();
+    loadSponsors();
+  }
+
+  Future<void> loadSponsors() async {
+    final items = await loadSponsorsFromSigmaLibrary();
+    setState(() => sponsors = items);
+  }
 
   Future<void> _openCalculator() async {
     try {
@@ -159,63 +175,137 @@ class _Appbar2State extends State<OtherPage> {
           title: 'Exam Preparation'),
     ];
     return Scaffold(
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width * 0.9,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 0.6,
-            ),
-            itemCount: studyMenu.length,
-            itemBuilder: (BuildContext context, int index) {
-              return Column(
-                children: [
-                  InkWell(
-                    splashColor: Colors.transparent,
-                    onTap: () {
-                      if (studyMenu[index].navigation != null) {
-                        studyMenu[index].navigation!();
-                      } else {
-                        print('No navigation route defined for this menu item');
-                      }
-                    },
-                    child: Container(
-                      height: MediaQuery.of(context).size.height * 0.13,
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: Color(studyMenu[index].color),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: SvgPicture.asset(
-                          studyMenu[index].imagePath, // Correct interpolation
-                          height: 30,
-                          width: 30,
-                          fit: BoxFit.contain,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                width: MediaQuery.of(context).size.width * 0.9,
+
+                child: GridView.builder(
+                  shrinkWrap: true,          // ✅ Important
+                  physics: NeverScrollableScrollPhysics(), // ❌ Disable internal scrolling
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 0.6,
+                  ),
+                  itemCount: studyMenu.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Column(
+                      children: [
+                        InkWell(
+                          splashColor: Colors.transparent,
+                          onTap: () {
+                            if (studyMenu[index].navigation != null) {
+                              studyMenu[index].navigation!();
+                            }
+                          },
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.13,
+                            width: MediaQuery.of(context).size.width * 0.3,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Color(studyMenu[index].color),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: SvgPicture.asset(
+                                studyMenu[index].imagePath,
+                                height: 30,
+                                width: 30,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  Text(
-                    textAlign: TextAlign.center,
-                    studyMenu[index].title,
-                    style: black14w400MediumTextStyle,
-                  )
-                ],
-              );
-            },
-          ),
+                        const SizedBox(height: 5),
+                        Text(
+                          studyMenu[index].title,
+                          textAlign: TextAlign.center,
+                          style: black14w400MediumTextStyle,
+                        )
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // ⭐ ADD SPONSORS HERE (NOW IT WILL DISPLAY)
+            SponsorsSection(
+              sectionTitle: 'Our Sponsors',
+              sponsors: sponsors,
+            ),
+
+          ],
         ),
       ),
     );
+
+  }
+}
+
+
+/// Loads sponsor files from:   <SD Card base path> / library /
+/// Example: /storage/emulated/0/Sigma/library
+Future<List<SponsorItem>> loadSponsorsFromSigmaLibrary() async {
+  try {
+    // Get Sigma base path (your utility)
+    final sigmaPath = await SdCardUtility.getBasePath();
+
+    // Your sponsors directory: Sigma/library
+    final baseDir = Directory("$sigmaPath/sponsors");
+
+    if (!await baseDir.exists()) {
+      print("⚠️ Sponsor directory not found: $baseDir");
+      return [];
+    }
+
+    // Read all files inside the directory
+    final entries = await baseDir.list().toList();
+
+    final files = entries.whereType<File>().toList();
+
+    // Optional: sort alphabetically
+    files.sort((a, b) => p.basename(a.path).compareTo(p.basename(b.path)));
+
+    final sponsors = <SponsorItem>[];
+
+    for (final file in files) {
+      final ext = p.extension(file.path).toLowerCase();
+      if (ext.isEmpty) continue;
+
+      final type = guessTypeFromUrl(file.path);
+      if (type == SponsorMediaType.unknown) {
+        // Skip unsupported file types
+        continue;
+      }
+
+      // Title = file name without extension
+      final title = p.basenameWithoutExtension(file.path);
+
+      // Local file URL (used by viewers)
+      final url = "file://${file.path}";
+
+      sponsors.add(
+        SponsorItem(
+          id: title,
+          title: title,
+          url: url,
+          type: type,
+        ),
+      );
+    }
+
+    return sponsors;
+
+  } catch (e) {
+    print("ERROR while reading sponsors: $e");
+    return [];
   }
 }

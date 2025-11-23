@@ -11,6 +11,7 @@ import 'package:sigma_new/side_navigation/sigma_team.dart';
 import 'package:sigma_new/supports/fetchDeviceDetails.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import '../../side_navigation/info_folder_page.dart';
 import '../library/LibraryHome.dart';
 import '../report/real_time_usage_reports.dart';
 
@@ -84,20 +85,48 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 title: const Text('About Us'),
                 leading: const Icon(Icons.details),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const AboutUs()),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoFolderPage(
+                    title: 'About Us',
+                    folderName: 'about_us', // the exact folder under Sigma/library/about_us
+                    icon: Icons.info,
+                    description: 'About our app, mission and goals.',
+                  )));
                 }
               ),
               ListTile(
                   title: const Text('Team'),
                   leading: const Icon(Icons.person),
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SigmaTeam()),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoFolderPage(
+                      title: 'Team',
+                      folderName: 'sigma_team', // the exact folder under Sigma/library/about_us
+                      icon: Icons.info,
+                      description: 'Sigma Team',
+                    )));
+                  }
+              ),
+              ListTile(
+                  title: const Text('FAQs'),
+                  leading: const Icon(Icons.person),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoFolderPage(
+                      title: 'FAQs',
+                      folderName: 'faqs', // the exact folder under Sigma/library/about_us
+                      icon: Icons.info,
+                      description: 'Find answers to the most common questions about using the Sigma app.',
+                    )));
+                  }
+              ),
+              ListTile(
+                  title: const Text('TERMS & CONDITIONS'),
+                  leading: const Icon(Icons.person),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoFolderPage(
+                      title: 'TERMS & CONDITIONS',
+                      folderName: 'terms_conditions', // the exact folder under Sigma/library/about_us
+                      icon: Icons.info,
+                      description: 'Review the legal terms and policies governing your use of the Sigma app.',
+                    )));
                   }
               ),
               ListTile(
