@@ -27,18 +27,41 @@ class JeeMockExamDetails extends StatelessWidget {
           final attempt = attempts[index];
           final allQuestions = attempt['questions'] as List<dynamic>? ?? [];
           final chapter = attempt['chapter'] ?? 'Unknown';
+          // Filter wrong answers first
+          final wrongQuestions = allQuestions.where((q) => q['selected'] != q['correct']).toList();
 
           return Card(
             margin: const EdgeInsets.all(10),
             elevation: 3,
-            child: ExpansionTile(
-              title: Text(title),
-              subtitle: Text("Time: $date"),
+            child: Column(
               children: [
-                QuestionList(
-                  allQuestions: allQuestions,
-                  chapter: chapter,
-                )
+                // Existing All Questions tile
+                ExpansionTile(
+                  title: Text(title),
+                  subtitle: Text("Time: $date"),
+                  children: [
+                    QuestionList(
+                      allQuestions: allQuestions,
+                      chapter: chapter,
+                    )
+                  ],
+                ),
+
+                // Divider
+                const Divider(height: 3, color: Colors.grey),
+
+                // NEW Wrong Answers tile
+                ExpansionTile(
+                  title: Text("Wrong Answers (${wrongQuestions.length})"),
+                  subtitle: const Text("Tap to view only wrong questions"),
+                  initiallyExpanded: false,
+                  children: [
+                    QuestionList(
+                      allQuestions: wrongQuestions,   // ← only wrong ones
+                      chapter: chapter,
+                    )
+                  ],
+                ),
               ],
             ),
           );

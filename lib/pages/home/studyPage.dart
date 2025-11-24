@@ -148,7 +148,7 @@ class _StudyPageState extends State<StudyPage> {
                             DateTime expiry = formatter.parse(
                                 config.expiryDate!);
 
-                            /*if (now.isBefore(start)) {
+                            if (now.isBefore(start)) {
                               Get.snackbar(
                                 "Access Denied",
                                 "Course access begins on ${config.startDate}.",
@@ -180,7 +180,7 @@ class _StudyPageState extends State<StudyPage> {
                                 colorText: Colors.white,
                               );
                               return;
-                            }*/
+                            }
 
                             // Continue navigation
                             if (othersMenuList[index].navigation != null) {
