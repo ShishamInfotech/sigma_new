@@ -8,6 +8,8 @@ import 'package:sigma_new/questions/table_quiz.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
+import '../drawer/drawer.dart';
+
 class SubjectWise extends StatefulWidget {
   final String? path;
   const SubjectWise({this.path, super.key});
@@ -102,8 +104,14 @@ class _SubjectWiseState extends State<SubjectWise> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: const DrawerWidget(),
       appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
+        leading: Builder(builder: (context) {
+          return IconButton(
+            icon: const Icon(Icons.menu, size: 28),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          );
+        }),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

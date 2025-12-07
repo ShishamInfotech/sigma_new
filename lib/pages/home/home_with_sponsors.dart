@@ -1,4 +1,5 @@
 // Sponsors with live video preview + increased height
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -20,16 +21,104 @@ class SponsorItem {
   SponsorItem({required this.id, required this.title, required this.url, required this.type});
 }
 
-// -------------------- SponsorsSection --------------------
-class SponsorsSection extends StatelessWidget {
+// -------------------- SponsorsSection (now Stateful with auto-scroll) --------------------
+class SponsorsSection extends StatefulWidget {
   final String sectionTitle;
   final List<SponsorItem> sponsors;
 
   const SponsorsSection({Key? key, this.sectionTitle = 'Sponsors', required this.sponsors}) : super(key: key);
 
   @override
+  State<SponsorsSection> createState() => _SponsorsSectionState();
+
+}
+
+class _SponsorsSectionState extends State<SponsorsSection> {
+  late final ScrollController _autoScrollController;
+  Timer? _autoScrollTimer;
+
+  // This controls the smoothness and speed:
+  // - _stepPx: how many pixels to move per tick (smaller = slower)
+  // - _tickMs: milliseconds between ticks (smaller = smoother/higher CPU)
+  // Tune these two to taste.
+  static const double _stepPx = 1.6; // try 1.0 - 2.5 for gentle motion
+  static const int _tickMs = 30; // ~33 fps (smooth). Increase to 50/60 to reduce CPU.
+
+  @override
+  void initState() {
+    super.initState();
+    _autoScrollController = ScrollController();
+    // Wait for layout to complete before starting scroll
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensureLayoutThenStart();
+    });
+  }
+
+  Future<void> _ensureLayoutThenStart() async {
+    // Wait until the controller has positions and the maxScrollExtent is > 0
+    // or give up after ~1 second (10 * 100ms). Adjust if you have very large images.
+    int tries = 0;
+    while (mounted) {
+      if (_autoScrollController.hasClients) {
+        try {
+          final max = _autoScrollController.position.maxScrollExtent;
+          if (max > 0 && widget.sponsors.isNotEmpty) {
+            // Ready to start
+            _startAutoScroll();
+            return;
+          }
+        } catch (_) {
+          // ignore (sometimes accessing position too early throws)
+        }
+      }
+      tries++;
+      if (tries > 10) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    // fallback: start anyway (useful if extents are zero but you still want motion)
+    if (mounted) _startAutoScroll();
+  }
+
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+    if (widget.sponsors.isEmpty) return;
+
+    // Use a periodic timer that increments the scroll offset by a tiny amount.
+    _autoScrollTimer = Timer.periodic(Duration(milliseconds: _tickMs), (_) {
+      if (!_autoScrollController.hasClients) return;
+
+      final max = _autoScrollController.position.maxScrollExtent;
+      double current = _autoScrollController.offset;
+      double next = current + _stepPx;
+
+      // If we've reached (or passed) the end, wrap back to start.
+      if (next >= max) {
+        // When close to end, snap to end first to avoid visual jitter, then jump to 0.
+        // Small delay: cancel timer briefly to allow UI to render end position if needed.
+        _autoScrollController.jumpTo(0);
+      } else {
+        // Use jumpTo for small-step motion (cheaper than animateTo every tick).
+        _autoScrollController.jumpTo(next);
+      }
+    });
+  }
+
+  void _stopAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _stopAutoScroll();
+    _autoScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (sponsors.isEmpty) return SizedBox.shrink();
+    if (widget.sponsors.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,30 +128,38 @@ class SponsorsSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(sectionTitle, style: Theme.of(context).textTheme.titleLarge),
+              Text(widget.sectionTitle, style: Theme.of(context).textTheme.titleLarge),
               TextButton(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SponsorsGalleryPage(sponsors: sponsors))),
-                child: Text('See all'),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => SponsorsGalleryPage(sponsors: widget.sponsors)),
+                ),
+                child: const Text('See all'),
               )
             ],
           ),
         ),
 
-        // Increased height to give video preview more space
         SizedBox(
-          height: 240, // increased height
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            scrollDirection: Axis.horizontal,
-            itemCount: sponsors.length,
-            separatorBuilder: (_, __) => SizedBox(width: 12),
-            itemBuilder: (context, idx) => SponsorCard(item: sponsors[idx]),
+          height: 400,
+          child: Listener(
+            onPointerDown: (_) => _stopAutoScroll(),
+            onPointerUp: (_) => _startAutoScroll(),
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              scrollDirection: Axis.horizontal,
+              controller: _autoScrollController,
+              itemCount: widget.sponsors.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, idx) => SponsorCard(item: widget.sponsors[idx]),
+            ),
           ),
         ),
       ],
     );
   }
 }
+
+
 
 // -------------------- SponsorCard (Stateful) --------------------
 class SponsorCard extends StatefulWidget {
@@ -145,22 +242,22 @@ class _SponsorCardState extends State<SponsorCard> {
   Widget build(BuildContext context) {
     final item = widget.item;
     return GestureDetector(
-        onTap: () => _openViewer(context, item),
-        child: Container(
-          width: 260, // adjust as needed to fit layout
-          height: 240, // <-- FULL HEIGHT (no title area)
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
-          ),
-
-          // Entire card is just the preview now
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: _buildPreview(item),
-          ),
+      onTap: () => _openViewer(context, item),
+      child: Container(
+        width: 260, // adjust as needed to fit layout
+        height: 240, // <-- FULL HEIGHT (no title area)
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
         ),
+
+        // Entire card is just the preview now
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: _buildPreview(item),
+        ),
+      ),
     );
   }
 

@@ -6,6 +6,9 @@ import 'package:sigma_new/pages/board_syallabus/topic_wise_syallabus.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+// <-- add this import to use your existing drawer implementation
+import 'package:sigma_new/pages/drawer/drawer.dart';
+
 class LastMinuteRevision extends StatefulWidget {
   final String? path;
   const LastMinuteRevision({super.key, this.path});
@@ -26,8 +29,10 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
   List<bool> isExpanded = [];
   bool _isLoading = true;
   String _errorMessage = '';
-  bool _showSideNav = true;
   int _totalBookmarkedQuestions = 0;
+
+  // Scaffold key to open the drawer
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -62,11 +67,13 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
       String? boardPref = prefs.getString('board');
 
       String board = (widget.path?.contains("10") == true || widget.path?.contains("12") == true)
-          ? (boardPref == "Maharashtra"
-          ? "MH/"
-          : "${boardPref ?? ""}/")
+          ? (boardPref == "Maharashtra" ? "MH/" : "${boardPref ?? ""}/")
           : "";
-      String newPath = widget.path?.contains("10") == true ? "10/" :widget.path?.contains("12")==true ? "12/" : "JEE/THEORY/" ;
+      String newPath = widget.path?.contains("10") == true
+          ? "10/"
+          : widget.path?.contains("12") == true
+          ? "12/"
+          : "JEE/THEORY/";
       String sigmaDataPath = '${newPath}${board}sigma_data.json';
 
       // Step 1: Load sigma_data.json to get subject mappings
@@ -80,9 +87,7 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
       // Create a map of question_serial_number to subjectid
       final Map<String, String> questionToSubjectMap = {};
       for (var subjectData in allSubjectsData) {
-
         String subjectId = subjectData["subjectid"]?.toString() ?? '';
-
 
         if (subjectId != null) {
           // Load the subject file (e.g., 12mhmat.json)
@@ -97,9 +102,8 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
             for (var question in subjectQuestions) {
               if (bookmarkedIds.contains(question["question_serial_number"]?.toString() ?? '')) {
                 bookmarkedQuestionsBySubject.putIfAbsent(subjectId, () => []);
-                bookmarkedQuestionsBySubject[subjectId]!.add(question);
+                bookmarkedQuestionsBySubject[subjectId]!.add(Map<String, dynamic>.from(question));
                 _totalBookmarkedQuestions++;
-                //break;
               }
             }
           }
@@ -133,7 +137,7 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
           result.putIfAbsent(subjectName, () => {});
           result[subjectName]!.putIfAbsent(chapter, () => {});
           result[subjectName]![chapter]!.putIfAbsent(subchapter, () => []);
-          result[subjectName]![chapter]![subchapter]!.add(question);
+          result[subjectName]![chapter]![subchapter]!.add(Map<String, dynamic>.from(question));
         }
       }
 
@@ -142,7 +146,6 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
         isExpanded = List.filled(result.length, false);
         _isLoading = false;
       });
-
     } catch (e) {
       debugPrint('Error loading bookmarks: $e');
       setState(() {
@@ -159,6 +162,7 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
 
     print("Path ${widget.path}");
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Row(
@@ -174,186 +178,146 @@ class _LastMinuteRevisionState extends State<LastMinuteRevision> {
         leading: IconButton(
           icon: const Icon(Icons.menu, size: 28),
           onPressed: () {
-            setState(() {
-              _showSideNav = !_showSideNav;
-            });
+            // open the actual drawer
+            _scaffoldKey.currentState?.openDrawer();
           },
         ),
       ),
+
+      // attach your real drawer here (Option A)
+      drawer: const DrawerWidget(),
+
       body: SafeArea(
-        child: Stack(
-          children: [
-            if (_showSideNav)
-              Positioned(
-                top: screenHeight * 0.05,
-                left: -10,
-                child: Container(
-                  width: screenWidth * 0.15,
-                  height: screenHeight * 0.6,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.6),
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                        offset: const Offset(5, 0),
-                      ),
-                    ],
-                  ),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Icon(Icons.home, size: 30, color: Colors.black),
-                      Icon(Icons.book, size: 30, color: Colors.black),
-                      Icon(Icons.bar_chart, size: 30, color: Colors.black),
-                      Icon(Icons.edit, size: 30, color: Colors.black),
-                      Icon(Icons.search, size: 30, color: Colors.black),
-                    ],
-                  ),
-                ),
-              ),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(screenWidth * 0.05, screenHeight * 0.04, screenWidth * 0.05, screenHeight * 0.03),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage.isNotEmpty
+              ? Center(child: Text(_errorMessage, textAlign: TextAlign.center))
+              : structuredData.isEmpty
+              ? const Center(child: Text('No bookmarked questions found.'))
+              : SingleChildScrollView(
+            child: Column(
+              children: structuredData.entries.map((subjectEntry) {
+                final subjectIndex = structuredData.keys.toList().indexOf(subjectEntry.key);
+                final subjectQuestions = _countQuestionsInSubject(subjectEntry.value);
 
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              left: _showSideNav ? screenWidth * 0.18 : screenWidth * 0.05,
-              right: screenWidth * 0.05,
-              top: screenHeight * 0.04,
-              bottom: screenHeight * 0.03,
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _errorMessage.isNotEmpty
-                  ? Center(child: Text(_errorMessage, textAlign: TextAlign.center))
-                  : structuredData.isEmpty
-                  ? const Center(child: Text('No bookmarked questions found.'))
-                  : SingleChildScrollView(
-                child: Column(
-                  children: structuredData.entries.map((subjectEntry) {
-                    final subjectIndex = structuredData.keys.toList().indexOf(subjectEntry.key);
-                    final subjectQuestions = _countQuestionsInSubject(subjectEntry.value);
-
-                    return Column(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              isExpanded[subjectIndex] = !isExpanded[subjectIndex];
-                            });
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(
-                              vertical: screenHeight * 0.02,
-                              horizontal: screenWidth * 0.04,
-                            ),
-                            margin: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
-                            decoration: BoxDecoration(
-                              color: cardColors[subjectIndex % cardColors.length],
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  spreadRadius: 1,
-                                  offset: const Offset(4, 0),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(_getIconForSubject(subjectEntry.key), size: 18),
-                                    SizedBox(width: screenWidth * 0.02),
-                                    Container(
-                                      width: screenWidth * 0.55,
-                                      child: Text(
-                                        '${subjectEntry.key} ($subjectQuestions)',
-                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Icon(
-                                  isExpanded[subjectIndex] ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                  size: 24,
-                                ),
-                              ],
-                            ),
-                          ),
+                return Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isExpanded[subjectIndex] = !isExpanded[subjectIndex];
+                        });
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(
+                          vertical: screenHeight * 0.02,
+                          horizontal: screenWidth * 0.04,
                         ),
-                        if (isExpanded[subjectIndex])
-                          ...subjectEntry.value.entries.map((chapterEntry) {
-                            final chapterQuestions = _countQuestionsInChapter(chapterEntry.value);
-                            return Padding(
-                              padding: EdgeInsets.only(left: screenWidth * 0.05),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Chapter ${chapterEntry.key} ($chapterQuestions)",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: Colors.grey[700],
+                        margin: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+                        decoration: BoxDecoration(
+                          color: cardColors[subjectIndex % cardColors.length],
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                              offset: const Offset(4, 0),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(_getIconForSubject(subjectEntry.key), size: 18),
+                                SizedBox(width: screenWidth * 0.02),
+                                Container(
+                                  width: screenWidth * 0.55,
+                                  child: Text(
+                                    '${subjectEntry.key} ($subjectQuestions)',
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Icon(
+                              isExpanded[subjectIndex] ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                              size: 24,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (isExpanded[subjectIndex])
+                      ...subjectEntry.value.entries.map((chapterEntry) {
+                        final chapterQuestions = _countQuestionsInChapter(chapterEntry.value);
+                        return Padding(
+                          padding: EdgeInsets.only(left: screenWidth * 0.05),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Chapter ${chapterEntry.key} ($chapterQuestions)",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                              ...chapterEntry.value.entries.map((subchapterEntry) {
+                                final first = subchapterEntry.value.first;
+                                return GestureDetector(
+                                  onTap: () {
+                                    Get.to(() => TopicWiseSyllabus(
+                                      pathQuestionList: subchapterEntry.value,
+                                      subjectId: first["subjectid"],
+                                    ));
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: screenHeight * 0.015,
+                                      horizontal: screenWidth * 0.04,
+                                    ),
+                                    margin: EdgeInsets.symmetric(vertical: screenHeight * 0.005),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 4,
+                                          spreadRadius: 1,
+                                          offset: const Offset(2, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      "${subchapterEntry.key}: ${first["subchapter"]} (${subchapterEntry.value.length})",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[800],
+                                      ),
                                     ),
                                   ),
-                                  ...chapterEntry.value.entries.map((subchapterEntry) {
-                                    final first = subchapterEntry.value.first;
-                                    return GestureDetector(
-                                      onTap: () {
-                                        Get.to(() => TopicWiseSyllabus(
-                                          pathQuestionList: subchapterEntry.value,
-                                          subjectId: first["subjectid"],
-                                        ));
-                                      },
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: screenHeight * 0.015,
-                                          horizontal: screenWidth * 0.04,
-                                        ),
-                                        margin: EdgeInsets.symmetric(vertical: screenHeight * 0.005),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(8),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.05),
-                                              blurRadius: 4,
-                                              spreadRadius: 1,
-                                              offset: const Offset(2, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Text(
-                                          "${subchapterEntry.key}: ${first["subchapter"]} (${subchapterEntry.value.length})",
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey[800],
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                  SizedBox(height: screenHeight * 0.01),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
+                                );
+                              }).toList(),
+                              SizedBox(height: screenHeight * 0.01),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                  ],
+                );
+              }).toList(),
             ),
-          ],
+          ),
         ),
       ),
     );

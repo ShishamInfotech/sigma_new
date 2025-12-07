@@ -24,8 +24,7 @@ void main() async {
     // 🔹 Create bind files if first time
    //await SdCardUtility.initializeBindingIfNeeded();
 
-    // Validate SD card binding
-   //await SdCardUtility.validateBinding();
+    // Validate SD card bindingawait SdCardUtility.validateBinding();
 
     // Start app if validation succeeds
     runApp(const MyApp());

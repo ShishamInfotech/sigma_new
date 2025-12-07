@@ -100,15 +100,15 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
     input = input.trim();
 
     if(input.contains("img src")){
-      print("getBasepath ${widget.basePath}");
+      //print("getBasepath ${widget.basePath}");
       input = input.replaceAll("/sigma", widget.basePath!).replaceAll("style= width : 100px/", "style=\"width: 450px; height: auto;\"");
-      print("After Image $input");
+      //print("After Image $input");
     }
 
 
 
     if (input.contains("matrix") || input.contains("vmatrix")) {
-      print("Matrix Test================   $input");
+      //print("Matrix Test================   $input");
       input= input
           .replaceAll(r'\\begin', r'\begin')
           .replaceAll(r'\\end', r'\end')
@@ -255,7 +255,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   }
 
   Widget _buildMathView(double height) {
-    print("Data Contex ===============$_sanitized");
+    //print("Data Contex ===============$_sanitized");
     final isMatrix = _sanitized.contains(r'\begin{matrix}') ||
         _sanitized.contains(r'\begin{pmatrix}') ||
         _sanitized.contains(r'\begin{vmatrix}') ||
@@ -263,7 +263,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
 
     //final topPadding = isMatrix ? .0 : 6.0; // add extra space for matrix top line
     height = isMatrix ? height + 37.0 : height;
-    print("Data Contex Height ===============$height");
+    //print("Data Contex Height ===============$height");
     return SizedBox(
       height: height,
       child: Padding(

@@ -8,6 +8,8 @@ import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/home/jee/jee_neet_home.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import '../../utility/sponsors_loader.dart';
+
 class StandardMenu extends StatefulWidget {
   var standard;
   StandardMenu({this.standard, super.key});
@@ -20,6 +22,8 @@ class _StandardMenuState extends State<StandardMenu> {
 
 
   final GlobalKey<ScaffoldState> _examscaffoldKey = GlobalKey<ScaffoldState>();
+
+  final repo = SponsorsRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -74,84 +78,88 @@ class _StandardMenuState extends State<StandardMenu> {
             widget.standard,
             style: black20w400MediumTextStyle,
           )),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.only(top: 30.0, bottom: 24.0),
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 30.0),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                height: MediaQuery.of(context).size.height * 0.8,
-                width: MediaQuery.of(context).size.width * 0.85,
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.6,
-                  ),
-                  itemCount: examPreparationMenu.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Column(
-                      children: [
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          onTap: () {
-                            if (examPreparationMenu[index].navigation != null && index==1) {
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              // remove the fixed height so GridView can size itself in the ListView
+              width: MediaQuery.of(context).size.width * 0.85,
+              child: GridView.builder(
+                shrinkWrap: true, // allow GridView to size itself inside ListView
+                physics: const NeverScrollableScrollPhysics(), // avoid nested scroll conflicts
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.6,
+                ),
+                itemCount: examPreparationMenu.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Column(
+                    children: [
+                      InkWell(
+                        splashColor: Colors.transparent,
+                        onTap: () {
+                          if (examPreparationMenu[index].navigation != null && index==1) {
+                            examPreparationMenu[index].navigation!();
+                            Get.to(SubjectWise(path: widget.standard,));
+                          } else if(index==0) {
+                            if(widget.standard.toString().contains("IIT")){
+                              Get.to(JeeNeetHome());
+                            } else {
                               examPreparationMenu[index].navigation!();
-                                  Get.to(SubjectWise(path: widget.standard,));
-                            } else if(index==0) {
-
-                              if(widget.standard.toString().contains("IIT")){
-                                Get.to(JeeNeetHome());
-                              }else {
-                                examPreparationMenu[index].navigation!();
-                                Get.to(
-                                    BoardWiseSyllabus(path: widget.standard,));
-                              }
-
-                            }else{
-                              print(
-                                  'No navigation route defined for this menu item');
+                              Get.to(BoardWiseSyllabus(path: widget.standard,));
                             }
-                            // Navigation logic here
-                          },
-                          child: Container(
-                            height: MediaQuery.of(context).size.height * 0.13,
-                            width: MediaQuery.of(context).size.width * 0.3,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: Color(examPreparationMenu[index].color),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: SvgPicture.asset(
-                                examPreparationMenu[index]
-                                    .imagePath, // Correct interpolation
-                                height: height * 0.07,
-                                width: width * 0.07,
-                                fit: BoxFit.contain,
-                              ),
+                          } else {
+                            print('No navigation route defined for this menu item');
+                          }
+                        },
+                        child: Container(
+                          height: MediaQuery.of(context).size.height * 0.13,
+                          width: MediaQuery.of(context).size.width * 0.3,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Color(examPreparationMenu[index].color),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: SvgPicture.asset(
+                              examPreparationMenu[index].imagePath,
+                              height: MediaQuery.of(context).size.height * 0.07,
+                              width: MediaQuery.of(context).size.width * 0.07,
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
-                        const SizedBox(
-                          height: 5,
-                        ),
-                        Text(
-                          textAlign: TextAlign.center,
-                          examPreparationMenu[index].title,
-                          style: black14RegularTextStyle,
-                        )
-                      ],
-                    );
-                  },
-                ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        textAlign: TextAlign.center,
+                        examPreparationMenu[index].title,
+                        style: black14RegularTextStyle,
+                      )
+                    ],
+                  );
+                },
               ),
             ),
           ),
+
+          const SizedBox(height: 10),
+
+          // ⭐ Sponsors placed below the syllabus & board exam sections
+          SizedBox(
+            height: 472, // fixed panel height so it renders predictably
+            child: SponsorsLoader(fetcher: () => repo.fetchSponsorsFromSdCard()),
+          ),
+
+          // optional extra spacing
+          const SizedBox(height: 24),
         ],
       ),
+
       drawer: DrawerWidget(),
     );
   }

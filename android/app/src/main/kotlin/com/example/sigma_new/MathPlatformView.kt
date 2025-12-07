@@ -54,7 +54,7 @@ class MathPlatformView(context: Context, private val expression: String) : Platf
                                 font-size: 17px;
                                 height: auto;
                                 max-height: max-content;
-                                margin-top: 13px;
+                                margin-top: 15px;
                                 margin-bottom:5px;
                             }
                             mjx-container {

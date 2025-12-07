@@ -15,6 +15,7 @@ import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:intl/intl.dart';
 
 import '../../utility/sd_card_utility.dart';
+import '../../utility/sponsors_loader.dart';
 import 'home_with_sponsors.dart';
 
 class StudyPage extends StatefulWidget {
@@ -35,12 +36,6 @@ class _StudyPageState extends State<StudyPage> {
   void initState() {
     super.initState();
     sharedPrefrenceData();
-    loadSponsors();
-  }
-
-  Future<void> loadSponsors() async {
-    final items = await loadSponsorsFromSigmaLibrary();
-    setState(() => sponsors = items);
   }
 
   sharedPrefrenceData() async {
@@ -59,6 +54,8 @@ class _StudyPageState extends State<StudyPage> {
 
     });
   }
+
+  final repo = SponsorsRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -256,13 +253,11 @@ class _StudyPageState extends State<StudyPage> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
           // ⭐ ADD SPONSORS HERE (NOW IT WILL DISPLAY)
-          SponsorsSection(
-            sectionTitle: 'Our Sponsors',
-            sponsors: sponsors,
-          ),
+          // simple: loader will fetch from SD and render SponsorsSection once ready
+          SponsorsLoader(fetcher: () => repo.fetchSponsorsFromSdCard()),
 
         ],
       ),
@@ -270,61 +265,3 @@ class _StudyPageState extends State<StudyPage> {
   }
 }
 
-/// Loads sponsor files from:   <SD Card base path> / library /
-/// Example: /storage/emulated/0/Sigma/library
-Future<List<SponsorItem>> loadSponsorsFromSigmaLibrary() async {
-  try {
-    // Get Sigma base path (your utility)
-    final sigmaPath = await SdCardUtility.getBasePath();
-
-    // Your sponsors directory: Sigma/library
-    final baseDir = Directory("$sigmaPath/sponsors");
-
-    if (!await baseDir.exists()) {
-      print("⚠️ Sponsor directory not found: $baseDir");
-      return [];
-    }
-
-    // Read all files inside the directory
-    final entries = await baseDir.list().toList();
-
-    final files = entries.whereType<File>().toList();
-
-    // Optional: sort alphabetically
-    files.sort((a, b) => p.basename(a.path).compareTo(p.basename(b.path)));
-
-    final sponsors = <SponsorItem>[];
-
-    for (final file in files) {
-      final ext = p.extension(file.path).toLowerCase();
-      if (ext.isEmpty) continue;
-
-      final type = guessTypeFromUrl(file.path);
-      if (type == SponsorMediaType.unknown) {
-        // Skip unsupported file types
-        continue;
-      }
-
-      // Title = file name without extension
-      final title = p.basenameWithoutExtension(file.path);
-
-      // Local file URL (used by viewers)
-      final url = "file://${file.path}";
-
-      sponsors.add(
-        SponsorItem(
-          id: title,
-          title: title,
-          url: url,
-          type: type,
-        ),
-      );
-    }
-
-    return sponsors;
-
-  } catch (e) {
-    print("ERROR while reading sponsors: $e");
-    return [];
-  }
-}

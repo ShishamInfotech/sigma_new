@@ -8,8 +8,10 @@ import 'package:sigma_new/pages/last_minute_revision/last_minute_revision.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
-class BoardWiseSyllabus extends StatefulWidget {
+// add drawer import
+import 'package:sigma_new/pages/drawer/drawer.dart';
 
+class BoardWiseSyllabus extends StatefulWidget {
   String? path;
 
   BoardWiseSyllabus({this.path, super.key});
@@ -53,16 +55,12 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
     ]
   ];
 
-  List<bool> isExpanded = [false, false, false, false, false, false, false, false];
-  bool _showSideNav = true; // Toggle variable for the side navigation bar
-
-
+  List<bool> isExpanded = [];
+  // removed _showSideNav; we're using real drawer now
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-
     subjectWiseTest();
   }
 
@@ -84,13 +82,10 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
     var board;
     final prefs = await SharedPreferences.getInstance();
     String? course = prefs.getString('course');
-    print(
-        "Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
+    print("Standard${prefs.getString('standard')} State:${prefs.getString('board')}");
 
     String? boardPref = prefs.getString('board');
-    board = (boardPref != null && boardPref == "Maharashtra")
-        ? "MH/"
-        : "${boardPref ?? ""}/";
+    board = (boardPref != null && boardPref == "Maharashtra") ? "MH/" : "${boardPref ?? ""}/";
 
     if (widget.path!.contains("10")) {
       newPath = "10/";
@@ -98,8 +93,7 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
       newPath = "12/";
     }
 
-    var inputFile = await SdCardUtility.getSubjectEncJsonData(
-        '${newPath}${board}sigma_data.json');
+    var inputFile = await SdCardUtility.getSubjectEncJsonData('${newPath}${board}sigma_data.json');
 
     print("INput File  $inputFile");
     Map<String, dynamic> parsedJson = jsonDecode(inputFile!);
@@ -110,7 +104,8 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
     subjects = sigmaData.map((data) => data["subject"].toString()).toList();
     subjectsId = sigmaData.map((data) => data["subjectid"].toString()).toList();
 
-    //removeTestSeriesFromSubjectTitle(subjects);
+    // initialize isExpanded safely to subjects length
+    isExpanded = List<bool>.filled(subjects.length, false);
 
     // Print subjects
     print(subjects);
@@ -124,184 +119,129 @@ class _BoardWiseSyllabusState extends State<BoardWiseSyllabus> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+
+      // keep your bottom button
       bottomNavigationBar: InkWell(
-        onTap: (){
-          Get.to(LastMinuteRevision(path: widget.path,));
+        onTap: () {
+          Get.to(LastMinuteRevision(path: widget.path));
         },
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 15),
-          decoration: BoxDecoration(
-            color: primaryColor,
-            boxShadow:const [
-              BoxShadow(
-                color: whiteColor,
-              )
-            ],
-            borderRadius: BorderRadius.circular(10)
-          ),
+          decoration: BoxDecoration(color: primaryColor, boxShadow: const [BoxShadow(color: whiteColor)], borderRadius: BorderRadius.circular(10)),
           height: 60,
           alignment: Alignment.center,
-          child: const Text('Last Minute Revision', style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),),
+          child: const Text(
+            'Last Minute Revision',
+            style: TextStyle(color: whiteColor, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
+
       appBar: AppBar(
         title: Row(
           children: [
             const Icon(Icons.chevron_right, size: 24),
             const SizedBox(width: 8),
             Text(
-              widget.path!,
+              widget.path ?? '',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.menu, size: 28),
-          onPressed: () {
-            setState(() {
-              _showSideNav = !_showSideNav; // Toggle side navigation visibility
-            });
-          },
-        ),
+        // open real drawer via scaffold key:
+        leading: Builder(builder: (context) {
+          return IconButton(
+            icon: const Icon(Icons.menu, size: 28),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          );
+        }),
       ),
+
+      // attach your real drawer here
+      drawer: const DrawerWidget(),
+
       body: SafeArea(
-        child: Stack(
-          children: [
-            // 🔹 Side Navigation Bar (Show/Hide based on _showSideNav)
-            if (_showSideNav)
-              Positioned(
-                top: screenHeight * 0.05,
-                left: -10,
-                child: Container(
-                  width: screenWidth * 0.15,
-                  height: screenHeight * 0.6,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.6),
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                        offset: const Offset(5, 0),
-                      ),
-                    ],
-                  ),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Icon(Icons.home, size: 30, color: Colors.black),
-                      Icon(Icons.book, size: 30, color: Colors.black),
-                      Icon(Icons.bar_chart, size: 30, color: Colors.black),
-                      Icon(Icons.edit, size: 30, color: Colors.black),
-                      Icon(Icons.search, size: 30, color: Colors.black),
-                    ],
-                  ),
-                ),
-              ),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(screenWidth * 0.05, screenHeight * 0.04, screenWidth * 0.05, screenHeight * 0.03),
+          child: subjects.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+            child: Column(
+              children: List.generate(subjects.length, (index) {
+                // guard against mismatched color/cardData indices
+                final color = cardColors[index % cardColors.length];
+                final icon = (index < cardData.length) ? cardData[index]['icon'] as IconData : Icons.book;
 
-            // 🔹 Main Content (Scrollable) - Adjust position when side nav is hidden
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              left: _showSideNav ? screenWidth * 0.18 : screenWidth * 0.05,
-              right: screenWidth * 0.05,
-              top: screenHeight * 0.04,
-              bottom: screenHeight * 0.03,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: List.generate(subjects.length, (index) {
-                    return Column(
-                      children: [
-                        // Main Card
-                        GestureDetector(
-                          onTap: () {
-                            Get.to(ChapterWiseSyllabus(path: subjectsId[index],title:subjects[index] ,));
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(
-                              vertical: screenHeight * 0.02,
-                              horizontal: screenWidth * 0.04,
+                return Column(
+                  children: [
+                    // Main Card
+                    GestureDetector(
+                      onTap: () {
+                        Get.to(ChapterWiseSyllabus(path: subjectsId[index], title: subjects[index]));
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02, horizontal: screenWidth * 0.04),
+                        margin: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                              offset: const Offset(4, 0),
                             ),
-                            margin: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
-                            decoration: BoxDecoration(
-                              color: cardColors[index],
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  spreadRadius: 1,
-                                  offset: const Offset(4, 0),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Icon(cardData[index]['icon'], size: 18),
-                                    SizedBox(width: screenWidth * 0.02),
-                                    Container(
-                                      width: screenWidth * 0.55,
-                                      child: Text(
-                                        subjects[index],
-                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Icon(
-                                  isExpanded[index] ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                  size: 24,
+                                Icon(icon, size: 18),
+                                SizedBox(width: screenWidth * 0.02),
+                                Container(
+                                  width: screenWidth * 0.55,
+                                  child: Text(
+                                    subjects[index],
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
+                            Icon(
+                              isExpanded.length > index && isExpanded[index] ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                              size: 24,
+                            ),
+                          ],
                         ),
+                      ),
+                    ),
 
-                        // Expandable Content
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(
-                            vertical: isExpanded[index] ? screenHeight * 0.02 : 0,
-                            horizontal: screenWidth * 0.04,
-                          ),
-                          margin: EdgeInsets.only(bottom: isExpanded[index] ? screenHeight * 0.01 : 0),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 5,
-                                spreadRadius: 2,
-                                offset: const Offset(2, 2),
-                              ),
-                            ],
-                          ),
-                          child: isExpanded[index] && subjects[index].isNotEmpty
-                              ? const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox()
-                            ],
-                          )
-                              : const SizedBox(),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-              ),
+                    // Expandable Content (keeps structure, currently empty)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: (isExpanded.length > index && isExpanded[index]) ? screenHeight * 0.02 : 0, horizontal: screenWidth * 0.04),
+                      margin: EdgeInsets.only(bottom: (isExpanded.length > index && isExpanded[index]) ? screenHeight * 0.01 : 0),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5, spreadRadius: 2, offset: const Offset(2, 2)),
+                      ]),
+                      child: (isExpanded.length > index && isExpanded[index] && subjects[index].isNotEmpty)
+                          ? const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [SizedBox()],
+                      )
+                          : const SizedBox(),
+                    ),
+                  ],
+                );
+              }),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -12,6 +12,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 
 import '../../utility/sd_card_utility.dart';
+import '../../utility/sponsors_loader.dart';
 import '../pdf/PdfFolderListPage.dart';
 import 'home_with_sponsors.dart';
 
@@ -117,6 +118,7 @@ class _Appbar2State extends State<OtherPage> {
     }
   }
 
+  final repo = SponsorsRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -234,13 +236,11 @@ class _Appbar2State extends State<OtherPage> {
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 10),
 
             // ⭐ ADD SPONSORS HERE (NOW IT WILL DISPLAY)
-            SponsorsSection(
-              sectionTitle: 'Our Sponsors',
-              sponsors: sponsors,
-            ),
+            // simple: loader will fetch from SD and render SponsorsSection once ready
+            SponsorsLoader(fetcher: () => repo.fetchSponsorsFromSdCard()),
 
           ],
         ),

@@ -12,6 +12,7 @@ import 'package:sigma_new/pages/last_minute_revision/last_minute_revision_mcq.da
 import 'package:sigma_new/ui_helper/constant.dart';
 import 'package:sigma_new/utility/sd_card_utility.dart';
 
+import '../../drawer/drawer.dart';
 import '../../last_minute_revision/last_minute_revision.dart';
 import 'mock_exam/MockExamInstructions.dart';
 import 'mock_exam/MockExamScreen.dart';
@@ -86,6 +87,9 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
 
     subjectWiseTest();
   }
+
+  // Use a scaffold key to open drawer from AppBar
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   List<String> subjects = [];
   List<String> subjectsTopic = [];
@@ -223,6 +227,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
     double width = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
       bottomNavigationBar: widget.path.toString().toLowerCase() ==
                   "multiple choice question" ||
@@ -266,10 +271,11 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
           leading: InkWell(
             onTap: () {
               print("Opening Drawer");
-              // _quickquidescaffoldKey.currentState?.openDrawer();
+              _scaffoldKey.currentState?.openDrawer();
             },
             child: const Icon(Icons.menu),
           ),
+
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -288,6 +294,9 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
             widget.path,
             style: black20w400MediumTextStyle,
           )),
+      // <-- here we attach your existing drawer implementation
+      drawer: const DrawerWidget(),
+
       body: Column(
         children: [
           Padding(
