@@ -140,8 +140,18 @@ class _QuestionListState extends State<QuestionList> {
                   height: _estimateHeight(questionText),
                 ),
                 const SizedBox(height: 4),
-                MathText(expression: "Your Answer: $selected", height: 80),
-                MathText(expression: "Correct Answer: $correct", height: 80),
+                MathText(
+                  expression:
+                  'Your Answer: <span style="color:${selected == correct ? 'green' : 'red'};">$selected</span>',
+                  height: 80,
+                ),
+
+
+                MathText(
+                  expression: 'Correct Answer: <span style="color:green;">$correct</span>',
+                  height: 80,
+                ),
+
                 ElevatedButton(
                   onPressed: () {
                     Get.to(TextAnswer(
