@@ -10,6 +10,7 @@ import 'package:sigma_new/pages/drawer/drawer.dart';
 import 'package:sigma_new/pages/usage_report/jee_mock_exam_details.dart';
 import 'package:sigma_new/ui_helper/constant.dart';
 
+import '../../utility/date_utils.dart';
 import '../../utility/sd_card_utility.dart';
 import '../usage_report/mock_exam_detail_page.dart';
 import 'mock_exam_details.dart'; // You'll create this next
@@ -136,9 +137,9 @@ class _EvaluationPageState extends State<EvaluationPage> {
     // Example: "Board Mock Exam - Physics 1"
     final parts = title.split(' - ');
     if (parts.length >= 2) {
-      final subjectPart = parts.last.trim(); // "Physics 1"
-      final words = subjectPart.split(' ');
-      return words.isNotEmpty ? words.first : "Unknown"; // "Physics"
+      return parts.last.trim(); // "Physics 1"
+      //final words = subjectPart.split(' ');
+      //return words.isNotEmpty ? words.first : "Unknown"; // "Physics"
     }
     return "Unknown";
   }
@@ -234,52 +235,66 @@ class _EvaluationPageState extends State<EvaluationPage> {
             // Tab 1: Mock Exam
             Column(
               children: [
-                // _buildStatsCard(context),
-                /*Expanded(
-                  child: submissions.isEmpty
-                      ? const Center(child: Text("No submitted mocks found."))
-                      : ListView.builder(
-                          itemCount: submissions.length,
-                          itemBuilder: (context, index) {
-                            final sub = submissions[index];
-                            print("Subject ${sub["questions"][0]["stream"]}");
-                            final title = sub['title'] ?? 'Untitled';
-                            final timestamp = sub['timestamp'] ?? '';
-                            final dateTime = DateTime.tryParse(timestamp);
-
-                            print("Titiel $title");
-                            return ListTile(
-                              title: Text("Class:${sub["questions"][0]["stream"]} $title"),
-                              subtitle: Text(dateTime != null
-                                  ? '${dateTime.toLocal()}'
-                                  : 'Unknown time'),
-                              trailing: const Icon(Icons.arrow_forward_ios),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => MockExamDetailPage(
-                                      title: title,
-                                      timestamp: timestamp,
-                                      questions:
-                                          List<Map<String, dynamic>>.from(
-                                              sub['questions']),
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                ),*/
 
                 Expanded(
-                  child: submissions.isEmpty
+                  child: groupedSubmissions.isEmpty
                       ? const Center(child: Text("No submitted mocks found."))
                       : ListView(
-                          children: children,
+                    children: groupedSubmissions.entries.map((entry) {
+                      final subject = entry.key;
+                      final exams = entry.value;
+
+                      return ExpansionTile(
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              subject,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            Text(
+                              "(${exams.length})",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
-                ),
+
+                        children: exams.map((sub) {
+                          final title = sub['title'] ?? 'Untitled';
+                          final timestamp = sub['timestamp'] ?? '';
+                          final dateTime = DateTime.tryParse(timestamp);
+
+                          return ListTile(
+                            title: Text(title),
+                            subtitle: Text(DateUtilsHelper.formatDate(timestamp)),
+                            trailing: const Icon(Icons.arrow_forward_ios),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => MockExamDetailPage(
+                                    title: title,
+                                    timestamp: timestamp,
+                                    questions: List<Map<String, dynamic>>.from(sub['questions']),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        }).toList(),
+                      );
+                    }).toList(),
+                  ),
+                )
+
               ],
             ),
 
@@ -316,82 +331,85 @@ class _EvaluationPageState extends State<EvaluationPage> {
               ),
             ),
             // Tab 3: JEE Mock Exam
+            DefaultTabController(
+              length: subjectAttemptsMock.length,
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Transform.translate(
+                      offset: const Offset(-46, 0), // SHIFT LEFT (adjust as needed)
+                      child: TabBar(
+                        isScrollable: true,
+                        labelColor: Colors.blue,
+                        unselectedLabelColor: Colors.black54,
+                        indicatorColor: Colors.blue,
+                        padding: EdgeInsets.zero,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+                        tabs: subjectAttemptsMock.entries
+                            .map((entry) => Tab(text: entry.value.first["title"]))
+                            .toList(),
+                      ),
+                    ),
+                  ),
 
-            SingleChildScrollView(
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 10),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (subjectAttemptsMock.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(
-                            child: Text("No exam attempts found",
-                                style: TextStyle(color: Colors.grey)),
-                          ),
-                        )
-                      else
-                        ...subjectAttemptsMock.entries.expand((subjectEntry) {
-                          return [
-                            const SizedBox(height: 8),
-                            Text(
-                              subjectEntry.value.first["title"],
-                              style: black14BoldTextStyle.copyWith(
-                                  color: Colors.blue),
-                            ),
-                            ...subjectEntry.value.map((attempt) {
-                              final date =
-                                  DateTime.tryParse(attempt['date'] ?? '')
-                                          ?.toLocal() ??
-                                      DateTime.now();
-                              final score = attempt['correct'] ?? 0;
-                              final total = attempt['total'] ?? 1;
-                              final wrong = attempt['wrong'] ?? 0;
-                              final percentage =
-                                  (score / total * 100).toStringAsFixed(1);
-                              final duration = attempt['duration'] ?? 'N/A';
 
-                              return Card(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                child: ListTile(
-                                  title: Text(
-                                      "Score: $score/$total ($percentage%)"),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                          "Date: ${date.toString().substring(0, 16)}"),
-                                      Text("Wrong: $wrong | Time: $duration"),
-                                    ],
-                                  ),
-                                  // trailing: const Icon(Icons.chevron_right),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => JeeMockExamDetails(
-                                          subject: subjectEntry.key,
-                                          //  attempts: subjectEntry.value,
-                                          attempts: [attempt],
-                                          title:
-                                              subjectEntry.value.first["title"],
-                                          date:
-                                              date.toString().substring(0, 16),
-                                          //  selectedAttempt: attempt,
-                                        ),
-                                      ),
-                                    );
-                                  },
+                  Expanded(
+                    child: TabBarView(
+                      children: subjectAttemptsMock.entries.map((entry) {
+                        final attempts = entry.value;
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(10),
+                          itemCount: attempts.length,
+                          itemBuilder: (context, index) {
+                            final attempt = attempts[index];
+                            final date = DateTime.tryParse(attempt['date'] ?? '')
+                                ?.toLocal() ??
+                                DateTime.now();
+                            final timestamp = attempt['date'] ?? '';
+                            final score = attempt['correct'] ?? 0;
+                            final total = attempt['total'] ?? 1;
+                            final wrong = attempt['wrong'] ?? 0;
+                            final percentage =
+                            (score / total * 100).toStringAsFixed(1);
+                            final duration = attempt['duration'] ?? 'N/A';
+
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              child: ListTile(
+                                title: Text("Score: $score/$total ($percentage%)"),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("Date: ${DateUtilsHelper.formatDate(timestamp)}"),
+                                    Text("Wrong: $wrong | Time: ${DateUtilsHelper.formatDuration(duration)}"),
+                                  ],
                                 ),
-                              );
-                            }).toList(),
-                          ];
-                        }).toList(),
-                    ]),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => JeeMockExamDetails(
+                                        subject: entry.key,
+                                        attempts: [attempt],
+                                        title: entry.value.first["title"],
+                                        date: DateUtilsHelper.formatDuration(duration),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
               ),
             )
+
           ],
         ),
       ),
@@ -558,4 +576,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
 
     return {};
   }
+
+
+
 }
