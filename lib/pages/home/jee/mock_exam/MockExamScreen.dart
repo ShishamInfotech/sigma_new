@@ -78,13 +78,14 @@ class _MockExamScreenState extends State<MockExamScreen> {
   Future<void> _initialize() async {
     prefs = await SharedPreferences.getInstance();
     basePath = await SdCardUtility.getBasePath();
-    _loadCurrentLevel();
-    _setExamDuration();
+    await _loadCurrentLevel();   // FIX HERE
+    _setExamDuration();          // Now it uses correct level
 
     final hasSavedState = await _loadExamState();
     if (!hasSavedState) {
       await _loadQuestionsInBatches();
     }
+
   }
 
 
@@ -261,7 +262,17 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
   void _setExamDuration() {
     // Full mock exam duration (3 hours)
-    duration = const Duration(minutes: 180);
+    // Level-based duration logic
+    if (currentLevel == 's' || currentLevel == 'm') {
+      duration = const Duration(minutes: 120);
+    } else if (currentLevel == 'c' || currentLevel == 'd' || currentLevel == 'a') {
+      duration = const Duration(minutes: 150);
+    } else {
+      // Default fallback
+      duration = const Duration(minutes: 120);
+    }
+
+    print("Exam duration set to ${duration.inMinutes} minutes for Level: $currentLevel");
   }
 
   Future<void> _saveExamState() async {
@@ -355,15 +366,18 @@ class _MockExamScreenState extends State<MockExamScreen> {
       });
     }
 
+    // Calculate actual exam duration (not remaining)
+    final actualDuration = DateTime.now().difference(examStartTime!);
+
     final examResult = {
       'title': widget.title,
       'date': examStartTime?.toIso8601String() ?? DateTime.now().toIso8601String(),
-      'duration': (duration.inMinutes).toString(),
+      'duration': actualDuration.inMinutes.toString(),   // ✅ FIXED
       'correct': correct,
       'wrong': wrong,
       'total': questions.length,
       'subjectId': widget.subjectId,
-      'isPCB': widget.isPCB,
+      'isPCB': widget.isPCB == true,
       'score': (correct / questions.length * 100).toStringAsFixed(1),
       'questions': detailedQuestions,
       'level': currentLevel, // Add current level to exam result
@@ -399,6 +413,8 @@ class _MockExamScreenState extends State<MockExamScreen> {
     await _updateLevelProgression(scorePercentage);
 
     loadMockAttemptsMock();
+    await _appendExamAttemptToSDCard(examResult);
+
   }
 
   Future<void> _updateLevelProgression(double scorePercentage) async {
@@ -462,12 +478,14 @@ class _MockExamScreenState extends State<MockExamScreen> {
     }));
 
     // After updating the level, save it
-    await _saveCurrentLevel();
+    await _saveCurrentLevel(currentLevels);
 
     // Update the current level in state
     setState(() {
       this.currentLevel = currentLevels;
     });
+    print("Level: $currentLevels  | Consecutive: $consecutivePasses  | Score: $scorePercentage");
+
   }
 
   String _getNextLevel(String currentLevel) {
@@ -1069,12 +1087,12 @@ class _MockExamScreenState extends State<MockExamScreen> {
   }
 
 
-  Future<void> _saveCurrentLevel() async {
+  Future<void> _saveCurrentLevel(String currentLevels) async {
     // Create a unique key based on the stream type
     final levelKey = 'current_level_${widget.isPCB ? "PCB" : "PCM"}';
 
     // Save to SharedPreferences
-    await prefs.setString(levelKey, currentLevel);
+    await prefs.setString(levelKey, currentLevels);
 
     // Save to SD card
     try {
@@ -1098,12 +1116,15 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
       // Update level data for this stream
       levelData[levelKey] = {
-        'level': currentLevel,
+        'level': currentLevels,
         'last_updated': DateTime.now().toIso8601String(),
       };
 
       // Save updated data
       await file.writeAsString(jsonEncode(levelData));
+
+      print("Saved level: $currentLevels");
+
     } catch (e) {
       debugPrint("Failed to save level to SD card: $e");
     }
@@ -1135,8 +1156,61 @@ class _MockExamScreenState extends State<MockExamScreen> {
 
     setState(() {
       currentLevel = level ?? 's'; // Default to 's' if no level found
+      print("Updated level: $currentLevel");
     });
+
   }
+
+  Future<void> _appendExamAttemptToSDCard(Map<String, dynamic> attempt) async {
+    try {
+      final directory = await SdCardUtility.getBasePath();
+      final filePath = '$directory/jee_exam_attempt.json';
+      final file = File(filePath);
+
+      Map<String, List<Map<String, dynamic>>> existingData = {};
+
+      // Load existing
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        final decoded = jsonDecode(content);
+        if (decoded is Map) {
+          decoded.forEach((key, list) {
+            if (list is List) {
+              existingData[key] = List<Map<String, dynamic>>.from(
+                  list.whereType<Map<String, dynamic>>());
+            }
+          });
+        }
+      }
+
+      final subject = attempt['subjectId'] ?? "Unknown";
+
+      // Create subject section if missing
+      existingData.putIfAbsent(subject, () => []);
+
+      // Avoid duplicates using date
+      final recordedDates =
+      existingData[subject]!.map((e) => e['date']).toSet();
+
+      if (!recordedDates.contains(attempt['date'])) {
+        existingData[subject]!.add(attempt);
+      }
+
+      // Sort newest first
+      existingData[subject]!.sort((a, b) {
+        final da = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+        final db = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+        return db.compareTo(da);
+      });
+
+      await file.writeAsString(jsonEncode(existingData));
+      print("Saved exam attempt to SD card.");
+
+    } catch (e) {
+      print("Error saving exam attempt to SD card: $e");
+    }
+  }
+
 }
 
 class FileUri {

@@ -88,6 +88,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
     subjectWiseTest();
   }
 
+
   // Use a scaffold key to open drawer from AppBar
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -220,6 +221,88 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
 
     setState(() {});
   }
+
+  Future<Map<String, List<Map<String, dynamic>>>> readMockAttemptsFromSDCard() async {
+    try {
+      final directory = await SdCardUtility.getBasePath();
+      final filePath = '$directory/jee_exam_attempt.json';
+      final file = File(filePath);
+
+      if (!await file.exists()) return {};
+
+      final content = await file.readAsString();
+      if (content.trim().isEmpty) return {};
+
+      final decoded = jsonDecode(content);
+      if (decoded is! Map<String, dynamic>) return {};
+
+      Map<String, List<Map<String, dynamic>>> parsedData = {};
+
+      decoded.forEach((key, value) {
+        if (value is List) {
+          parsedData[key] = value.whereType<Map<String, dynamic>>().toList();
+        }
+      });
+
+      // Sort by latest date
+      parsedData.forEach((key, list) {
+        list.sort((a, b) {
+          final da = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+          final db = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+          return db.compareTo(da);
+        });
+      });
+
+      return parsedData;
+    } catch (e) {
+      print("Error reading SD attempts: $e");
+      return {};
+    }
+  }
+
+  Future<Map<String, dynamic>> getCurrentExamLevelInfo(bool isPCB) async {
+    final data = await readMockAttemptsFromSDCard();
+
+    final all = data.values.expand((e) => e).toList();
+
+    final attempts = all.where((a) => a['isPCB'] == isPCB).toList();
+
+    if (attempts.isEmpty) {
+      return {
+        "level": "Simple",
+        "tag": "s",
+        "average": 0.0,
+        "attempts": 0
+      };
+    }
+
+    final latest = attempts.first;
+
+    final tag = latest['level']?.toString().toLowerCase() ?? "s";
+
+    final levelName = {
+      's': 'Simple',
+      'm': 'Medium',
+      'c': 'Complex',
+      'd': 'Difficult',
+      'a': 'Advance',
+    }[tag] ?? "Simple";
+
+    final scores = attempts.map((a) {
+      final s = a['score'];
+      return s is String ? double.tryParse(s) ?? 0 : (s as num).toDouble();
+    }).toList();
+
+    final avg = scores.reduce((a, b) => a + b) / scores.length;
+
+    return {
+      "level": levelName,
+      "tag": tag,
+      "average": avg,
+      "attempts": attempts.length,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     print("Subject ${widget.path}");
@@ -363,45 +446,111 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
                                 showDialog(
                                   context: context,
                                   builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: const Text('Exam information'),
-                                      content: const Text(
-                                        'Your Current Test Average: 0.00 \n\nCurrent Test Level Qualified for: SIMPLE \n\nBegin Test?',
-                                        style: black14BoldTextStyleInter,
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          style: TextButton.styleFrom(
-                                              textStyle: Theme.of(context)
-                                                  .textTheme
-                                                  .labelLarge),
-                                          child: const Text('Yes'),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                            instructionMockExam(
-                                                subjectsId[index],
-                                                subjectsTopic[index]);
-                                            /*Get.to(MockExamScreen(
-                                              subjectId: subjectsId[index],
-                                              title: subjectsTopic[index],
-                                              path: 'JEE/MCQ/sigma_data.json',
-                                            ));*/
-                                          },
-                                        ),
-                                        TextButton(
-                                          style: TextButton.styleFrom(
-                                              textStyle: Theme.of(context)
-                                                  .textTheme
-                                                  .labelLarge),
-                                          child: const Text('No'),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                      ],
+                                    return FutureBuilder<Map<String, dynamic>>(
+                                      future: getCurrentExamLevelInfo(
+                                          subjectsTopic[index].toLowerCase().contains("pcb")),
+                                      builder: (context, snapshot) {
+                                        if (!snapshot.hasData) {
+                                          return AlertDialog(
+                                            title: const Text("Exam information"),
+                                            content: const Text("Loading..."),
+                                          );
+                                        }
+
+                                        final info = snapshot.data!;
+                                        final level = info["level"];
+                                        final avg = info["average"];
+                                        final attempts = info["attempts"];
+                                        final tag = info["tag"];
+
+                                        return AlertDialog(
+                                          title: const Text(
+                                            'Exam Information',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20, // Increased size
+                                            ),
+                                          ),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              RichText(
+                                                text: TextSpan(
+                                                  style: TextStyle(
+                                                    fontSize: 16,              // ⬅ Bigger base font
+                                                    color: Colors.black87,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                  children: [
+
+                                                    const TextSpan(text: "Your Current Test Average: "),
+                                                    TextSpan(
+                                                      text: "${avg.toStringAsFixed(2)}%",
+                                                      style: TextStyle(
+                                                        color: avg >= 70 ? Colors.green : Colors.red,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 18,          // ⬅ Larger highlight text
+                                                      ),
+                                                    ),
+
+                                                    const TextSpan(text: "\n\n"),
+
+                                                    const TextSpan(text: "Current Test Level Qualified for: "),
+                                                    TextSpan(
+                                                      text: level.toUpperCase(),
+                                                      style: const TextStyle(
+                                                        color: Colors.blueAccent,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 18,          // ⬅ Larger highlight text
+                                                      ),
+                                                    ),
+
+                                                    const TextSpan(text: "\n\n"),
+
+                                                    const TextSpan(text: "Total Attempts: "),
+                                                    TextSpan(
+                                                      text: attempts.toString(),
+                                                      style: const TextStyle(
+                                                        color: Colors.purple,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 18,          // ⬅ Larger highlight text
+                                                      ),
+                                                    ),
+
+                                                    const TextSpan(text: "\n\nBegin Test?"),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              child: const Text(
+                                                'Yes',
+                                                style: TextStyle(fontSize: 16),
+                                              ),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                                instructionMockExam(subjectsId[index], subjectsTopic[index]);
+                                              },
+                                            ),
+                                            TextButton(
+                                              child: const Text(
+                                                'No',
+                                                style: TextStyle(fontSize: 16),
+                                              ),
+                                              onPressed: () => Navigator.of(context).pop(),
+                                            ),
+                                          ],
+                                        );
+
+
+                                      },
                                     );
                                   },
                                 );
+
                               }
                             } else {
                               print(
@@ -447,6 +596,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
       ),
     );
   }
+
 
   /*instructionMockExam(String subjectId, String title) {
     return showDialog(
@@ -494,35 +644,7 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
 
   }
 
-  Future<String> _getCurrentLevel(bool isPCB) async {
-    final prefs = await SharedPreferences.getInstance();
-    //return prefs.getString('currentLevel') ?? 's'; // Default to 's' if not set
 
-    // Create a unique key based on the stream type
-    final levelKey = 'current_level_${isPCB ? "PCB" : "PCM"}';
-
-    // Try loading from SharedPreferences first
-    String? level = prefs.getString(levelKey);
-
-    if (level == null) {
-      // If not in SharedPreferences, try loading from SD card
-      try {
-        final directory = await SdCardUtility.getBasePath();
-        final filePath = '$directory/jee_level_data.json';
-        final file = File(filePath);
-
-        if (await file.exists()) {
-          final content = await file.readAsString();
-          final levelData = jsonDecode(content);
-          level = levelData[levelKey]?['level'];
-        }
-      } catch (e) {
-        debugPrint("Error loading level from SD card: $e");
-      }
-
-    }
-    return level ?? 's';
-  }
 
   final levelNames = {
     's': 'Simple',
@@ -533,14 +655,14 @@ class _JeeSubjectwiseState extends State<JeeSubjectwise> {
   };
 
   void showMockExamInstructions(BuildContext context, String subjectId, String title, bool isPCB) async {
-    final currentLevel = await _getCurrentLevel(isPCB);
-    final instructions = MockExamInstructions.instructions[currentLevel]?[isPCB] ?? 'No instructions available.';
+    final currentLevel = await getCurrentExamLevelInfo(isPCB);
+    final instructions = MockExamInstructions.instructions[currentLevel["tag"]]?[isPCB] ?? 'No instructions available.';
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Level ${levelNames[currentLevel] ?? currentLevel.toUpperCase()} Instructions',
+          'Level ${levelNames[currentLevel["tag"]] ?? currentLevel["tag"].toUpperCase()} Instructions',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(child: Text(instructions)),

@@ -342,26 +342,63 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
 
   // Method to load mock exam results
+  /// Read ALL exam attempts from SD card instead of SharedPreferences
   Future<List<Map<String, dynamic>>> _loadMockExamResults(bool isPCB) async {
-    final prefs = await SharedPreferences.getInstance();
-    final examAttemptsJson = prefs.getString('mock_exam_attempts') ?? '[]';
-    final List<dynamic> examAttempts = jsonDecode(examAttemptsJson);
+    final directory = await SdCardUtility.getBasePath();
+    final filePath = '$directory/jee_exam_attempt.json';
+    final file = File(filePath);
 
-    print("Exam Attempts $examAttempts");
-    // Filter results by PCB/PCM and sort by date
-    return examAttempts
-        .where((exam) => exam['isPCB'] == isPCB)
-        .map((exam) => exam as Map<String, dynamic>)
-        .toList()
-        .reversed
-        .toList();
+    if (!await file.exists()) {
+      print("No exam attempt file found.");
+      return [];
+    }
+
+    try {
+      final content = await file.readAsString();
+      final decoded = jsonDecode(content);
+
+      if (decoded is! Map) return [];
+
+      List<Map<String, dynamic>> flatList = [];
+
+      // ★ Flatten all subjects into single list
+      decoded.forEach((key, list) {
+        if (list is List) {
+          for (var item in list) {
+            if (item is Map<String, dynamic>) {
+              flatList.add(item);
+            }
+          }
+        }
+      });
+
+      // ★ Filter PCM vs PCB
+      final filtered = flatList.where((exam) {
+        final v = exam['isPCB'];
+        return v == isPCB;
+      }).toList();
+
+      // ★ Sort by date (latest first)
+      filtered.sort((a, b) {
+        final da = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
+        final db = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
+        return db.compareTo(da);
+      });
+
+      return filtered;
+
+    } catch (e) {
+      print("Error reading SD card attempts: $e");
+      return [];
+    }
   }
+
+
 
 // Method to calculate stats for competitive exams
   Future<Map<String, dynamic>> _calculateExamStats(bool isPCB) async {
     final results = await _loadMockExamResults(isPCB);
 
-    print("Calculate $results");
     if (results.isEmpty) {
       return {
         'attempts': 0,
@@ -372,42 +409,36 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
       };
     }
 
-    final scores = results.map((r) => double.parse(r['score'].toString())).toList();
-    final average = scores.reduce((a, b) => a + b) / scores.length;
-    final highest = scores.reduce((a, b) => a > b ? a : b);
-    final lowest = scores.reduce((a, b) => a < b ? a : b);
+    // Build score list
+    final scores = results.map((r) {
+      final s = r['score'];
+      return s is String ? double.tryParse(s) ?? 0.0 : (s as num).toDouble();
+    }).toList();
 
-    final level = results.elementAt(0)['level'].toString();
-    // Determine current level based on average score
-    String currentLevel;
-    if (level == 'a') {
-      currentLevel = 'Advance';
-    } else if (level == 'd') {
-      currentLevel = 'Difficult';
-    } else if (level == 'c') {
-      currentLevel = 'Complex';
-    } else if (level == 'm') {
-      currentLevel = 'Medium';
-    } else if (level == 's') {
-      currentLevel = 'Simple';
-    } else {
-      currentLevel = 'Simple';
-    }
+    final avg = scores.reduce((a, b) => a + b) / scores.length;
+    final hi = scores.reduce((a, b) => a > b ? a : b);
+    final lo = scores.reduce((a, b) => a < b ? a : b);
 
+    // Latest attempt level
+    final latestLevel = results.first['level']?.toString().toLowerCase() ?? 's';
 
+    final levelName = {
+      's': 'Simple',
+      'm': 'Medium',
+      'c': 'Complex',
+      'd': 'Difficult',
+      'a': 'Advance',
+    }[latestLevel] ?? 'Simple';
 
-    final resultMap = {
+    return {
       'attempts': results.length,
-      'averageScore': average,
-      'highestScore': highest,
-      'lowestScore': lowest,
-      'currentLevel': currentLevel,
+      'averageScore': avg,
+      'highestScore': hi,
+      'lowestScore': lo,
+      'currentLevel': levelName,
     };
-
-    await appendExamStat(isPCB ? 'pcb' : 'pcm', resultMap);
-
-    return resultMap;
   }
+
 
 
 
@@ -1129,6 +1160,27 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
     final isPCB = exam.contains('PCB');
     final stats = isPCB ? scoreStats['pcb'] : scoreStats['nonPcb'];
 
+    // Determine REAL current level from last attempt in SD card
+    String realCurrentLevel = "Simple";
+
+    final latestAttemptList = isPCB
+        ? subjectAttemptsMock.values.expand((e) => e).where((a) => a['isPCB'] == true)
+        : subjectAttemptsMock.values.expand((e) => e).where((a) => a['isPCB'] == false);
+
+    if (latestAttemptList.isNotEmpty) {
+      final latestAttempt = latestAttemptList.first;
+      final tag = latestAttempt['level']?.toString().toLowerCase() ?? 's';
+
+      realCurrentLevel = {
+        's': 'Simple',
+        'm': 'Medium',
+        'c': 'Complex',
+        'd': 'Difficult',
+        'a': 'Advance',
+      }[tag] ?? 'Simple';
+    }
+
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1155,8 +1207,8 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
 
               // Data Rows
-              _buildStatRow('Level', currentLevel,
-                  color: _getLevelColor(currentLevel)),
+              _buildStatRow('Level', realCurrentLevel,
+                  color: _getLevelColor(realCurrentLevel)),
               width10Space,
               _buildStatRow('Attempts', '${stats?['count']?.toInt() ?? 0}'),
               width10Space,
@@ -1192,7 +1244,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                   child: Text(
                     level,
                     style: TextStyle(
-                      fontWeight: level == currentLevel ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: level == realCurrentLevel ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 ),
@@ -1202,7 +1254,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                     value: (levelCounts[level] ?? 0) / (attempts == 0 ? 1 : attempts),
                     backgroundColor: Colors.grey[200],
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      level == currentLevel ? Colors.green : Colors.blue,
+                      level == realCurrentLevel ? Colors.green : Colors.blue,
                     ),
                   ),
                 ),
@@ -1211,7 +1263,7 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
                   '${levelCounts[level] ?? 0}',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: level == currentLevel ? Colors.green : Colors.black,
+                    color: level == realCurrentLevel ? Colors.green : Colors.black,
                   ),
                 ),
               ],
@@ -1320,8 +1372,6 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
   Future<Map<String, Map<String, int>>> _getLevelAttemptsCount() async {
     final directory = await SdCardUtility.getBasePath();
-    if (directory == null) return {};
-
     final filePath = '$directory/jee_exam_attempt.json';
     final file = File(filePath);
 
@@ -1329,54 +1379,45 @@ class _StudyTrackerHomePageState extends State<StudyTrackerHomePage> {
 
     try {
       final content = await file.readAsString();
-      final Map<String, dynamic> data = jsonDecode(content);
+      final decoded = jsonDecode(content);
 
       Map<String, Map<String, int>> levelCounts = {
         'pcm': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
         'pcb': {'Simple': 0, 'Medium': 0, 'Complex': 0, 'Difficult': 0, 'Advance': 0},
       };
 
-      data.forEach((key, value) {
-        if (value is List) {
-          for (var attempt in value) {
+      decoded.forEach((key, list) {
+        if (list is List) {
+          for (var attempt in list) {
             if (attempt is Map<String, dynamic>) {
               final isPCB = attempt['isPCB'] == true;
-              final stream = isPCB ? 'pcb' : 'pcm';
+
               final levelTag = attempt['level']?.toString().toLowerCase() ?? 's';
 
-              String level;
-              switch (levelTag) {
-                case 's':
-                  level = 'Simple';
-                  break;
-                case 'm':
-                  level = 'Medium';
-                  break;
-                case 'c':
-                  level = 'Complex';
-                  break;
-                case 'd':
-                  level = 'Difficult';
-                  break;
-                case 'a':
-                  level = 'Advance';
-                  break;
-                default:
-                  level = 'Simple'; // Default to Simple if level tag is unknown
-              }
+              final levelName = {
+                's': 'Simple',
+                'm': 'Medium',
+                'c': 'Complex',
+                'd': 'Difficult',
+                'a': 'Advance',
+              }[levelTag] ?? 'Simple';
 
-              levelCounts[stream]?[level] = (levelCounts[stream]?[level] ?? 0) + 1;
+              final stream = isPCB ? 'pcb' : 'pcm';
+              levelCounts[stream]![levelName] =
+                  (levelCounts[stream]![levelName] ?? 0) + 1;
             }
           }
         }
       });
 
       return levelCounts;
+
     } catch (e) {
-      print('Error reading level attempts: $e');
+      print("ERROR reading level attempts → $e");
       return {};
     }
   }
+
 
 // Helper widget to build exam performance table
   /*Widget _buildExamPerformanceTable(String exam, String subjects, Map<String, dynamic> data, Map<String, int> levelCounts,) {

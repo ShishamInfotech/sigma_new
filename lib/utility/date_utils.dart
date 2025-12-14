@@ -17,23 +17,29 @@ class DateUtilsHelper {
   static String formatDuration(dynamic raw) {
     if (raw == null) return "N/A";
 
-    // Convert to number safely
-    final duration = int.tryParse(raw.toString());
-    if (duration == null) return "N/A";
+    // Convert safely to integer
+    final minutes = int.tryParse(raw.toString());
+    if (minutes == null) return "N/A";
 
-    // If less than 60, show seconds
-    if (duration < 60) {
-      return "$duration sec";
+    // If less than 1 minute (should not normally happen)
+    if (minutes == 0) {
+      return "0 min";
     }
 
-    // Convert seconds → minutes
-    final minutes = duration ~/ 60;
-    final seconds = duration % 60;
-
-    if (seconds == 0) {
+    // If only minutes
+    if (minutes < 60) {
       return "$minutes min";
     }
 
-    return "$minutes min $seconds sec";
+    // Convert minutes → hours + minutes
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+
+    if (remainingMinutes == 0) {
+      return "$hours hr";
+    }
+
+    return "$hours hr $remainingMinutes min";
   }
+
 }
