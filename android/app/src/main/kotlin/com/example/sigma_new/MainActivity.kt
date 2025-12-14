@@ -23,7 +23,10 @@ class MainActivity : FlutterFragmentActivity() {
         flutterEngine
             .platformViewsController
             .registry
-            .registerViewFactory("mathview-native", MathViewFactory())
+            .registerViewFactory(
+                "mathview-native",
+                MathViewFactory(flutterEngine.dartExecutor.binaryMessenger)
+            )
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -43,6 +46,20 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+
+        // 🔹 NEW: MathView height channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "mathview-native/height")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "onHeight") {
+                    // Just log for now; Flutter side will listen
+                    val h = call.arguments.toString()
+                    android.util.Log.d("MathView", "Height from WebView: $h")
+                    result.success(null)
+                } else {
+                    result.notImplemented()
+                }
+            }
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

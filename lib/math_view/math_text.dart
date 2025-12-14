@@ -97,7 +97,7 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   String sanitizeMathExpression(String input) {
 
     //debugPrint("Matrix Test================   $input");
-    input = input.trim();
+    input = input.trimRight(); // safer
 
     if(input.contains("img src")){
       //print("getBasepath ${widget.basePath}");
@@ -107,19 +107,40 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
 
 
 
-    if (input.contains("matrix") || input.contains("vmatrix")) {
-      //print("Matrix Test================   $input");
-      input= input
+    if (input.contains(r'\begin{bmatrix}') ||
+        input.contains(r'\begin{matrix}') ||
+        input.contains(r'\begin{pmatrix}') ||
+        input.contains(r'\begin{vmatrix}')
+    ) {
+      // Fix double escapes
+      input = input
           .replaceAll(r'\\begin', r'\begin')
           .replaceAll(r'\\end', r'\end')
-          .replaceAll(r'\\\\', r'\\')
-          .replaceAll(r'$', r'')
-      .replaceAll(r'\left[\begin', r'\(\left[\begin')
-       .replaceAll(r'\right]', r'\right]\)')
-          .replaceAll(r'z-[1', r'z_{1');
+          //.replaceAll(r'$$', r'')
+          .replaceAll(r'\\\\', r'\\');
+
+
     }
 
-    input = input.replaceAll(',br>', '<br>').replaceAllMapped(RegExp(r'<br\s*/?>'), (_) => '\n');
+    //input = input.replaceAll(',br>', '<br>').replaceAllMapped(RegExp(r'<br\s*/?>'), (_) => '\n');
+
+    // Replace <br> → newline ONLY when NOT inside inline math
+    input = input.replaceAllMapped(
+      RegExp(r'<br\s*/?>'),
+          (match) {
+        // if <br> is surrounded by inline math, keep it inline
+        int index = match.start;
+
+        // count how many \( and \) appear before this index
+        int open = RegExp(r'\\\(').allMatches(input.substring(0, index)).length;
+        int close = RegExp(r'\\\)').allMatches(input.substring(0, index)).length;
+
+        bool insideInlineMath = open > close;
+
+        return insideInlineMath ? ' ' : '\n';
+      },
+    );
+
 
     return input;
   }
@@ -255,19 +276,19 @@ class _MathTextState extends State<MathText> with AutomaticKeepAliveClientMixin{
   }
 
   Widget _buildMathView(double height) {
-    //print("Data Contex ===============$_sanitized");
+    print("Data Contex ===============$_sanitized");
     final isMatrix = _sanitized.contains(r'\begin{matrix}') ||
         _sanitized.contains(r'\begin{pmatrix}') ||
         _sanitized.contains(r'\begin{vmatrix}') ||
         _sanitized.contains(r'\begin{bmatrix}');
 
     //final topPadding = isMatrix ? .0 : 6.0; // add extra space for matrix top line
-    height = isMatrix ? height + 37.0 : height;
+    height = isMatrix ? height + 25.0 : height;
     //print("Data Contex Height ===============$height");
     return SizedBox(
       height: height,
       child: Padding(
-        padding: EdgeInsets.only(top: 6), // You can adjust this value as needed
+        padding: const EdgeInsets.only(top: 4), // You can adjust this value as needed
         child: RepaintBoundary(
           child: AndroidView(
             viewType: 'mathview-native',
